@@ -1,0 +1,3 @@
+# Enter the full names of your cloud clietns here.
+# We'll parse this and make it easier on your staff.
+# The assumption is they don't know all the prefixes you use.

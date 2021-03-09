@@ -141,7 +141,5 @@ QStringList MainWidget::execute_command(QString param)
 
       return return_list;
 
-
-
-
+      
 }

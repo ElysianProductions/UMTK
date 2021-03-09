@@ -1,0 +1,3 @@
+# Type in all of your prefixes here. 
+# This should corespond to the lines in the cloud clients file. 
+# If you order them wrong this wont work well...
