@@ -42,9 +42,6 @@ MainWidget::MainWidget()
 
     //
 
-
-
-
     //
 }
 
@@ -140,8 +137,6 @@ QStringList MainWidget::execute_command(QString param)
       QStringList return_list = QString(term_output).split(" ", QString::SkipEmptyParts);
 
       return return_list;
-
-
 
 
 }
