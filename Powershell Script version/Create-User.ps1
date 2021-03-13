@@ -23,7 +23,7 @@
 function Shift-OU 
 {
       param (
-        [string[]]$Username, #This represents the user name.
+        [string]$Username, #This represents the user name.
         [array[]]$OU_Array, # Just the cleaned up names. 
 		[array[]]$OU_Path # The Distinguished names.
 			
@@ -60,6 +60,65 @@ function Shift-OU
 }
 
 
+function Get-UPN
+{
+      Get-ADForest | Select-Object -ExpandProperty UPNSuffixes
+      <# 
+	       Separating everything out to individual functions just makes things easier.
+		   
+		   This is a simple one. It pulls all of your UPNs.
+	   #>
+}
+
+function Get-DomainName 
+{
+    Get-ADDomain | Select-Object -ExpandProperty Forest
+	<# 
+	    Separating everything out to individual functions just makes things easier.
+		   
+		This is a simple one. It pulls your domain name.
+	#>
+}
+  
+function Get-OUNames 
+{
+    param
+    (
+        [string]$List
+    )
+
+    if($List.ToLower() -eq "name")
+    {
+        Get-ADOrganizationalUnit -Filter * | Select-Object -ExpandProperty Name   
+    }
+    if($List.ToLower() -eq "distinguished")
+    {
+        Get-ADOrganizationalUnit -Filter * | Select-Object -ExpandProperty distinguishedName
+    }
+	
+	<# 
+	    Separating everything out to individual functions just makes things easier.
+		   
+	    Feed this function one of two variables:
+		-List "Name"
+		-List "Distinguished"
+		
+		Both are used hereand respectively generate:
+		<example name> 
+		<Users>
+		<My Users>
+		
+		<OU= example> 
+		etc..
+	#>
+
+}
+
+
+
+
+
+
 function Create-User
 {	
     $_whoami = (Get-ItemProperty "HKCU:Software\Microsoft\Windows\CurrentVersion\Explorer\User Shell Folders") | 
@@ -82,13 +141,15 @@ function Create-User
 		}			
     #>
 
-    $_ou = (Get-ADOrganizationalUnit -Filter * | select-object -expandproperty Name)
-    <#
+    # $_ou = (Get-ADOrganizationalUnit -Filter * | select-object -expandproperty Name)
+    [array[]]$_ou = (Get-OUNames -List "Names")
+	<#
         The purpose of this is simply to store the 'clean' easily readable OU names.
     #>
 
-    $_ou_distinguished = (Get-ADOrganizationalUnit -Filter * | Select-Object -ExpandProperty distinguishedName)
-    <#
+    # $_ou_distinguished = (Get-ADOrganizationalUnit -Filter * | Select-Object -ExpandProperty distinguishedName)
+    [array[]]$_ou_distinguished = (Get-OUNames -List "Distinguished")
+	<#
         This will pull in your distinguished name(s). 
 	    Note: OU=Elysium Administrators,OU=Elysium,DC=Elysium,DC=local 
     
@@ -97,7 +158,8 @@ function Create-User
         up OU names to just read in. Depending on how large the DC is... 	
     #>
 
-    # $_dname = (Get-ADDomain | Select-Object -expandproperty Forest) 
+    # $_dname = (Get-ADDomain | Select-Object -expandproperty Forest)
+	$_dname = (Get-DomainName)
     <#
         This could get interesting because it assumes a single forest. 
 	    I need to test in a multi forest environment to get it going. 
@@ -108,7 +170,7 @@ function Create-User
     #>
 	
 
-    $_upn_suffixes = (Get-ADForest | Select-Object -ExpandProperty UPNSuffixes)
+    [array[]]$_upn_suffixes = Get-UPN
     if($_upn_suffixes.count -ge 1)
     {
         $validate_suffix = 0
@@ -127,10 +189,8 @@ function Create-User
             }    
         }
     }
-	else
-    {
-        $_dname = (Get-ADDomain | Select-Object -expandproperty Forest)
-    }
+    
+    $_dname = Get-DomainName
 
     if($_upn_suffixes.count -ge 1)
     {
@@ -164,7 +224,7 @@ function Create-User
             Write-Host = "Select from one of the following values: "
             for($i = 0; $i -lt $_cloud_prefix.count; $i++)
             {
-                "`t " + + $i + ": " + $_cloud_client[$i]
+                "`t " + $i + ": " + $_cloud_client[$i]
             }
             $cloud_choice = Read-Host "Select cloud prefix "
             $tmp = Read-Host "You selected "  $_cloud_client[$cloud_choice]  " if this is right, type 'y' "
@@ -270,6 +330,8 @@ function Create-User
         }    
     }
 	
-	Shift-OU -Username (Get-ADUser -Filter {SamAccountName -like $user_name}) -OU_Array (Get-ADOrganizationalUnit -Filter * | Select-Object -expandproperty Name) -OU_Path (Get-ADOrganizationalUnit -Filter * | Select-Object -ExpandProperty distinguishedName)
+	#Shift-OU -Username (Get-ADUser -Filter {SamAccountName -like $user_name}) -OU_Array (Get-ADOrganizationalUnit -Filter * | Select-Object -expandproperty Name) -OU_Path (Get-ADOrganizationalUnit -Filter * | Select-Object -ExpandProperty distinguishedName)
+    Shift-OU -Username (Get-ADUser -Filter {SamAccountName -like $user_name}) -OU_Array (Get-OUNames -List "Name" ) -OU_Path (Get-OUNames -List "Distinguished")
+
 }
 Create-User
