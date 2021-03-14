@@ -141,14 +141,14 @@ function Create-User
 		}			
     #>
 
-    # $_ou = (Get-ADOrganizationalUnit -Filter * | select-object -expandproperty Name)
-    [array[]]$_ou = (Get-OUNames -List "Names")
+    $_ou = (Get-ADOrganizationalUnit -Filter * | select-object -ExpandProperty Name)
+    # $_ou = (Get-OUNames -List "Names")
 	<#
         The purpose of this is simply to store the 'clean' easily readable OU names.
     #>
 
-    # $_ou_distinguished = (Get-ADOrganizationalUnit -Filter * | Select-Object -ExpandProperty distinguishedName)
-    [array[]]$_ou_distinguished = (Get-OUNames -List "Distinguished")
+    $_ou_distinguished = (Get-ADOrganizationalUnit -Filter * | Select-Object -ExpandProperty distinguishedName)
+    # $_ou_distinguished = (Get-OUNames -List "Distinguished")
 	<#
         This will pull in your distinguished name(s). 
 	    Note: OU=Elysium Administrators,OU=Elysium,DC=Elysium,DC=local 
@@ -330,8 +330,8 @@ function Create-User
         }    
     }
 	
-	#Shift-OU -Username (Get-ADUser -Filter {SamAccountName -like $user_name}) -OU_Array (Get-ADOrganizationalUnit -Filter * | Select-Object -expandproperty Name) -OU_Path (Get-ADOrganizationalUnit -Filter * | Select-Object -ExpandProperty distinguishedName)
-    Shift-OU -Username (Get-ADUser -Filter {SamAccountName -like $user_name}) -OU_Array (Get-OUNames -List "Name" ) -OU_Path (Get-OUNames -List "Distinguished")
+	Shift-OU -Username (Get-ADUser -Filter {SamAccountName -like $user_name}) -OU_Array (Get-ADOrganizationalUnit -Filter * | Select-Object -expandproperty Name) -OU_Path (Get-ADOrganizationalUnit -Filter * | Select-Object -ExpandProperty distinguishedName)
+    # Shift-OU -Username (Get-ADUser -Filter {SamAccountName -like $user_name}) -OU_Array (Get-OUNames -List "Name" ) -OU_Path (Get-OUNames -List "Distinguished")
 
 }
 Create-User
