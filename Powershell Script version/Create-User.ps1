@@ -16,6 +16,26 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #>
 
+function Menu
+{
+	$choice = Read-Host "1) View Licensing information`n2) Create a user "
+	$validate = 0
+	while($validate -eq 0)
+	{
+		if($choice -eq 1)
+		{
+		    $validate = 1
+			Display-Licensing
+		}
+		if($choice -eq 2)
+		{
+			$validate = 1
+			Create-User
+		}
+	}
+}
+
+
 function Display-Licensing
 {
 	$validate = 0 
@@ -146,6 +166,31 @@ function Get-OUNames
 
 }
 
+
+
+function Add-ProxyAddress 
+{
+	param
+	(
+	    [string]$Username, 
+		[string]$Proxy,
+        [string]$Type 
+	)
+	
+    if($type.toLower() -eq "primary")
+    {
+        $tmp = "SMTP: "
+        $Proxy = $tmp + $Proxy
+        Set-ADUser -Identity $Username -Add @{Proxyaddresses = $Proxy} 
+    }
+    if($type.toLower() -eq "secondary")
+    {
+        $tmp = "smtp: "
+        $Proxy = $tmp + $Proxy
+        Set-ADUser -Identity $Username -Add @{Proxyaddresses = $Proxy} 
+    }
+    # Usage example = Add-ProxyAddress -Username $user_name -Proxy $proxy -Type "secondary"
+}
 
 
 
@@ -284,12 +329,25 @@ function Create-User
         $user_name = Read-Host "Input the username you'd like to use "
         $email_address = Read-Host "Input the users full email address "
         $pfin = Read-Host "Password" -AsSecureString
-
+		
 	
 	    $answer = Read-Host "If the user needs a different display name type 'y' "
         if($answer.ToLower() -eq 'y')
         {
             $display_name = Read-Host "Input the users display name "
+			$validate = 0
+            while($validate -eq 0)
+            {
+                $choice = Read-Host "You entered" + $display_name + " is this correct, y/n "
+                if($choice -eq "y")
+                {
+                    $validate = 1
+                }
+                if($choice -eq "n")
+                {
+                    $display_name = Read-Host "Input the users new display name "
+                }
+            }
         }
         else
 		{
@@ -319,7 +377,7 @@ function Create-User
 		
 		if($is_cloud -eq "y" )
         {
-            $username = $_cloud_prefix[$cloud_choice] + $username
+            $user_name = $_cloud_prefix[$cloud_choice] + $user_name
         }
 		<#
 		    Correcting the SamAccountName based on cloud usage.
@@ -331,7 +389,7 @@ function Create-User
         Write-Host "`n----------------------------Confirm User----------------------------`n"
         Write-Host "Employee Name: " $full_name
         Write-Host "UPN: " $_upn
-        Write-Host "SamAccountName: " $user_name
+        Write-Host "sAMAccountName: " $user_name
         Write-Host "Display name: " $display_name
         Write-Host "Email Address: " $email_address
         Write-Host "Proxy Address: " $_proxy
@@ -366,4 +424,4 @@ function Create-User
     # Shift-OU -Username (Get-ADUser -Filter {SamAccountName -like $user_name}) -OU_Array (Get-OUNames -List "Name" ) -OU_Path (Get-OUNames -List "Distinguished")
 
 }
-Display-Licensing 
+Menu 
