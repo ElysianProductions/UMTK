@@ -1,23 +1,55 @@
 <#
-	This script was written by Aaron Johnson and is being released under the MIT License. It's free and open source and can be used by anyone for any purpose. 
-	I only ask that you credit me as the original creator. With that said, see below for compatability.
+	Standardized New User Creations: A powershell script to standardize the process of creaitng new active directory user accounts.
+    Copyright (C) 2021  Aaron Johnson
 
-	TESTED AND CONFIRMED WORKING ON THE FOLLOWING WITH NO ISSUES:
-	    Windows Server 2019 
-	    Windows Server 2016 
-	    Windows Server 2012 Essentials
-		Windows Server 2012 R2 Standard
-	    Windows Small Business Server 2011
-	
-	TESTED ON:
-		
-	
-	FAILS ON:
-	    Windows Server 2008 - Any version 
-		Windows SErver 2003 - Any version
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
 
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #>
 
+function Display-Licensing
+{
+	$validate = 0 
+	while($validate -eq  0)
+	{
+	    $choice = Read-Host "SNUC  Copyright (C) 2021  Aaron Johnson `n This program comes with ABSOLUTELY NO WARRANTY; for details type 'show w'. `n This is free software, and you are welcome to redistribute it `n under certain conditions; type 'show c' for details.`n To cotninue on, type 'continue' "
+	    if($choice.toLower() -eq "show c")
+	    {
+		    clear
+            Write-Host " See the License (GPLv3 License.txt) contained in the root directory of this program. `n "
+			           " When you downloaded this you were provided with a license. If you downloaded this `n"
+					   " from anywhere other than https://github.com/ElysianProductions/SNUC you must ensure you are given a license. `n  "
+					   " My master repository contains a license in the root directory as well as the sub-directory which includes this script. `n "
+					   " The file is again labeled GPLv3 License.txt If for some reason you lose or delete that license it can be found here:`n https://www.gnu.org/licenses/gpl-3.0.en.html "
+					 
+	    }
+	    if($choice.toLower() -eq "show w")
+	    {
+            clear   
+		    $warranty = "      15. Disclaimer of Warranty. `n"
+                             " THERE IS NO WARRANTY FOR THE PROGRAM, TO THE EXTENT PERMITTED BY APPLICABLE LAW. EXCEPT WHEN OTHERWISE STATED IN WRITING`n "
+						     " THE COPYRIGHT HOLDERS AND/OR OTHER PARTIES PROVIDE THE PROGRAM 'AS IS' WITHOUT WARRANTY OF ANY KIND, EITHER EXPRESSED OR`n "
+						     " IMPLIED, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE. THE`n "
+						     " ENTIRE RISK AS TO THE QUALITY AND PERFORMANCE OF THE PROGRAM IS WITH YOU. SHOULD THE PROGRAM PROVE DEFECTIVE, YOU ASSUME`n  "
+						     " THE COST OF ALL NECESSARY SERVICING, REPAIR OR CORRECTION."
+	    }
+	    if($choice.toLower() -eq "continue")
+	    { 
+			$validate = 1
+	    }	
+	}
+    clear
+	Create-User
+}
 
 
 function Shift-OU 
@@ -334,4 +366,4 @@ function Create-User
     # Shift-OU -Username (Get-ADUser -Filter {SamAccountName -like $user_name}) -OU_Array (Get-OUNames -List "Name" ) -OU_Path (Get-OUNames -List "Distinguished")
 
 }
-Create-User
+Display-Licensing 
