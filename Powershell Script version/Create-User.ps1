@@ -18,7 +18,7 @@
 
 function Menu
 {
-	$choice = Read-Host "1) View Licensing information`n2) Create a user "
+	$choice = Read-Host "Select from one of the following options by typing the number: `n`t1) View Licensing information`n`t2) Create a user`n`tChoice "
 	$validate = 0
 	while($validate -eq 0)
 	{
@@ -259,7 +259,7 @@ function Create-User
                 "`t " + $i + ": " + $_upn_suffixes[$i]
             }
             $suffix_choice = Read-Host "Select UPN: "
-            $tmp = Read-Host "You selected " $_upn_suffixes[$suffix_choice] " if this is right, type 'y' "
+            $tmp = Read-Host "You selected " $_upn_suffixes[$suffix_choice] " if this is right, type 'y\n' "
             if($tmp.ToLower() -eq "y")
             {
                 $validate_suffix = 1
@@ -304,7 +304,7 @@ function Create-User
                 "`t " + $i + ": " + $_cloud_client[$i]
             }
             $cloud_choice = Read-Host "Select cloud prefix "
-            $tmp = Read-Host "You selected "  $_cloud_client[$cloud_choice]  " if this is right, type 'y' "
+            $tmp = Read-Host "You selected "  $_cloud_client[$cloud_choice]  " if this is right, type 'y\n' "
             if($tmp.ToLower() -eq "y")
             {
                 $validate_cloud = 1
@@ -331,7 +331,7 @@ function Create-User
         $pfin = Read-Host "Password" -AsSecureString
 		
 	
-	    $answer = Read-Host "If the user needs a different display name type 'y' "
+	    $answer = Read-Host "If the user needs a different display name type 'y\n' "
         if($answer.ToLower() -eq 'y')
         {
             $display_name = Read-Host "Input the users display name "
@@ -356,12 +356,32 @@ function Create-User
         
     
 
-	    $_proxy = "SMTP:" + $email_address
-	    $multi_proxy = Read-Host "By default the primary proxy has already been generated. If the user requires another proxy type 'y' "
-	    if($multi_proxy.toLower() -eq "y")
+	    $_primary_proxy = "SMTP:" + $email_address
+	    $multi_proxy = Read-Host "By default the primary proxy has already been generated. If the user requires another (or different) proxy type 'y\n' "
+	    #if($multi_proxy.toLower() -eq "y")
 	    {
-	       $tmp = Read-Host "Input the secondary proxy address without typing 'smtp:' "
-           $_secondary_proxy = 	"smtp:" + $tmp    
+	       #$tmp = Read-Host "Input the secondary proxy address without typing 'smtp:' "
+           #$_secondary_proxy = 	"smtp:" + $tmp
+           $prox_val = 0
+           $prox_choice = ''
+           while($prox_val -eq 0)
+           {
+               $prox_choice = Read-Host "Please select from one of the following values`n`t1) Primary SMTP`n`t2) Secondary SMTP`n`t3) Finished`nChoice "
+               if($prox_choice -eq 1)
+               {
+                   $tmp = Read-Host "Please enter the full email"
+                   $_primary_proxy = "SMTP:" + $tmp
+               }
+               if($prox_choice -eq 2)
+               {
+                   $tmp = Read-Host "Please enter the full email"
+                   $_secondary_proxy = "smtp:" + $tmp
+               }
+               if($prox_choice -eq 3)
+               {
+                   $prox_val = 1
+               }
+            }		   
 	    }
         <#
 	        We can do the proxy addresses with an array but I don't see it as critical. 
@@ -392,7 +412,11 @@ function Create-User
         Write-Host "sAMAccountName: " $user_name
         Write-Host "Display name: " $display_name
         Write-Host "Email Address: " $email_address
-        Write-Host "Proxy Address: " $_proxy
+        Write-Host "Primary Proxy Address: " $_primary_proxy
+		if($_secondary_proxy.length -ge 1)
+		{
+			Write-Host "Secondary Proxy Address: " $_secondary_proxy
+		}
         Write-Host "`n----------------------------Confirm User----------------------------`n"
     
         
@@ -416,7 +440,11 @@ function Create-User
                 Add-ADGroupMember -Identity (Get-ADGroup $group).name -Members $user_name
             }
 
-            Set-ADUser -Identity $user_name -Add @{Proxyaddresses = $_proxy}
+            Set-ADUser -Identity $user_name -Add @{Proxyaddresses = $_primary_proxy}
+			if($_secondary_proxy.length -ge 1)
+			{
+			    Set-ADUser -Identity $user_name -Add @{Proxyaddresses = $_secondary_proxy}	
+			}
         }    
     }
 	
