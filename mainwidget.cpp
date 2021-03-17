@@ -72,6 +72,7 @@ QWidget* MainWidget::create_widget(QComboBox *upn_combo, QComboBox *ou_combo, QC
 
         cloud_combobox->setToolTip("If you're seeing this widget you need to seelct the cloud client from the list.");
         cloud_combobox->addItems(cloud_clients);
+        cloud_combobox->hide();
 
         template_user_combo->setToolTip("Please select the appropriate template user.");
         ad_users = execute_command("Get-ADUser -Filter * | Select-Object -ExpandProperty Name");

@@ -34,6 +34,7 @@ void MainWindow::initialize_main_window()
 void MainWindow::initialize_connections()
 {
       connect(saveFileAction, &QAction::triggered, this, &MainWindow::save_command);
+      connect(enableCloudCreationAction, &QAction::triggered, [this] {if(enableCloudCreationAction->isChecked()) { mainwidget.cloud_combobox->show();} if(!enableCloudCreationAction->isChecked()) {mainwidget.cloud_combobox->hide();} });
 }
 
 
@@ -46,32 +47,35 @@ void MainWindow::initialize_connections()
 
 
      saveFileAsAction = new QAction(tr("Save to file"));
-     saveFileAsAction->setShortcuts(QKeySequence::New);
      saveFileAsAction->setStatusTip(tr("Click this to save your current command to an existing ps script."));
      saveFileAsAction->setToolTip("Save your current working command to a new ps script.");
 
      closeProgramAction = new QAction(tr("Close program"));
-     closeProgramAction->setShortcut(QKeySequence::New);
      closeProgramAction->setStatusTip("Click this to close the program");
      closeProgramAction->setToolTip("Click to close the program.");
 
-     enableCloudCreationAction = new QAction("Click to enable cloud account creation");
-     enableCloudCreationAction->setShortcuts(QKeySequence::New);
+     enableCloudCreationAction = new QAction("Enable Cloud");
      enableCloudCreationAction->setStatusTip("Select this option to enable the ability to create cloud accounts.");
      enableCloudCreationAction->setToolTip("Select this option to enable the ability to create cloud accounts.");
+     enableCloudCreationAction->setCheckable(true);
 
-     addCloudClientsAction = new QAction(tr("Add cloud clients"));
-     addCloudClientsAction->setShortcuts(QKeySequence::New);
+     addCloudClientsAction = new QAction(tr("Add clients"));
      addCloudClientsAction->setStatusTip("Click here to add cloud clients to a text file for use later on.");
      addCloudClientsAction->setToolTip("Click here to add cloud clients to a text file for use later on.");
 
-     addCloudPefixesAction = new QAction("Add cloud prefixes");
-     addCloudPefixesAction->setShortcuts(QKeySequence::New);
+     addCloudPefixesAction = new QAction("Add prefixes");
      addCloudPefixesAction->setStatusTip("Click to add your cloud prefixes.");
      addCloudPefixesAction->setToolTip("Click to add your cloud prefixes.");
 
+     loadCloudClients = new QAction("Load clients");
+     loadCloudClients->setToolTip("Click here to load a text file continaing your cloud clients.");
+     loadCloudClients->setStatusTip("Click here to load a text file continaing your cloud clients.");
+
+     loadCloudPrefixes = new QAction("Load prefixes");
+     loadCloudPrefixes->setToolTip("Click here to load a text file containing your cloud prefixes.");
+     loadCloudPrefixes->setStatusTip("Click here to load a text file containing your cloud prefixes.");
+
      helpMeAction = new QAction(tr("Help"));
-     helpMeAction->setShortcuts(QKeySequence::New);
      helpMeAction->setToolTip("Click to view the help documentation.");
      helpMeAction->setToolTip("Click to view the help documentation.");
 
@@ -97,6 +101,9 @@ void MainWindow::initialize_connections()
         settingsMenu = menuBar()->addMenu(tr("&Settings"));
         settingsMenu->addAction(enableCloudCreationAction);
         settingsMenu->addSeparator();
+        settingsMenu->addAction(loadCloudClients);
+        settingsMenu->addSeparator();
+        settingsMenu->addAction(loadCloudPrefixes);
 
         helpMenu = menuBar()->addMenu(tr("&Help"));
         helpMenu->addAction(helpMeAction);

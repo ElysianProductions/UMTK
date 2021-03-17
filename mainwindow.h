@@ -21,6 +21,7 @@ public:
     ~MainWindow();
 
 
+    QString build_command();
 
 
     void save_command();
@@ -54,6 +55,9 @@ private:
 
     QAction *addCloudClientsAction;
     QAction *addCloudPefixesAction;
+    QAction *loadCloudClients;
+    QAction *loadCloudPrefixes;
+
     QAction *enableCloudCreationAction;
 
     QAction *helpMeAction;
