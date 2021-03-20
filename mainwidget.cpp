@@ -135,7 +135,7 @@ QStringList MainWidget::execute_command(QString param)
       term_output.append(process->readAllStandardOutput());
       process->close();
 
-      QStringList return_list = QString(term_output).split(" ", QString::SkipEmptyParts);
+      QStringList return_list = QString(term_output).split("\n", QString::SkipEmptyParts);
 
       return return_list;
 
