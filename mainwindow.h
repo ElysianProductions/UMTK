@@ -7,6 +7,7 @@
 #include <QStackedWidget>
 #include <QMenu>
 #include <QAction>
+#include <QMessageBox>
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -21,7 +22,10 @@ public:
     ~MainWindow();
 
 
-    QString build_command();
+    void validate_information();
+    void create_user();
+    void set_proxy_addresses();
+    void shift_ou();
 
 
     void save_command();
@@ -41,6 +45,9 @@ private:
     void initialize_connections();
     void initialize_actions();
     void initialize_menus();
+    void initialize_warning_banner();
+
+
 
     QMenu *fileMenu;
     QMenu *editMenu;
@@ -55,13 +62,17 @@ private:
 
     QAction *addCloudClientsAction;
     QAction *addCloudPefixesAction;
-    QAction *loadCloudClients;
-    QAction *loadCloudPrefixes;
+
 
     QAction *enableCloudCreationAction;
+    QAction *loadCloudClients;
+    QAction *loadCloudPrefixes;
+    QAction *setProxyAction;
+    QAction *setDisplayNameAction;
 
     QAction *helpMeAction;
 
+    QMessageBox *warning_banner;
 
 
 

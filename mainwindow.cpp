@@ -35,6 +35,15 @@ void MainWindow::initialize_connections()
 {
       connect(saveFileAction, &QAction::triggered, this, &MainWindow::save_command);
       connect(enableCloudCreationAction, &QAction::triggered, [this] {if(enableCloudCreationAction->isChecked()) { mainwidget.cloud_combobox->show();} if(!enableCloudCreationAction->isChecked()) {mainwidget.cloud_combobox->hide();} });
+      connect(setProxyAction, &QAction::triggered, [this] {if (setProxyAction->isChecked()) { mainwidget.primary_proxy_edit->show(); mainwidget.secondary_proxy_edit->show(); } if(!setProxyAction->isChecked()) {mainwidget.primary_proxy_edit->hide(); mainwidget.secondary_proxy_edit->hide(); } } );
+      connect(setDisplayNameAction, &QAction::triggered, [this] { if(setDisplayNameAction->isChecked()) { mainwidget.display_name_edit->show(); } if(!setDisplayNameAction->isChecked()) { mainwidget.display_name_edit->hide(); } } );
+      connect(mainwidget.create_button, &QPushButton::clicked, this, &MainWindow::initialize_warning_banner);
+
+
+
+
+
+
 }
 
 
@@ -75,6 +84,16 @@ void MainWindow::initialize_connections()
      loadCloudPrefixes->setToolTip("Click here to load a text file containing your cloud prefixes.");
      loadCloudPrefixes->setStatusTip("Click here to load a text file containing your cloud prefixes.");
 
+     setProxyAction = new QAction("Set aditonal proxy");
+     setProxyAction->setToolTip("Check this to show a widget that will enable you to add a non-standard primary\nandsecondary proxy address.");
+     setProxyAction->setStatusTip("Check this to show a widget that will enable you to add a non-standard primary\nandsecondary proxy address.");
+     setProxyAction->setCheckable(true);
+
+     setDisplayNameAction = new QAction("Set display name");
+     setDisplayNameAction->setToolTip("Check this to enable a widget to modify the display name.");
+     setDisplayNameAction->setStatusTip("Check this to enable a widget to modify the display name.");
+     setDisplayNameAction->setCheckable(true);
+
      helpMeAction = new QAction(tr("Help"));
      helpMeAction->setToolTip("Click to view the help documentation.");
      helpMeAction->setToolTip("Click to view the help documentation.");
@@ -104,6 +123,9 @@ void MainWindow::initialize_connections()
         settingsMenu->addAction(loadCloudClients);
         settingsMenu->addSeparator();
         settingsMenu->addAction(loadCloudPrefixes);
+        settingsMenu->addAction(setProxyAction);
+        settingsMenu->addSeparator();
+        settingsMenu->addAction(setDisplayNameAction);
 
         helpMenu = menuBar()->addMenu(tr("&Help"));
         helpMenu->addAction(helpMeAction);
@@ -112,6 +134,94 @@ void MainWindow::initialize_connections()
         editMenu->setToolTipsVisible(true);
         settingsMenu->setToolTipsVisible(true);
         helpMenu->setToolTipsVisible(true);
+ }
+
+ void MainWindow::initialize_warning_banner()
+ {
+     warning_banner = new QMessageBox();
+     warning_banner->setText("Confirm the following information by clicking 'OK'\nTo cancel and redo the information, click the button labeled 'Cancel'");
+
+     QString employee_name = mainwidget.employee_name_edit->text();
+     QString username = mainwidget.user_edit->text();
+     QString user_upn = "";
+     QString display_name = "";
+     QString email_address = "";
+     QString primary_proxy = "";
+     QString secondary_proxy = "";
+     QString cloud_prefix = "";
+     if(mainwidget.upn_combo->isVisible())
+     {
+         user_upn = mainwidget.upn_combo->currentText();
+     }
+     if(mainwidget.display_name_edit->isVisible())
+     {
+         display_name = mainwidget.display_name_edit->text();
+     }
+     if(mainwidget.display_name_edit->isHidden())
+     {
+         display_name = employee_name;
+     }
+     email_address = mainwidget.email_edit->text();
+     if(mainwidget.primary_proxy_edit->isVisible())
+     {
+         primary_proxy = mainwidget.primary_proxy_edit->text();
+         if(mainwidget.secondary_proxy_edit->text().length() > 0)
+         {
+             secondary_proxy = mainwidget.secondary_proxy_edit->text();
+         }
+     }
+     if(mainwidget.primary_proxy_edit->isHidden())
+     {
+         primary_proxy = "SMTP: " + email_address;
+     }
+     if(mainwidget.cloud_combobox->isVisible())
+     {
+         cloud_prefix = mainwidget.cloud_prefixes[mainwidget.cloud_combobox->currentIndex()];
+         username = cloud_prefix + username;
+     }
+     if(user_upn.length() <= 0)
+     {
+        if(mainwidget.primary_proxy_edit->isHidden())
+        {
+             warning_banner->setInformativeText("Employee name: " + employee_name + "\nUsername: " + username + "\nDisplay name: " + display_name + "\nEmail address: " + email_address + "\nPrimary proxy: " + primary_proxy);
+        }
+        if(mainwidget.primary_proxy_edit->isVisible())
+        {
+             if(mainwidget.secondary_proxy_edit->text().length() <= 0)
+             {
+                 warning_banner->setInformativeText("Employee name: " + employee_name + "\nUsername: " + username + "\nDisplay name: " + display_name + "\nEmail address: " + email_address + "\nPrimary Proxy: " + primary_proxy);
+             }
+             else
+             {
+                 warning_banner->setInformativeText("Employee name: " + employee_name + "\nUsername: " + username + "\nDisplay name: " + display_name + "\nEmail address: " + email_address + "\nPrimary Proxy: " + primary_proxy + "\nSecondary Proxy: " + secondary_proxy);
+             }
+        }
+     }
+
+     warning_banner->exec();
+
+
+ }
+
+
+ void MainWindow::validate_information()
+ {
+
+ }
+
+ void MainWindow::create_user()
+ {
+
+ }
+
+ void MainWindow::set_proxy_addresses()
+ {
+
+ }
+
+ void MainWindow::shift_ou()
+ {
+
  }
 
  void MainWindow::save_command()

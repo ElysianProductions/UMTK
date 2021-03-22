@@ -31,12 +31,14 @@ public:
     QLineEdit *password_edit;
     QLineEdit *email_edit;
     QLineEdit *display_name_edit;
+    QLineEdit *primary_proxy_edit;
+    QLineEdit *secondary_proxy_edit;
     QPushButton *create_button;
     QPushButton *delete_button;
 
     QStringList commands;
     QStringList cloud_clients;
-    QStringList cloud_suffixes;
+    QStringList cloud_prefixes;
     QStringList ad_users;
     QStringList ou_clean_names;
     QStringList ou_distinguished_names;
@@ -49,7 +51,7 @@ public:
 
 private:
     QStringList execute_command(QString param);
-    QWidget* create_widget(QComboBox *upn_combo, QComboBox *ou_combo, QComboBox *cloud_combobox, QComboBox *template_user_combo, QComboBox *domain_name_combo, QLineEdit *employee_name_edit, QLineEdit *user_edit, QLineEdit *password_edit, QLineEdit *email_edit, QLineEdit *display_name_edit, QPushButton *create_button, QPushButton *delete_button);
+    QWidget* create_widget(QComboBox *upn_combo, QComboBox *ou_combo, QComboBox *cloud_combobox, QComboBox *template_user_combo, QComboBox *domain_name_combo, QLineEdit *employee_name_edit, QLineEdit *user_edit, QLineEdit *password_edit, QLineEdit *email_edit, QLineEdit *display_name_edit, QLineEdit *primary_proxy_edit, QLineEdit *secondary_proxy_edit, QPushButton *create_button, QPushButton *delete_button);
 
 
 };

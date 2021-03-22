@@ -13,6 +13,8 @@ MainWidget::MainWidget()
     password_edit = new QLineEdit();
     email_edit = new QLineEdit();
     display_name_edit = new QLineEdit();
+    primary_proxy_edit = new QLineEdit();
+    secondary_proxy_edit = new QLineEdit();
     create_button = new QPushButton();
     delete_button= new QPushButton();
 
@@ -31,7 +33,7 @@ MainWidget::MainWidget()
                   << "Tom Fucito CPA"
                   << "Dana Sperry CPA";
 
-    cloud_suffixes << "TOH_"
+    cloud_prefixes << "TOH_"
                    << "DCWIB_"
                    << "RWM_"
                    << "Taxpert_"
@@ -49,10 +51,10 @@ MainWidget::MainWidget()
 
 QWidget* MainWidget::initalize_widget()
 {
-    return create_widget(upn_combo, ou_combo, cloud_combobox, template_user_combo, domain_name_combo, employee_name_edit, user_edit, password_edit, email_edit, display_name_edit, create_button, delete_button);
+    return create_widget(upn_combo, ou_combo, cloud_combobox, template_user_combo, domain_name_combo, employee_name_edit, user_edit, password_edit, email_edit, display_name_edit, primary_proxy_edit, secondary_proxy_edit, create_button, delete_button);
 }
 
-QWidget* MainWidget::create_widget(QComboBox *upn_combo, QComboBox *ou_combo, QComboBox *cloud_combobox, QComboBox *template_user_combo, QComboBox *domain_name_combo, QLineEdit *employee_name_edit, QLineEdit *user_edit, QLineEdit *password_edit, QLineEdit *email_edit, QLineEdit *display_name_edit, QPushButton *create_button, QPushButton *delete_button)
+QWidget* MainWidget::create_widget(QComboBox *upn_combo, QComboBox *ou_combo, QComboBox *cloud_combobox, QComboBox *template_user_combo, QComboBox *domain_name_combo, QLineEdit *employee_name_edit, QLineEdit *user_edit, QLineEdit *password_edit, QLineEdit *email_edit, QLineEdit *display_name_edit, QLineEdit *primary_proxy_edit, QLineEdit *secondary_proxy_edit, QPushButton *create_button, QPushButton *delete_button)
 {
         QVBoxLayout *main_layout = new QVBoxLayout();
         QWidget *primary_display = new QWidget();
@@ -98,7 +100,15 @@ QWidget* MainWidget::create_widget(QComboBox *upn_combo, QComboBox *ou_combo, QC
         email_edit->setPlaceholderText("Type the employees email address");
 
         display_name_edit->setPlaceholderText("Type the desired display name if different from the default.");
+        display_name_edit->hide();
 
+        primary_proxy_edit->setPlaceholderText("Input your primary proxy address");
+        primary_proxy_edit->setToolTip("You do not have to type SMTP: ");
+        primary_proxy_edit->hide();
+
+        secondary_proxy_edit->setPlaceholderText("Input your seocndary proxy address");
+        secondary_proxy_edit->setToolTip("You do not have to type smtp: ");
+        secondary_proxy_edit->hide();
 
         create_button->setText("Create");
         delete_button->setText("Cancel");
@@ -113,6 +123,8 @@ QWidget* MainWidget::create_widget(QComboBox *upn_combo, QComboBox *ou_combo, QC
         main_layout->addWidget(password_edit);
         main_layout->addWidget(email_edit);
         main_layout->addWidget(display_name_edit);
+        main_layout->addWidget(primary_proxy_edit);
+        main_layout->addWidget(secondary_proxy_edit);
         main_layout->addWidget(create_button);
         main_layout->addWidget(delete_button);
         primary_display->setLayout(main_layout);
