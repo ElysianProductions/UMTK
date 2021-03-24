@@ -164,10 +164,11 @@ void MainWindow::initialize_connections()
      email_address = mainwidget.email_edit->text();
      if(mainwidget.primary_proxy_edit->isVisible())
      {
-         primary_proxy = mainwidget.primary_proxy_edit->text();
+         primary_proxy = "SMTP:" + mainwidget.primary_proxy_edit->text();
          if(mainwidget.secondary_proxy_edit->text().length() > 0)
          {
-             secondary_proxy = mainwidget.secondary_proxy_edit->text();
+             secondary_proxy = "smtp:" + mainwidget.secondary_proxy_edit->text();
+
          }
      }
      if(mainwidget.primary_proxy_edit->isHidden())
@@ -198,7 +199,21 @@ void MainWindow::initialize_connections()
         }
      }
 
+     QPushButton *okay_button = warning_banner->addButton(tr("Okay"), QMessageBox::ActionRole);
+     QPushButton *cancel_button = warning_banner->addButton(tr("Cancel"), QMessageBox::ActionRole);
+
      warning_banner->exec();
+
+     if (warning_banner->clickedButton() == okay_button)
+     {
+         // build command
+         qDebug() << "1";
+     }
+     else if (warning_banner->clickedButton() == cancel_button)
+     {
+         // cancel and clear everything
+         qDebug() << "2";
+     }
 
 
  }
