@@ -10,7 +10,7 @@ NOTE: For information regarding the C++ variation; please see the doxgen generat
 	    Windows Server 2019 
 	    Windows Server 2016 
 	    Windows Server 2012 Essentials
-		Windows Server 2012 R2 Standard
+            Windows Server 2012 R2 Standard
 	    Windows Small Business Server 2011
 	
 	TESTED ON:
