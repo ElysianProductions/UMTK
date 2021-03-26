@@ -74,7 +74,29 @@ private:
 
     QMessageBox *warning_banner;
 
-
+    struct New_User
+    {
+        QString username = "";
+        QString full_name = "";
+        QString given_name = "";
+        QString sur_name = "";
+        QString display_name = "";
+        QString email_address = "";
+        QString password = "";
+        QString cloud_prefix = "";
+        QString sAMAccount = "";
+        QString UPN = "";
+        QString domain_name = "";
+        int enabled = 1;
+        QString ou_clean = "";
+        QString ou_path = "";
+        QString template_user = "";
+        QString user_groups = "";
+        QString default_proxy = "";
+        QString primary_proxy = "";
+        QString secondary_proxy = "";
+        QString middle_inital = "";
+    };
 
 };
 #endif // MAINWINDOW_H

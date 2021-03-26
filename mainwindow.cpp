@@ -206,8 +206,80 @@ void MainWindow::initialize_connections()
 
      if (warning_banner->clickedButton() == okay_button)
      {
-         // build command
-         qDebug() << "1";
+         New_User ADUser;
+         ADUser.ou_clean = mainwidget.ou_combo->currentText();
+         ADUser.template_user = mainwidget.template_user_combo->currentText();
+         if(mainwidget.cloud_combobox->isVisible())
+         {
+             ADUser.cloud_prefix = mainwidget.cloud_prefixes[mainwidget.cloud_combobox->currentIndex()];
+         }
+         ADUser.domain_name = mainwidget.domain_name_combo->currentText();
+         ADUser.full_name = mainwidget.employee_name_edit->text();
+         QStringList tmp_name = mainwidget.employee_name_edit->text().split(" ");
+         if(tmp_name.count() >= 3)
+         {
+             ADUser.given_name = tmp_name[0];
+             ADUser.middle_inital = tmp_name[1];
+             ADUser.sur_name = tmp_name[2];
+         }
+         else if(tmp_name.count() == 2)
+         {
+             ADUser.given_name = tmp_name[0];
+             ADUser.sur_name = tmp_name[1];
+         }
+         ADUser.username = mainwidget.user_edit->text();
+         ADUser.password = mainwidget.password_edit->text();
+         ADUser.email_address = mainwidget.email_edit->text();
+         if(mainwidget.primary_proxy_edit->isVisible())
+         {
+             if(mainwidget.primary_proxy_edit->text().length() > 0)
+             {
+                 ADUser.primary_proxy = "SMTP:" + mainwidget.primary_proxy_edit->text();
+             }
+             if(mainwidget.secondary_proxy_edit->text().length() > 0)
+             {
+                 ADUser.secondary_proxy = "smtp:" + mainwidget.secondary_proxy_edit->text();
+             }
+         }
+         else if(mainwidget.primary_proxy_edit->isHidden())
+         {
+             ADUser.default_proxy = "SMTP:" + mainwidget.email_edit->text();
+         }
+
+         if(mainwidget.upn_combo->isVisible())
+         {
+             ADUser.UPN = mainwidget.upn_combo->currentText();
+             ADUser.sAMAccount = ADUser.username;
+             ADUser.username = ADUser.username + "@" + ADUser.UPN;
+
+         }
+         else if(mainwidget.upn_combo->isHidden())
+         {
+             ADUser.sAMAccount = ADUser.username;
+             ADUser.username = ADUser.username + "@" + ADUser.domain_name;
+
+         }
+
+
+         qDebug() << "Username: " + ADUser.username
+                  << "Email: " + ADUser.email_address
+                  << "Password: " + ADUser.password
+                  << "Domain name: " + ADUser.domain_name
+                  << "UPN: " + ADUser.UPN
+                  << "Defualt proxy: " << ADUser.default_proxy
+                  << "Primary Proxy: " + ADUser.primary_proxy
+                  << "Secondary Proxy: " + ADUser.secondary_proxy
+                  << "sAMAccount: " + ADUser.sAMAccount
+                  << "Display name: " + ADUser.display_name
+                  << "Cloud Prefix: " + ADUser.cloud_prefix
+                  << "Given name: " + ADUser.given_name
+                  << "Surname: " + ADUser.sur_name
+                  << "OU Clean: " + ADUser.ou_clean
+                  << "OU Distinguished: " + ADUser.ou_path
+                  << "Template user: " + ADUser.template_user
+                  << "User groups: " + ADUser.user_groups
+                  << "Enabled: " + QString(ADUser.enabled);
+
      }
      else if (warning_banner->clickedButton() == cancel_button)
      {
