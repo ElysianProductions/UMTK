@@ -358,7 +358,7 @@ function Create-User
 
 	    $_primary_proxy = "SMTP:" + $email_address
 	    $multi_proxy = Read-Host "By default the primary proxy has already been generated. If the user requires another (or different) proxy type 'y\n' "
-	    #if($multi_proxy.toLower() -eq "y")
+	    if($multi_proxy.toLower() -eq "y")
 	    {
 	       #$tmp = Read-Host "Input the secondary proxy address without typing 'smtp:' "
            #$_secondary_proxy = 	"smtp:" + $tmp
