@@ -23,56 +23,19 @@ public:
 
 
     void validate_information();
-    void create_user();
-    void set_proxy_addresses();
-    void shift_ou();
-
 
     void save_command();
     void save_command_to_file();
     void close_program();
+    void build_commands();
+    void write_stamps();
 
 private:
     Ui::MainWindow *ui;
 
     QFrame *main_frame;
     QStackedWidget *key_widget;
-
     MainWidget mainwidget;
-
-
-    void initialize_main_window();
-    void initialize_connections();
-    void initialize_actions();
-    void initialize_menus();
-    void initialize_warning_banner();
-
-
-
-    QMenu *fileMenu;
-    QMenu *editMenu;
-    QMenu *settingsMenu;
-    QMenu *helpMenu;
-
-
-
-    QAction *saveFileAction;
-    QAction *saveFileAsAction;
-    QAction *closeProgramAction;
-
-    QAction *addCloudClientsAction;
-    QAction *addCloudPefixesAction;
-
-
-    QAction *enableCloudCreationAction;
-    QAction *loadCloudClients;
-    QAction *loadCloudPrefixes;
-    QAction *setProxyAction;
-    QAction *setDisplayNameAction;
-
-    QAction *helpMeAction;
-
-    QMessageBox *warning_banner;
 
     struct New_User
     {
@@ -87,7 +50,7 @@ private:
         QString sAMAccount = "";
         QString UPN = "";
         QString domain_name = "";
-        int enabled = 1;
+        QString enabled = "1";
         QString ou_clean = "";
         QString ou_path = "";
         QString template_user = "";
@@ -96,7 +59,41 @@ private:
         QString primary_proxy = "";
         QString secondary_proxy = "";
         QString middle_inital = "";
+
+        QString user_command = "";
+        QString GetGroups = "";
+        QString SetProxy = "";
+        QString ShiftOU = "";
     };
+
+
+    void initialize_main_window();
+    void initialize_connections();
+    void initialize_actions();
+    void initialize_menus();
+    void initialize_warning_banner();
+    void create_user(struct New_User s);
+    void create_proxy_addresses(struct New_User s);
+    void shift_ou(struct New_User s);
+    void execute_command(QString param);
+
+    QMenu *fileMenu;
+    QMenu *editMenu;
+    QMenu *settingsMenu;
+    QMenu *helpMenu;
+    QAction *saveFileAction;
+    QAction *saveFileAsAction;
+    QAction *closeProgramAction;
+    QAction *addCloudClientsAction;
+    QAction *addCloudPefixesAction;
+    QAction *enableCloudCreationAction;
+    QAction *loadCloudClients;
+    QAction *loadCloudPrefixes;
+    QAction *setProxyAction;
+    QAction *setDisplayNameAction;
+    QAction *helpMeAction;
+    QMessageBox *warning_banner;
+
 
 };
 #endif // MAINWINDOW_H

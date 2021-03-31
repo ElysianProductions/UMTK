@@ -208,6 +208,8 @@ void MainWindow::initialize_connections()
      {
          New_User ADUser;
          ADUser.ou_clean = mainwidget.ou_combo->currentText();
+
+         ADUser.ou_path = mainwidget.ou_distinguished_names[mainwidget.ou_combo->currentIndex()];
          ADUser.template_user = mainwidget.template_user_combo->currentText();
          if(mainwidget.cloud_combobox->isVisible())
          {
@@ -257,28 +259,17 @@ void MainWindow::initialize_connections()
          {
              ADUser.sAMAccount = ADUser.username;
              ADUser.username = ADUser.username + "@" + ADUser.domain_name;
-
          }
-
-
-         qDebug() << "Username: " + ADUser.username
-                  << "Email: " + ADUser.email_address
-                  << "Password: " + ADUser.password
-                  << "Domain name: " + ADUser.domain_name
-                  << "UPN: " + ADUser.UPN
-                  << "Defualt proxy: " << ADUser.default_proxy
-                  << "Primary Proxy: " + ADUser.primary_proxy
-                  << "Secondary Proxy: " + ADUser.secondary_proxy
-                  << "sAMAccount: " + ADUser.sAMAccount
-                  << "Display name: " + ADUser.display_name
-                  << "Cloud Prefix: " + ADUser.cloud_prefix
-                  << "Given name: " + ADUser.given_name
-                  << "Surname: " + ADUser.sur_name
-                  << "OU Clean: " + ADUser.ou_clean
-                  << "OU Distinguished: " + ADUser.ou_path
-                  << "Template user: " + ADUser.template_user
-                  << "User groups: " + ADUser.user_groups
-                  << "Enabled: " + QString(ADUser.enabled);
+         if(mainwidget.display_name_edit->isVisible())
+         {
+             ADUser.display_name = mainwidget.display_name_edit->text();
+         }
+         else if(mainwidget.display_name_edit->isHidden())
+         {
+             ADUser.display_name = ADUser.full_name;
+         }
+         create_user(ADUser);
+         create_proxy_addresses(ADUser);
 
      }
      else if (warning_banner->clickedButton() == cancel_button)
@@ -296,17 +287,71 @@ void MainWindow::initialize_connections()
 
  }
 
- void MainWindow::create_user()
+ void MainWindow::create_user(struct New_User s)
  {
+     QString tmp = s.password;
+     s.user_command = "$p = " + tmp + "; $sec = $p | ConvertTo-SecureString -AsPlainText -Force;" + "$usr = $env:USERDOMAIN" + "\" + $env:USERNAME; runas /env:$usr" + "New-ADUser -Name " + s.full_name + " -GivenName " + s.given_name + " -Surname " + s.sur_name + " -AccountPassword " + s.password + " -UserPrincipleName " + s.username + " -DisplayName " + s.display_name + " -EmailAddress " + s.email_address + " -SamAccountName " + s.sAMAccount + " -Enabled " + s.enabled;
+     execute_command(s.user_command);
+
+     //"$usr = $env:USERDOMAIN" + "\" + $env:USERNAME; runas /env:$usr" + this may have to be removed
 
  }
 
- void MainWindow::set_proxy_addresses()
+ void MainWindow::create_proxy_addresses(struct New_User s)
  {
+     if(mainwidget.primary_proxy_edit->isVisible())
+     {
+         if(s.primary_proxy.length() > 0 && s.secondary_proxy.length() > 0)
+         {
+             QString primary_proxy = "Set-ADUser -Identity " + s.username + " @{Proxyaddresses = " + s.primary_proxy + "}";
+             QString secondary_proxy = "Set-ADUser -Identity " + s.username + " @{Proxyaddresses = " + s.secondary_proxy + "}";
 
+             execute_command(primary_proxy);
+             execute_command(secondary_proxy);
+         }
+         if(s.primary_proxy.length() > 0)
+         {
+             QString primary_proxy = "Set-ADUser -Identity " + s.username + " @{Proxyaddresses = " + s.primary_proxy + "}";
+
+             execute_command(primary_proxy);
+         }
+         if(s.secondary_proxy.length() > 0)
+         {
+             QString secondary_proxy = "Set-ADUser -Identity " + s.username + " @{Proxyaddresses = " + s.secondary_proxy + "}";
+
+             execute_command(secondary_proxy);
+         }
+     }
+     else if(mainwidget.primary_proxy_edit->isHidden())
+     {
+         QString default_proxy = "Set-ADUser -Identity " + s.username + " @{Proxyaddresses = " + s.primary_proxy + "}";
+
+         execute_command(default_proxy);
+     }
  }
 
- void MainWindow::shift_ou()
+
+ void MainWindow::execute_command(QString param)
+ {
+     qDebug() << param; ///
+
+
+     QProcess *process = new QProcess();
+     QByteArray term_output;
+     QStringList params;
+     QString command = "powershell";
+     params << "-c" << "runas" << param;
+     process->start(command, params);
+     process->waitForFinished();
+     term_output.append(process->readAllStandardOutput());
+
+
+     QStringList return_list = QString(term_output).split("\n", QString::SkipEmptyParts);
+     qDebug() << return_list;
+ }
+
+
+ void MainWindow::shift_ou(struct New_User s)
  {
 
  }
