@@ -1,8 +1,7 @@
-#include "mainwidget.h"
+#include "serverwidget.h"
 
-MainWidget::MainWidget()
+ServerWidget::ServerWidget()
 {
-
     upn_combo = new QComboBox();
     ou_combo = new QComboBox();
     cloud_combobox = new QComboBox();
@@ -16,14 +15,7 @@ MainWidget::MainWidget()
     primary_proxy_edit = new QLineEdit();
     secondary_proxy_edit = new QLineEdit();
     create_button = new QPushButton();
-    delete_button= new QPushButton();
-
-    /* commands << "Get-ADOrganizationalUnit -Filter * | select-object -expandproperty Name"
-             << "Get-ADOrganizationalUnit -Filter * | Select-Object -ExpandProperty distinguishedName"
-             << "Get-ADForest | Select-Object -ExpandProperty UPNSuffixes"
-             << "Get-ADDomain | Select-Object -expandproperty Forest"
-             << "Get-ADUser -Filter * | Select-Object -ExpandProperty Name"
-             << "(Get-ADUser $usr -Properties MemberOf).MemberOf";*/
+    cancel_button= new QPushButton();
 
 
     cloud_clients << "Taylor Oil & Heat"
@@ -40,21 +32,14 @@ MainWidget::MainWidget()
                    << "TFCPA_"
                    << "DSA_";
 
-
-
-    //
-
-    //
 }
 
-
-
-QWidget* MainWidget::initalize_widget()
+QWidget* ServerWidget::create_widget()
 {
-    return create_widget(upn_combo, ou_combo, cloud_combobox, template_user_combo, domain_name_combo, employee_name_edit, user_edit, password_edit, email_edit, display_name_edit, primary_proxy_edit, secondary_proxy_edit, create_button, delete_button);
+    return initalize_widget(upn_combo, ou_combo, cloud_combobox, template_user_combo, domain_name_combo, employee_name_edit, user_edit, password_edit, email_edit, display_name_edit, primary_proxy_edit, secondary_proxy_edit, create_button, cancel_button);
 }
 
-QWidget* MainWidget::create_widget(QComboBox *upn_combo, QComboBox *ou_combo, QComboBox *cloud_combobox, QComboBox *template_user_combo, QComboBox *domain_name_combo, QLineEdit *employee_name_edit, QLineEdit *user_edit, QLineEdit *password_edit, QLineEdit *email_edit, QLineEdit *display_name_edit, QLineEdit *primary_proxy_edit, QLineEdit *secondary_proxy_edit, QPushButton *create_button, QPushButton *delete_button)
+QWidget* ServerWidget::initalize_widget(QComboBox *upn_combo, QComboBox *ou_combo, QComboBox *cloud_combobox, QComboBox *template_user_combo, QComboBox *domain_name_combo, QLineEdit *employee_name_edit, QLineEdit *user_edit, QLineEdit *password_edit, QLineEdit *email_edit, QLineEdit *display_name_edit, QLineEdit *primary_proxy_edit, QLineEdit *secondary_proxy_edit, QPushButton *create_button, QPushButton *cancel_button)
 {
         QVBoxLayout *main_layout = new QVBoxLayout();
         QWidget *primary_display = new QWidget();
@@ -111,7 +96,7 @@ QWidget* MainWidget::create_widget(QComboBox *upn_combo, QComboBox *ou_combo, QC
         secondary_proxy_edit->hide();
 
         create_button->setText("Create");
-        delete_button->setText("Cancel");
+        cancel_button->setText("Cancel");
 
         main_layout->addWidget(upn_combo);
         main_layout->addWidget(ou_combo);
@@ -126,17 +111,15 @@ QWidget* MainWidget::create_widget(QComboBox *upn_combo, QComboBox *ou_combo, QC
         main_layout->addWidget(primary_proxy_edit);
         main_layout->addWidget(secondary_proxy_edit);
         main_layout->addWidget(create_button);
-        main_layout->addWidget(delete_button);
+        main_layout->addWidget(cancel_button);
         primary_display->setLayout(main_layout);
         main_layout->setAlignment(Qt::AlignHCenter);
-
 
         return primary_display;
 }
 
-QStringList MainWidget::execute_command(QString param)
+QStringList ServerWidget::execute_command(QString param)
 {
-
       QProcess *process = new QProcess();
       QByteArray term_output;
       QStringList params;
@@ -145,12 +128,10 @@ QStringList MainWidget::execute_command(QString param)
       process->start(command, params);
       process->waitForFinished();
       term_output.append(process->readAllStandardOutput());
-      process->close();
-
-
+      process->kill();
       QStringList return_list = QString(term_output).split("\n", QString::SkipEmptyParts);
-
       return return_list;
-
-
 }
+
+
+//

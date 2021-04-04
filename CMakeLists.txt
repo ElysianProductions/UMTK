@@ -33,6 +33,14 @@ if(ANDROID)
     mainwindow.cpp
     mainwindow.h
     mainwindow.ui
+    mainwidget.cpp
+    mainwidget.h
+    initalwidget.cpp
+    initalwidget.h
+    serverwidget.cpp
+    serverwidget.h
+    localwidget.cpp
+    localwidget.h
   )
 else()
   add_executable(SNC
@@ -42,6 +50,12 @@ else()
     mainwindow.ui
     mainwidget.cpp
     mainwidget.h
+    initalwidget.cpp
+    initalwidget.h
+    serverwidget.cpp
+    serverwidget.h
+    localwidget.cpp
+    localwidget.h
   )
 endif()
 

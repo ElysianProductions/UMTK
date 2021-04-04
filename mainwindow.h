@@ -3,11 +3,16 @@
 
 #include <QMainWindow>
 #include <mainwidget.h>
+#include <initalwidget.h>
+#include <serverwidget.h>
+#include <localwidget.h>
 #include <QFrame>
 #include <QStackedWidget>
 #include <QMenu>
 #include <QAction>
 #include <QMessageBox>
+#include <QFile>
+#include <QTextStream>
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -21,7 +26,12 @@ public:
     MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
 
+    void launch_local_widget();
+    void launch_server_widget();
+    void close_local_widget();
+    void close_server_widget();
 
+/*
     void validate_information();
 
     void save_command();
@@ -29,10 +39,12 @@ public:
     void close_program();
     void build_commands();
     void write_stamps();
+*/
+
 
 private:
     Ui::MainWindow *ui;
-
+/*
     QFrame *main_frame;
     QStackedWidget *key_widget;
     MainWidget mainwidget;
@@ -64,6 +76,8 @@ private:
         QString GetGroups = "";
         QString SetProxy = "";
         QString ShiftOU = "";
+
+        QString elevate = "";
     };
 
 
@@ -77,6 +91,8 @@ private:
     void shift_ou(struct New_User s);
     void execute_command(QString param);
 
+    void write_script(QString commands, QString _file);
+    
     QMenu *fileMenu;
     QMenu *editMenu;
     QMenu *settingsMenu;
@@ -93,7 +109,36 @@ private:
     QAction *setDisplayNameAction;
     QAction *helpMeAction;
     QMessageBox *warning_banner;
+*/
 
+    void initialize_main_window();
+    void initialize_connections();
+    void initialize_actions();
+    void initialize_menus();
+    void initialize_warning_banner();
+
+    QFrame *main_frame;
+    QStackedWidget *key_widget;
+   // MainWidget mainwidget; // replace with ServerWidget
+    ServerWidget serverwidget;
+    LocalWidget localwidget;
+    InitalWidget initalwidget;
+    QMenu *fileMenu;
+    QMenu *editMenu;
+    QMenu *settingsMenu;
+    QMenu *helpMenu;
+    QAction *saveFileAction;
+    QAction *saveFileAsAction;
+    QAction *closeProgramAction;
+    QAction *addCloudClientsAction;
+    QAction *addCloudPefixesAction;
+    QAction *enableCloudCreationAction;
+    QAction *loadCloudClients;
+    QAction *loadCloudPrefixes;
+    QAction *setProxyAction;
+    QAction *setDisplayNameAction;
+    QAction *helpMeAction;
+    QMessageBox *warning_banner;
 
 };
 #endif // MAINWINDOW_H

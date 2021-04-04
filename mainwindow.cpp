@@ -9,7 +9,9 @@ MainWindow::MainWindow(QWidget *parent)
 
     main_frame = new QFrame(this);
     key_widget = new QStackedWidget();
-    key_widget->addWidget(mainwidget.initalize_widget());
+    key_widget->addWidget(initalwidget.create_widget());
+    key_widget->insertWidget(1, serverwidget.create_widget());
+    key_widget->insertWidget(2, localwidget.create_widget());
     initialize_main_window();
     initialize_actions();
     initialize_menus();
@@ -24,6 +26,8 @@ MainWindow::~MainWindow()
 
 
 
+
+
 void MainWindow::initialize_main_window()
 {
     setCentralWidget(key_widget);
@@ -33,11 +37,15 @@ void MainWindow::initialize_main_window()
 
 void MainWindow::initialize_connections()
 {
-      connect(saveFileAction, &QAction::triggered, this, &MainWindow::save_command);
-      connect(enableCloudCreationAction, &QAction::triggered, [this] {if(enableCloudCreationAction->isChecked()) { mainwidget.cloud_combobox->show();} if(!enableCloudCreationAction->isChecked()) {mainwidget.cloud_combobox->hide();} });
-      connect(setProxyAction, &QAction::triggered, [this] {if (setProxyAction->isChecked()) { mainwidget.primary_proxy_edit->show(); mainwidget.secondary_proxy_edit->show(); } if(!setProxyAction->isChecked()) {mainwidget.primary_proxy_edit->hide(); mainwidget.secondary_proxy_edit->hide(); } } );
-      connect(setDisplayNameAction, &QAction::triggered, [this] { if(setDisplayNameAction->isChecked()) { mainwidget.display_name_edit->show(); } if(!setDisplayNameAction->isChecked()) { mainwidget.display_name_edit->hide(); } } );
-      connect(mainwidget.create_button, &QPushButton::clicked, this, &MainWindow::initialize_warning_banner);
+      //connect(saveFileAction, &QAction::triggered, this, &MainWindow::save_command);
+      //connect(enableCloudCreationAction, &QAction::triggered, [this] {if(enableCloudCreationAction->isChecked()) { serverwidget.cloud_combobox->show();} if(!enableCloudCreationAction->isChecked()) {serverwidget.cloud_combobox->hide();} });
+      //connect(setProxyAction, &QAction::triggered, [this] {if (setProxyAction->isChecked()) { serverwidget.primary_proxy_edit->show(); serverwidget.secondary_proxy_edit->show(); } if(!setProxyAction->isChecked()) {serverwidget.primary_proxy_edit->hide(); serverwidget.secondary_proxy_edit->hide(); } } );
+      //connect(setDisplayNameAction, &QAction::triggered, [this] { if(setDisplayNameAction->isChecked()) { serverwidget.display_name_edit->show(); } if(!setDisplayNameAction->isChecked()) { serverwidget.display_name_edit->hide(); } } );
+      //connect(serverwidget.create_button, &QPushButton::clicked, this, &MainWindow::initialize_warning_banner);
+      connect(initalwidget.server_button, &QPushButton::clicked, this, &MainWindow::launch_server_widget);
+      connect(serverwidget.cancel_button, &QPushButton::clicked, this, &MainWindow::close_server_widget);
+      connect(initalwidget.local_button, &QPushButton::clicked, this, &MainWindow::launch_local_widget);
+      connect(localwidget.cancel_button, &QPushButton::clicked, this, &MainWindow::close_local_widget);
 
 
 
@@ -136,6 +144,28 @@ void MainWindow::initialize_connections()
         helpMenu->setToolTipsVisible(true);
  }
 
+ void MainWindow::launch_local_widget()
+ {
+     key_widget->setCurrentIndex(2);
+ }
+
+ void MainWindow::launch_server_widget()
+ {
+     key_widget->setCurrentIndex(1);
+ }
+
+ void MainWindow::close_local_widget()
+ {
+     key_widget->setCurrentIndex(0);
+ }
+
+ void MainWindow::close_server_widget()
+ {
+     key_widget->setCurrentIndex(0);
+ }
+
+
+ /*
  void MainWindow::initialize_warning_banner()
  {
      warning_banner = new QMessageBox();
@@ -281,7 +311,10 @@ void MainWindow::initialize_connections()
 
  }
 
+ */
 
+
+/*
  void MainWindow::validate_information()
  {
 
@@ -290,11 +323,8 @@ void MainWindow::initialize_connections()
  void MainWindow::create_user(struct New_User s)
  {
      QString tmp = s.password;
-     s.user_command = "$p = " + tmp + "; $sec = $p | ConvertTo-SecureString -AsPlainText -Force;" + "$usr = $env:USERDOMAIN" + "\" + $env:USERNAME; runas /env:$usr" + "New-ADUser -Name " + s.full_name + " -GivenName " + s.given_name + " -Surname " + s.sur_name + " -AccountPassword " + s.password + " -UserPrincipleName " + s.username + " -DisplayName " + s.display_name + " -EmailAddress " + s.email_address + " -SamAccountName " + s.sAMAccount + " -Enabled " + s.enabled;
+     s.user_command = "$p = " + tmp + "; $sec = $p | ConvertTo-SecureString -AsPlainText -Force;" + " New-ADUser -Name " + s.full_name + " -GivenName " + s.given_name + " -Surname " + s.sur_name + " -AccountPassword " + s.password + " -UserPrincipleName " + s.username + " -DisplayName " + s.display_name + " -EmailAddress " + s.email_address + " -SamAccountName " + s.sAMAccount + " -Enabled " + s.enabled;
      execute_command(s.user_command);
-
-     //"$usr = $env:USERDOMAIN" + "\" + $env:USERNAME; runas /env:$usr" + this may have to be removed
-
  }
 
  void MainWindow::create_proxy_addresses(struct New_User s)
@@ -333,23 +363,48 @@ void MainWindow::initialize_connections()
 
  void MainWindow::execute_command(QString param)
  {
-     qDebug() << param; ///
+
+      QProcess *my_process = new QProcess();
+      QString launch_command = "powershell.exe -Verb runAs";
+      QStringList running_commands;
+      running_commands << param;
+      my_process->start(launch_command, running_commands);
+      if(my_process->waitForFinished())
+      {
+          my_process->kill();
+      }
 
 
-     QProcess *process = new QProcess();
-     QByteArray term_output;
-     QStringList params;
-     QString command = "powershell";
-     params << "-c" << "runas" << param;
-     process->start(command, params);
-     process->waitForFinished();
-     term_output.append(process->readAllStandardOutput());
 
+     //qDebug() << param;
+     //QString command = "powerhsell.exe; (New-Object -ComObject \"Shell.Application\"\").Filerun())";
+     //params << "-c" << "powershell.exe -Verb runAs " << param;
+     //params << "-Command" << "$usr = $env:USERDOMAIN + \"\" + $env:USERNAME; runas /env /user:$usr "  << param;
+     //QProcess *process = new QProcess();
+     //QByteArray term_output;
+     //QStringList params;
+     //QString command = "powershell.exe -Verb runAs";
+     //params << "-Command " << "-Verb runAs " << param;
+     //params << param;
+     //process->start(command, params);
+     //process->waitForFinished();
+     //term_output.append(process->readAllStandardOutput());
+     //QStringList return_list = QString(term_output).split("\n", QString::SkipEmptyParts);
+     //qDebug() << return_list;
 
-     QStringList return_list = QString(term_output).split("\n", QString::SkipEmptyParts);
-     qDebug() << return_list;
  }
 
+
+ void MainWindow::write_script(QString commands, QString _file)
+ {
+     QFile file(_file);
+     if (file.open(QIODevice::ReadWrite))
+     {
+       QTextStream stream(&file);
+       stream << commands;
+     }
+     file.close();
+ }
 
  void MainWindow::shift_ou(struct New_User s)
  {
@@ -370,3 +425,6 @@ void MainWindow::initialize_connections()
  {
 
  }
+ */
+
+
