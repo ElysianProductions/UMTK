@@ -116,10 +116,13 @@ private:
     void initialize_actions();
     void initialize_menus();
     void initialize_warning_banner();
+    void execute_command(QString param);
+    void build_local_user();
+    void create_local_user();
 
     QFrame *main_frame;
     QStackedWidget *key_widget;
-   // MainWidget mainwidget; // replace with ServerWidget
+
     ServerWidget serverwidget;
     LocalWidget localwidget;
     InitalWidget initalwidget;
@@ -139,6 +142,28 @@ private:
     QAction *setDisplayNameAction;
     QAction *helpMeAction;
     QMessageBox *warning_banner;
+
+
+
+
+    struct Local_User
+    {
+        QString username;
+        QString employee_name;
+        QString email_address;
+        QString password;
+        QString account_enabled = "1";
+        QString is_administrator = "0";
+
+        QString date_created;
+        QString time_created;
+        QString created_by;
+        QString final_command;
+
+        QString whoami;
+    };
+
+
 
 };
 #endif // MAINWINDOW_H

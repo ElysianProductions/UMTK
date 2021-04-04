@@ -1,6 +1,7 @@
 #include "mainwindow.h"
 #include "./ui_mainwindow.h"
 
+
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
@@ -46,6 +47,7 @@ void MainWindow::initialize_connections()
       connect(serverwidget.cancel_button, &QPushButton::clicked, this, &MainWindow::close_server_widget);
       connect(initalwidget.local_button, &QPushButton::clicked, this, &MainWindow::launch_local_widget);
       connect(localwidget.cancel_button, &QPushButton::clicked, this, &MainWindow::close_local_widget);
+      connect(localwidget.create_button, &QPushButton::clicked, this, &MainWindow::build_local_user);
 
 
 
@@ -163,6 +165,99 @@ void MainWindow::initialize_connections()
  {
      key_widget->setCurrentIndex(0);
  }
+
+ void MainWindow::build_local_user()
+ {
+    Local_User luser;
+    if(localwidget.username_edit->text() <= 0)
+    {
+        localwidget.username_edit->setStyleSheet("color: black; background-color: red");
+        localwidget.username_edit->setPlaceholderText("VALUE CANNOT BE EMPTY");
+    }
+    else if(localwidget.username_edit->text() > 0)
+    {
+        localwidget.username_edit->setStyleSheet("color: black; background-color: white");
+        luser.username = "\"" + localwidget.username_edit->text() + "\"";
+    }
+
+    if(localwidget.fullname_edit->text() <= 0)
+    {
+        localwidget.fullname_edit->setStyleSheet("color: black; background-color: red");
+        localwidget.fullname_edit->setPlaceholderText("VALUE CANNOT BE EMPTY");
+    }
+    else if(localwidget.fullname_edit->text() > 0)
+    {
+        localwidget.fullname_edit->setStyleSheet("color: black; background-color: white");
+        luser.employee_name = "\"" + localwidget.fullname_edit->text() + "\"";
+    }
+
+    if(localwidget.emailaddress_edit->text() <= 0)
+    {
+        localwidget.emailaddress_edit->setStyleSheet("color: black; background-color: red");
+        localwidget.emailaddress_edit->setPlaceholderText("VALUE CANNOT BE EMPTY");
+    }
+    else if(localwidget.emailaddress_edit->text() > 0)
+    {
+        localwidget.emailaddress_edit->setStyleSheet("color: black; background-color: white");
+        luser.email_address = localwidget.emailaddress_edit->text();
+    }
+    if(localwidget.password_edit->text() <= 0)
+    {
+        localwidget.password_edit->setStyleSheet("color: black; background-color: red");
+        localwidget.password_edit->setPlaceholderText("VALUE CANNOT BE EMPTY");
+    }
+    else if(localwidget.password_edit->text() > 0)
+    {
+        localwidget.password_edit->setStyleSheet("color: black; background-color: white");
+        luser.password = "\"" + localwidget.password_edit->text() + "\"";
+    }
+
+    if(localwidget.admin_checkbox->isChecked())
+    {
+        luser.is_administrator = "1";
+    }
+    else if(!localwidget.admin_checkbox->isChecked())
+    {
+        luser.is_administrator = "0";
+    }
+
+    if(luser.username > 0 && luser.employee_name > 0 && luser.email_address > 0 && luser.password > 0)
+    {
+        luser.final_command = "$p = " + luser.password + "; $sec = $p | ConvertTo-SecureString -AsPlainText -Force;" + " New-LocalUser " + luser.username + " -Password $sec"  + " -FullName " + luser.employee_name;
+        luser.whoami = qgetenv("USERNAME");
+        execute_command(luser.final_command);
+    }
+ }
+
+ void MainWindow::create_local_user()
+ {
+
+ }
+
+ void MainWindow::execute_command(QString param)
+ {
+     QProcess *process = new QProcess();
+     QStringList params;
+     QString command = "powershell";
+     params << "-c" << param;
+     process->start(command, params);
+     process->waitForFinished();
+
+
+
+     QFile file("C:\\Users\\Aaron\\Documents\\test.txt");
+     if (file.open(QIODevice::ReadWrite))
+     {
+       QTextStream stream(&file);
+       stream << param;
+     }
+     file.close();
+
+
+ }
+
+
+
 
 
  /*
