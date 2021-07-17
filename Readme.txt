@@ -1,5 +1,5 @@
 This program was written to make my life easier. It's a way to standardize the creation process of new users accounts. 
-There is a defined methodoly that you can see bvy either reading the code, or this file. The README file is not traditionally a pdf. 
+There is a defined methodoly that you can see by either reading the code, or this file. The README file is not traditionally a pdf. 
 I'm doing it this way to illustrate a more indepth documentation process. 
 
 NOTE: For information regarding the C++ variation; please see the doxgen generated documentation for that program. While 
