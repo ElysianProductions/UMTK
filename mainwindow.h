@@ -134,9 +134,5 @@ private:
     };
 
 
-    void shift_ou(QString command);
-    void add_proxies(QString command);
-    void add_membership(QString command);
-
 };
 #endif // MAINWINDOW_H

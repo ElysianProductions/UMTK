@@ -185,7 +185,7 @@ void MainWindow::initialize_connections()
      else if(localwidget.password_edit->text() > 0)
      {
          localwidget.password_edit->setStyleSheet("color: black; background-color: white");
-         luser.password = + "\"" + localwidget.password_edit->text() + "\"";
+         luser.password = localwidget.password_edit->text();
      }
 
      if(localwidget.admin_checkbox->isChecked())
@@ -200,12 +200,9 @@ void MainWindow::initialize_connections()
      if(luser.username > 0 && luser.employee_name > 0 && luser.email_address > 0 && luser.password > 0)
      {
 
-         QString tmp = "NET USER /ADD " + luser.username + " key=" + luser.password;
-         //qDebug() << tmp << luser.username << luser.password << luser.email_address << luser.employee_name;
+         QString tmp = "net user /add " + luser.username + " " + luser.password;
+         qDebug() << tmp;
          elevate_and_execute(tmp);
-
-
-
 
          /*  Local account creation
           *  QString tmp = "Install-Module -Name Microsoft.PowerShell.LocalAccounts\nImport-Module Microsoft.PowerShell.LocalAccounts\n$p = " + luser.password + "\n$sec = $p | ConvertTo-SecureString -AsPlainText -Force\nNew-LocalUser " + luser.username + " -Password $sec";
@@ -322,40 +319,15 @@ void MainWindow::initialize_connections()
  }
 
 
-void MainWindow::shift_ou(QString command)
-{
-     elevate_and_execute(command);
-}
-
-void MainWindow::add_proxies(QString command)
-{
-    elevate_and_execute(command);
-}
-
-void MainWindow::add_membership(QString command)
-{
-    elevate_and_execute(command);
-}
-
  void MainWindow::elevate_and_execute(QString param)
  {
-
-  /* QString path = "C:\\Users\\" + qgetenv("USERNAME") + "\\Documents\\file.txt";
-     QFile file(path);
-     if (file.open(QIODevice::ReadWrite))
-     {
-       QTextStream stream(&file);
-       stream << param.toUtf8();
-     }
-     file.close();
-  */
-
      QProcess *process = new QProcess();
      QStringList params = QStringList();
-     params = QStringList({"-Command", QString("Start-Process -Verb runAs powershell"), param});
-     process->start("powershell", params);
+     params = QStringList({"-Command", QString("Start-Process -Verb runAs powershell; "), param});
+     process->startDetached("powershell", params);
      process->waitForFinished();
-     process->kill();
+     process->close();
+
 
     /*
      CoInitializeEx(NULL, COINIT_APARTMENTTHREADED);
