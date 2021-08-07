@@ -199,24 +199,8 @@ void MainWindow::initialize_connections()
 
      if(luser.username > 0 && luser.employee_name > 0 && luser.email_address > 0 && luser.password > 0)
      {
-
          QString tmp = "net user /add " + luser.username + " " + luser.password;
-         qDebug() << tmp;
          elevate_and_execute(tmp);
-
-         /*  Local account creation
-          *  QString tmp = "Install-Module -Name Microsoft.PowerShell.LocalAccounts\nImport-Module Microsoft.PowerShell.LocalAccounts\n$p = " + luser.password + "\n$sec = $p | ConvertTo-SecureString -AsPlainText -Force\nNew-LocalUser " + luser.username + " -Password $sec";
-          *  Install-Module -Name Microsoft.PowerShell.LocalAccounts
-          *  Import-Module Microsoft.Powershell.LocalAccounts
-          *  $p = "Test62!"
-          *  $sec = $p | ConvertTo-SecureString -AsPlainText -Force
-          *  New-LocalUser "Microshaft" -Password
-          *  $module = Get-Module Microsoft.PowerShell.LocalAccounts
-          *  Remove-Module $module
-          * OR as it currently stands:
-          * NET USER /ADD <username> key=<password>
-          *
-          */
      }
  }
 
@@ -296,22 +280,28 @@ void MainWindow::initialize_connections()
                 "\"" + duser.sam_name + "\"" + " -Enabled " + duser.is_enabled;
 
         elevate_and_execute(duser.complete_command);
-        elevate_and_execute("$usr = Get-ADUser -Filter {name -like " + duser.template_user + "}; $groups = (Get-ADUser $usr -Properties MemberOf).MemberOf; foreach($group in $groups) {Add-ADGroupMember -Identity (Get-ADGroup $group).name -Members " + "\"" + duser.sam_name + "\"" + "}");
+
+        QString tmp_usr = "$usr = Get-ADUser -Filter {Name -like " + duser.template_user + "}; ";
+        QString tmp = QString("\"") + "$usr" + QString("\"");
+        QString get_groups = "$groups = (Get-ADUser " +  tmp + " -Properties MemberOf).MemberOf; ";
+        qDebug() << tmp_usr;
+        elevate_and_execute(tmp_usr + get_groups + "foreach($group in $groups) {Add-ADGroupMember -Identity (Get-ADGroup $group).name -Members " + "\"" + duser.sam_name + "\"" + "}");
 
         if(domainwidget.primary_proxy_edit->text().length() > 0 && domainwidget.secondary_proxy_edit->text().length() > 0)
         {
-            elevate_and_execute("Set-ADUser -Identity " + duser.sam_name + " -Add @{Proxyaddresses = " + "SMTP:" + duser.proxy_addresses.first() +"}");
-            elevate_and_execute("Set-ADUser -Identity " + duser.sam_name + " -Add @{Proxyaddresses = " + "smtp:" + duser.proxy_addresses.last() +"}");
+            elevate_and_execute("Set-ADUser -Identity " + QString("\"") + duser.sam_name + QString("\"") + " -Add @{Proxyaddresses = " + "SMTP:" + duser.proxy_addresses.first() +"}");
+            elevate_and_execute("Set-ADUser -Identity " + QString("\"") + duser.sam_name + QString("\"") +  " -Add @{Proxyaddresses = " + "smtp:" + duser.proxy_addresses.last() +"}");
         }
         else if(domainwidget.primary_proxy_edit->text().length() > 0 && domainwidget.secondary_proxy_edit->text().length() <= 0)
         {
-            elevate_and_execute("Set-ADUser -Identity " + duser.sam_name + " -Add @{Proxyaddresses = " + "SMTP:" + duser.proxy_addresses.first() +"}");
+            elevate_and_execute("Set-ADUser -Identity " + QString("\"") + duser.sam_name + QString("\"") + " -Add @{Proxyaddresses = " + "SMTP:" + duser.proxy_addresses.first() +"}");
         }
         else if(domainwidget.secondary_proxy_edit->text().length() > 0 && domainwidget.primary_proxy_edit->text().length() <= 0)
         {
-            elevate_and_execute("Set-ADUser -Identity " + duser.sam_name + " -Add @{Proxyaddresses = " + "SMTP:" + duser.email_address +"}");
-            elevate_and_execute("Set-ADUser -Identity " + duser.sam_name + " -Add @{Proxyaddresses = " + "smtp:" + duser.proxy_addresses.last() +"}");
+            elevate_and_execute("Set-ADUser -Identity " + QString("\"") + duser.sam_name + QString("\"") +  " -Add @{Proxyaddresses = " + "SMTP:" + duser.email_address +"}");
+            elevate_and_execute("Set-ADUser -Identity " + QString("\"") + duser.sam_name + QString("\"") +  " -Add @{Proxyaddresses = " + "smtp:" + duser.proxy_addresses.last() +"}");
         }
+        //elevate_and_execute("Move-ADObject -Identity " + QString("\"") + duser.sam_name + QString("\"") + " -TargetPath " + duser.ou_actual);
         elevate_and_execute("Move-ADObject -Identity " + duser.sam_name + " -TargetPath " + duser.ou_actual);
 
     }
