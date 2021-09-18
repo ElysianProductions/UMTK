@@ -41,7 +41,7 @@ void MainWindow::initialize_connections()
       //connect(saveFileAction, &QAction::triggered, this, &MainWindow::save_command);
       connect(setDisplayNameAction, &QAction::triggered, [this] {if(setDisplayNameAction->isChecked()) { domainwidget.display_name_edit->show();} if(!setDisplayNameAction->isChecked()) {domainwidget.display_name_edit->hide();} });
       connect(setProxyAction, &QAction::triggered, [this] {if (setProxyAction->isChecked()) { domainwidget.primary_proxy_edit->show(); domainwidget.secondary_proxy_edit->show(); } if(!setProxyAction->isChecked()) {domainwidget.primary_proxy_edit->hide(); domainwidget.secondary_proxy_edit->hide(); } } );
-      //connect(setDisplayNameAction, &QAction::triggered, [this] { if(setDisplayNameAction->isChecked()) { serverwidget.display_name_edit->show(); } if(!setDisplayNameAction->isChecked()) { serverwidget.display_name_edit->hide(); } } );
+      connect(setDisplayNameAction, &QAction::triggered, [this] { if(setDisplayNameAction->isChecked()) { domainwidget.display_name_edit->show(); } if(!setDisplayNameAction->isChecked()) { domainwidget.display_name_edit->hide(); } } );
       //connect(serverwidget.create_button, &QPushButton::clicked, this, &MainWindow::initialize_warning_banner);
       connect(mainwidget.server_button, &QPushButton::clicked, this, &MainWindow::launch_server_widget);
       connect(domainwidget.create_button, &QPushButton::clicked, this, &MainWindow::create_domain_user);
@@ -323,37 +323,160 @@ void MainWindow::initialize_connections()
                                    "$groups = (Get-ADUser $tmp -Properties MemberOf).MemberOf; $usr = \"" + duser.sam_name + "\"; "
                                    "Foreach ($group in $groups) {Add-ADGroupMember -Identity (Get-ADGroup $group).name -Members $usr} ";
 
+        warning_banner = new QMessageBox();
+        QPushButton *okay_button = warning_banner->addButton(tr("Okay"), QMessageBox::ActionRole);
+        QPushButton *cancel_button = warning_banner->addButton(tr("Cancel"), QMessageBox::ActionRole);
+        warning_banner->setText("Confirm the following by clicking 'Okay'\nTo cancel and redo, click 'Cancel'");
 
-        elevate_and_execute(duser.complete_command);
-
-        elevate_and_execute(duser.set_groups_command);
-
-
-        if(domainwidget.primary_proxy_edit->text().length() > 0 && domainwidget.secondary_proxy_edit->text().length() > 0)
+        if (domainwidget.primary_proxy_edit->isHidden())
         {
-            elevate_and_execute("Set-ADUser -Identity " + QString("\"") + duser.sam_name + QString("\"") + " -Add @{Proxyaddresses = " + "\"SMTP:" + duser.proxy_addresses.first() + "\"}");
-            elevate_and_execute("Set-ADUser -Identity " + QString("\"") + duser.sam_name + QString("\"") +  " -Add @{Proxyaddresses = " + "\"smtp:" + duser.proxy_addresses.last() + "\"}");
+            if(domainwidget.primary_proxy_edit->text().length() > 0 && domainwidget.secondary_proxy_edit->text().length() > 0)
+            {
+                if(domainwidget.display_name_edit->isHidden())
+                {
+                    warning_banner->setInformativeText("Employee Name: " + duser.employe_name +"\nUsername: " + duser.sam_name + "\nPassword: " + duser.password + "\nEmail Address: " + duser.email_address + "\nPrimary proxy: " + duser.proxy_addresses.first() + "\nSecondary Proxy: " + duser.proxy_addresses.last());
+                }
+                else if(!domainwidget.display_name_edit->isHidden() && domainwidget.display_name_edit->text().length() > 0)
+                {
+                    warning_banner->setInformativeText("Employee Name: " + duser.employe_name +"\nUsername: " + duser.sam_name + "\nPassword: " + duser.password + "\nEmail Address: " + duser.email_address + "\nDisplay name" + duser.display_name + "\nPrimary proxy: " + duser.proxy_addresses.first() + "\nSecondary Proxy: " + duser.proxy_addresses.last());
+                }
+            }
+            if(domainwidget.primary_proxy_edit->text().length() <= 0 && domainwidget.secondary_proxy_edit->text().length() > 0)
+            {
+                if(domainwidget.display_name_edit->isHidden())
+                {
+                    warning_banner->setInformativeText("Employee Name: " + duser.employe_name +"\nUsername: " + duser.sam_name + "\nPassword: " + duser.password + "\nEmail Address: " + duser.email_address + "\nPrimary proxy: " + "SMTP:" + duser.email_address + "\nSecondary Proxy: " + duser.proxy_addresses.last());
+                }
+                else if(!domainwidget.display_name_edit->isHidden() && domainwidget.display_name_edit->text().length() > 0)
+                {
+                    warning_banner->setInformativeText("Employee Name: " + duser.employe_name +"\nUsername: " + duser.sam_name + "\nPassword: " + duser.password + "\nEmail Address: " + duser.email_address + "\nDisplay name" + duser.display_name + "\nPrimary proxy: " + "SMTP:" + duser.email_address + "\nSecondary Proxy: " + duser.proxy_addresses.last());
+                }
+            }
+            if(domainwidget.primary_proxy_edit->text().length() > 0 && domainwidget.secondary_proxy_edit->text().length() <= 0)
+            {
+                if(domainwidget.display_name_edit->isHidden())
+                {
+                    warning_banner->setInformativeText("Employee Name: " + duser.employe_name +"\nUsername: " + duser.sam_name + "\nPassword: " + duser.password + "\nEmail Address: " + duser.email_address + "\nPrimary proxy: " + duser.proxy_addresses.first());
+                }
+                else if(!domainwidget.display_name_edit->isHidden() && domainwidget.display_name_edit->text().length() > 0)
+                {
+                    warning_banner->setInformativeText("Employee Name: " + duser.employe_name +"\nUsername: " + duser.sam_name + "\nPassword: " + duser.password + "\nEmail Address: " + duser.email_address + "\nDisplay name" + duser.display_name + "\nPrimary proxy: " + duser.proxy_addresses.first());
+                }
+            }
+            if(domainwidget.primary_proxy_edit->text().length() <= 0 && domainwidget.secondary_proxy_edit->text().length() <= 0)
+            {
+                if(domainwidget.display_name_edit->isHidden())
+                {
+                    warning_banner->setInformativeText("Employee Name: " + duser.employe_name +"\nUsername: " + duser.sam_name + "\nPassword: " + duser.password + "\nEmail Address: " + duser.email_address + "\nDefault proxy: " + "SMTP:" + duser.email_address);
+                }
+                else if(!domainwidget.display_name_edit->isHidden() && domainwidget.display_name_edit->text().length() > 0)
+                {
+                    warning_banner->setInformativeText("Employee Name: " + duser.employe_name +"\nUsername: " + duser.sam_name + "\nPassword: " + duser.password + "\nEmail Address: " + duser.email_address + "\nDisplay name" + duser.display_name + "\nDefault proxy: " + "SMTP:" + duser.email_address);
+                }
+            }
+
         }
-        else if(domainwidget.primary_proxy_edit->text().length() > 0 && domainwidget.secondary_proxy_edit->text().length() <= 0)
+        else if(!domainwidget.primary_proxy_edit->isHidden())
         {
-            elevate_and_execute("Set-ADUser -Identity " + QString("\"") + duser.sam_name + QString("\"") + " -Add @{Proxyaddresses = " + "\"SMTP:" + duser.proxy_addresses.first() +"\"}");
-        }
-        else if(domainwidget.secondary_proxy_edit->text().length() > 0 && domainwidget.primary_proxy_edit->text().length() <= 0)
-        {
-            elevate_and_execute("Set-ADUser -Identity " + QString("\"") + duser.sam_name + QString("\"") +  " -Add @{Proxyaddresses = " + "\"SMTP:" + duser.email_address +"\"}");
-            elevate_and_execute("Set-ADUser -Identity " + QString("\"") + duser.sam_name + QString("\"") +  " -Add @{Proxyaddresses = " + "\"smtp:" + duser.proxy_addresses.last() +"\"}");
-        }
-        else if(domainwidget.secondary_proxy_edit->text().length() <= 0 && domainwidget.primary_proxy_edit->text().length() <= 0)
-        {
-            write_debug_logs("Set-ADUser -Identity \"" + duser.sam_name + "\" -Add @{Proxyaddresses = " + "\"SMTP:" + duser.email_address +"\"}");
-            elevate_and_execute("Set-ADUser -Identity \"" + duser.sam_name + "\" -Add @{Proxyaddresses = " + "\"SMTP:" + duser.email_address +"\"}");
+            if(domainwidget.primary_proxy_edit->text().length() > 0 && domainwidget.secondary_proxy_edit->text().length() > 0)
+            {
+                if(domainwidget.display_name_edit->isHidden())
+                {
+                    warning_banner->setInformativeText("Employee Name: " + duser.employe_name +"\nUsername: " + duser.sam_name + "\nPassword: " + duser.password + "\nEmail Address: " + duser.email_address + "\nPrimary proxy: " + duser.proxy_addresses.first() + "\nSecondary Proxy: " + duser.proxy_addresses.last());
+                }
+                else if(!domainwidget.display_name_edit->isHidden() && domainwidget.display_name_edit->text().length() > 0)
+                {
+                    warning_banner->setInformativeText("Employee Name: " + duser.employe_name +"\nUsername: " + duser.sam_name + "\nPassword: " + duser.password + "\nEmail Address: " + duser.email_address + "\nDisplay name" + duser.display_name + "\nPrimary proxy: " + duser.proxy_addresses.first() + "\nSecondary Proxy: " + duser.proxy_addresses.last());
+                }
+            }
+            if(domainwidget.primary_proxy_edit->text().length() <= 0 && domainwidget.secondary_proxy_edit->text().length() > 0)
+            {
+                if(domainwidget.display_name_edit->isHidden())
+                {
+                    warning_banner->setInformativeText("Employee Name: " + duser.employe_name +"\nUsername: " + duser.sam_name + "\nPassword: " + duser.password + "\nEmail Address: " + duser.email_address + "\nPrimary proxy: " + "SMTP:" + duser.email_address + "\nSecondary Proxy: " + duser.proxy_addresses.last());
+                }
+                else if(!domainwidget.display_name_edit->isHidden() && domainwidget.display_name_edit->text().length() > 0)
+                {
+                    warning_banner->setInformativeText("Employee Name: " + duser.employe_name +"\nUsername: " + duser.sam_name + "\nPassword: " + duser.password + "\nEmail Address: " + duser.email_address + "\nDisplay name" + duser.display_name + "\nPrimary proxy: " + "SMTP:" + duser.email_address + "\nSecondary Proxy: " + duser.proxy_addresses.last());
+                }
+            }
+            if(domainwidget.primary_proxy_edit->text().length() > 0 && domainwidget.secondary_proxy_edit->text().length() <= 0)
+            {
+                if(domainwidget.display_name_edit->isHidden())
+                {
+                    warning_banner->setInformativeText("Employee Name: " + duser.employe_name +"\nUsername: " + duser.sam_name + "\nPassword: " + duser.password + "\nEmail Address: " + duser.email_address + "\nPrimary proxy: " + duser.proxy_addresses.first());
+                }
+                else if(!domainwidget.display_name_edit->isHidden() && domainwidget.display_name_edit->text().length() > 0)
+                {
+                    warning_banner->setInformativeText("Employee Name: " + duser.employe_name +"\nUsername: " + duser.sam_name + "\nPassword: " + duser.password + "\nEmail Address: " + duser.email_address + "\nDisplay name" + duser.display_name + "\nPrimary proxy: " + duser.proxy_addresses.first());
+                }
+            }
+            if(domainwidget.primary_proxy_edit->text().length() <= 0 && domainwidget.secondary_proxy_edit->text().length() <= 0)
+            {
+                if(domainwidget.display_name_edit->isHidden())
+                {
+                    warning_banner->setInformativeText("Employee Name: " + duser.employe_name +"\nUsername: " + duser.sam_name + "\nPassword: " + duser.password + "\nEmail Address: " + duser.email_address + "\nDefault proxy: " + "SMTP:" + duser.email_address);
+                }
+                else if(!domainwidget.display_name_edit->isHidden() && domainwidget.display_name_edit->text().length() > 0)
+                {
+                    warning_banner->setInformativeText("Employee Name: " + duser.employe_name +"\nUsername: " + duser.sam_name + "\nPassword: " + duser.password + "\nEmail Address: " + duser.email_address + "\nDisplay name" + duser.display_name + "\nDefault proxy: " + "SMTP:" + duser.email_address);
+                }
+            }
         }
 
-        shift_ou("$user = (Get-ADUser -Filter {SamAccountName -like \"" + duser.sam_name + "\"} | Select-Object -ExpandProperty DistinguishedName);", duser.ou_actual);
+
+        warning_banner->exec();
+        if(warning_banner->clickedButton() == okay_button)
+        {
+            elevate_and_execute(duser.complete_command);
+
+            elevate_and_execute(duser.set_groups_command);
+
+
+            if(domainwidget.primary_proxy_edit->text().length() > 0 && domainwidget.secondary_proxy_edit->text().length() > 0)
+            {
+                elevate_and_execute("Set-ADUser -Identity " + QString("\"") + duser.sam_name + QString("\"") + " -Add @{Proxyaddresses = " + "\"SMTP:" + duser.proxy_addresses.first() + "\"}");
+                elevate_and_execute("Set-ADUser -Identity " + QString("\"") + duser.sam_name + QString("\"") +  " -Add @{Proxyaddresses = " + "\"smtp:" + duser.proxy_addresses.last() + "\"}");
+            }
+            else if(domainwidget.primary_proxy_edit->text().length() > 0 && domainwidget.secondary_proxy_edit->text().length() <= 0)
+            {
+                elevate_and_execute("Set-ADUser -Identity " + QString("\"") + duser.sam_name + QString("\"") + " -Add @{Proxyaddresses = " + "\"SMTP:" + duser.proxy_addresses.first() +"\"}");
+            }
+            else if(domainwidget.secondary_proxy_edit->text().length() > 0 && domainwidget.primary_proxy_edit->text().length() <= 0)
+            {
+                elevate_and_execute("Set-ADUser -Identity " + QString("\"") + duser.sam_name + QString("\"") +  " -Add @{Proxyaddresses = " + "\"SMTP:" + duser.email_address +"\"}");
+                elevate_and_execute("Set-ADUser -Identity " + QString("\"") + duser.sam_name + QString("\"") +  " -Add @{Proxyaddresses = " + "\"smtp:" + duser.proxy_addresses.last() +"\"}");
+            }
+            else if(domainwidget.secondary_proxy_edit->text().length() <= 0 && domainwidget.primary_proxy_edit->text().length() <= 0)
+            {
+                write_debug_logs("Set-ADUser -Identity \"" + duser.sam_name + "\" -Add @{Proxyaddresses = " + "\"SMTP:" + duser.email_address +"\"}");
+                elevate_and_execute("Set-ADUser -Identity \"" + duser.sam_name + "\" -Add @{Proxyaddresses = " + "\"SMTP:" + duser.email_address +"\"}");
+            }
+
+            shift_ou("$user = (Get-ADUser -Filter {SamAccountName -like \"" + duser.sam_name + "\"} | Select-Object -ExpandProperty DistinguishedName);", duser.ou_actual);
+        }
+        else if (warning_banner->clickedButton() == cancel_button)
+        {
+            clear_ui();
+        }
+
+        // REMOVAL LINE
+
     }
 
  }
 
+
+ void MainWindow::clear_ui()
+ {
+     domainwidget.employee_name_edit->setText("");
+     domainwidget.user_edit->setText("");
+     domainwidget.password_edit->setText("");
+     domainwidget.email_edit->setText("");
+     domainwidget.display_name_edit->setText("");
+     domainwidget.primary_proxy_edit->setText("");
+     domainwidget.secondary_proxy_edit->setText("");
+ }
 
  void MainWindow::write_debug_logs(QString datastring) // remove
  {

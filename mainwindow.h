@@ -138,7 +138,7 @@ private:
 
     };
 
-
+    void clear_ui();
     void write_debug_logs(QString data); // remove
 };
 #endif // MAINWINDOW_H
