@@ -68,7 +68,7 @@ public:
     void create_local_user();
     void create_domain_user();
     void elevate_and_execute(QString param);
-
+    void shift_ou(QString command, QString OU);
 
     QFrame *main_frame;
     QStackedWidget *key_widget;
@@ -106,6 +106,7 @@ private:
         QString created_by;
         QString final_command;
 
+
         QString whoami;
     };
 
@@ -125,14 +126,19 @@ private:
         QString ou_actual; // OU Distingusihed name that's actually used
         QString UPN; // UPN
         QString template_user; // TEmplate to copy;
+        QString user_distinguished_name;
 
         QString date_created; // Date that the account was made.
         QString time_created; // Time of day the account was made.
         QString created_by; // Created by <insert username>.
 
         QString complete_command; // Finialized PS command for creation
+        QString set_groups_command; // String that holds the prebuilt PS command for setting group membership
+        QString set_OU_command; // String that holds the prebuilt PS command for moving the users OU.
+
     };
 
 
+    void write_debug_logs(QString data); // remove
 };
 #endif // MAINWINDOW_H

@@ -253,8 +253,47 @@ void MainWindow::initialize_connections()
 
         QString p = "$p = " + duser.password + "; $sec = $p | ConvertTo-SecureString -AsPlainText -Force; ";
         duser.ou_clean = domainwidget.ou_combo->currentText();
+
+
         duser.ou_actual = "\"" + domainwidget.ou_distinguished_names.at(domainwidget.ou_combo->currentIndex()) + "\"";
-        duser.template_user = "\"" + domainwidget.template_user_combo->currentText() + "\"";
+
+        bool bad_chars = true;
+        while(bad_chars)
+        {
+            if(duser.ou_actual.contains("\r"))
+            {
+                duser.ou_actual = duser.ou_actual.remove(QChar('\r'));
+            }
+            if(duser.ou_actual.contains("\n"))
+            {
+                duser.ou_actual = duser.ou_actual.remove(QChar('\n'));
+            }
+            if(!duser.ou_actual.contains("\r") && !duser.ou_actual.contains("\n"))
+            {
+                bad_chars = false;
+            }
+        }
+
+        duser.template_user = domainwidget.template_user_combo->currentText();
+
+        bad_chars = true;
+        while(bad_chars)
+        {
+            if(duser.template_user.contains("\r"))
+            {
+                duser.template_user = duser.template_user.remove(QChar('\r'));
+            }
+            if(duser.template_user.contains("\n"))
+            {
+                duser.template_user = duser.template_user.remove(QChar('\n'));
+            }
+            if(!duser.template_user.contains("\r") && !duser.template_user.contains("\n"))
+            {
+                bad_chars = false;
+            }
+        }
+
+
 
         if(duser.UPN.length() <= 0)
         {
@@ -274,23 +313,26 @@ void MainWindow::initialize_connections()
             duser.proxy_addresses << domainwidget.secondary_proxy_edit->text();
         }
 
-        duser.complete_command = p + "New-ADUser -Name " + "\"" + duser.employe_name +"\"" + " -GivenName " + "\"" +duser.given_name + "\""
+        duser.complete_command = p + "New-ADUser -Name " + "\"" + duser.employe_name +"\"" + " -GivenName " + "\"" + duser.given_name + "\""
                 + " -Surname " + "\"" + duser.surname + "\"" + " -AccountPassword $sec " + " -UserPrincipalName " + "\"" + duser.userpname + "\""
                 " -DisplayName " + "\"" + duser.display_name + "\"" + " -EmailAddress " + "\"" + duser.email_address + "\"" + " -SamAccountName " +
                 "\"" + duser.sam_name + "\"" + " -Enabled " + duser.is_enabled;
 
+
+        duser.set_groups_command = "$tmp = (Get-ADUser -Filter {Name -like \"" + duser.template_user + "\"}); "
+                                   "$groups = (Get-ADUser $tmp -Properties MemberOf).MemberOf; $usr = \"" + duser.sam_name + "\"; "
+                                   "Foreach ($group in $groups) {Add-ADGroupMember -Identity (Get-ADGroup $group).name -Members $usr} ";
+
+
         elevate_and_execute(duser.complete_command);
 
-        QString tmp_usr = "$usr = Get-ADUser -Filter {Name -like " + duser.template_user + "}; ";
-        QString tmp = QString("\"") + "$usr" + QString("\"");
-        QString get_groups = "$groups = (Get-ADUser " +  tmp + " -Properties MemberOf).MemberOf; ";
-        qDebug() << tmp_usr;
-        elevate_and_execute(tmp_usr + get_groups + "foreach($group in $groups) {Add-ADGroupMember -Identity (Get-ADGroup $group).name -Members " + "\"" + duser.sam_name + "\"" + "}");
+        elevate_and_execute(duser.set_groups_command);
+
 
         if(domainwidget.primary_proxy_edit->text().length() > 0 && domainwidget.secondary_proxy_edit->text().length() > 0)
         {
-            elevate_and_execute("Set-ADUser -Identity " + QString("\"") + duser.sam_name + QString("\"") + " -Add @{Proxyaddresses = " + "SMTP:" + duser.proxy_addresses.first() +"}");
-            elevate_and_execute("Set-ADUser -Identity " + QString("\"") + duser.sam_name + QString("\"") +  " -Add @{Proxyaddresses = " + "smtp:" + duser.proxy_addresses.last() +"}");
+            elevate_and_execute("Set-ADUser -Identity " + QString("\"") + duser.sam_name + QString("\"") + " -Add @{Proxyaddresses = " + "SMTP:" + duser.proxy_addresses.first() + "}");
+            elevate_and_execute("Set-ADUser -Identity " + QString("\"") + duser.sam_name + QString("\"") +  " -Add @{Proxyaddresses = " + "smtp:" + duser.proxy_addresses.last() + "}");
         }
         else if(domainwidget.primary_proxy_edit->text().length() > 0 && domainwidget.secondary_proxy_edit->text().length() <= 0)
         {
@@ -301,37 +343,44 @@ void MainWindow::initialize_connections()
             elevate_and_execute("Set-ADUser -Identity " + QString("\"") + duser.sam_name + QString("\"") +  " -Add @{Proxyaddresses = " + "SMTP:" + duser.email_address +"}");
             elevate_and_execute("Set-ADUser -Identity " + QString("\"") + duser.sam_name + QString("\"") +  " -Add @{Proxyaddresses = " + "smtp:" + duser.proxy_addresses.last() +"}");
         }
-        //elevate_and_execute("Move-ADObject -Identity " + QString("\"") + duser.sam_name + QString("\"") + " -TargetPath " + duser.ou_actual);
-        elevate_and_execute("Move-ADObject -Identity " + duser.sam_name + " -TargetPath " + duser.ou_actual);
+        else if(domainwidget.secondary_proxy_edit->text().length() <= 0 && domainwidget.primary_proxy_edit->text().length() <= 0)
+        {
+            elevate_and_execute("Set-ADUser -Identity " + QString("\"") + duser.sam_name + QString("\"") +  " -Add @{Proxyaddresses = " + "SMTP:" + duser.email_address +"}");
+        }
 
+        shift_ou("$user = (Get-ADUser -Filter {SamAccountName -like \"" + duser.sam_name + "\"} | Select-Object -ExpandProperty DistinguishedName);", duser.ou_actual);
     }
 
  }
 
 
+ void MainWindow::write_debug_logs(QString datastring) // remove
+ {
+     QFile data("C:\\Users\\Ajohnson\\Desktop\\output.txt");
+     if (data.open(QFile::WriteOnly)) {
+         QTextStream out(&data);
+         out << datastring;
+
+     }
+ }
+
  void MainWindow::elevate_and_execute(QString param)
  {
      QProcess *process = new QProcess();
      QStringList params = QStringList();
+     QByteArray output; // remove
+
      params = QStringList({"-Command", QString("Start-Process -Verb runAs powershell; "), param});
-     process->startDetached("powershell", params);
+     process->start("powershell", params);
      process->waitForFinished();
-     process->close();
+     output = process->readAllStandardError(); // remove
+     qDebug() << output; // remove
+     process->terminate();
 
-
-    /*
-     CoInitializeEx(NULL, COINIT_APARTMENTTHREADED);
-     SHELLEXECUTEINFO ShExecInfo = {0};
-     ShExecInfo.cbSize = sizeof(SHELLEXECUTEINFO);
-     ShExecInfo.fMask = SEE_MASK_NOCLOSEPROCESS;
-     ShExecInfo.hwnd = NULL;
-     ShExecInfo.lpVerb = "runas";
-     ShExecInfo.lpFile = TEXT("powershell");
-     ShExecInfo.lpParameters = param.toUtf8();
-     ShExecInfo.lpDirectory = NULL;
-     ShExecInfo.nShow = SW_SHOWNORMAL;
-     ShExecInfo.hInstApp = NULL;
-     ShellExecuteEx(&ShExecInfo);
-     WaitForSingleObject(ShExecInfo.hProcess,INFINITE);
-    */
  }
+
+
+void MainWindow::shift_ou(QString command, QString OU)
+{
+    elevate_and_execute(command + "Move-ADObject -Identity $user -TargetPath " + OU);
+}

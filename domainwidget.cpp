@@ -110,7 +110,8 @@ QStringList DomainWidget::execute_command(QString param)
       process->start(command, params);
       process->waitForFinished();
       term_output.append(process->readAllStandardOutput());
-      process->kill();
+      //process->kill();
+      process->terminate();
       QStringList return_list = QString(term_output).split("\n", QString::SkipEmptyParts);
       return return_list;
 }
