@@ -1,5 +1,22 @@
 ﻿[System.Reflection.Assembly]::LoadWithPartialName("System.Windows.Forms")
 
+
+Function DomainUser 
+{
+    Write-Host "Domain User"
+}
+
+
+Function LocalUser 
+{
+    Write-Host "Local User"
+}
+
+Function EditUser 
+{
+
+}
+
 Function Main 
 {
     [void] [System.Reflection.Assembly]::LoadWithPartialName("System.Drawing")
@@ -16,8 +33,24 @@ Function Main
 
     $UMTK_Form = New-Object System.Windows.Forms.Form
     $UMTK_Form.Text = "User Maintenance Tool Kit"
-    $UMTK_Form.Size = New-Object System.Drawing.Size($width, $height)
+    $UMTK_Form.Size = New-Object System.Drawing.Size(600, 600)
+    $UMTK_Form.minimumSize = New-Object System.Drawing.Size(600,600) 
+    $UMTK_Form.maximumSize = New-Object System.Drawing.Size(600,600) 
+    $UMTK_Form.FormBorderStyle = 'Fixed3D'
 
+    $duser_button = New-Object System.Windows.Forms.Button 
+    $duser_button.Size = New-Object System.Drawing.Size(120, 30)
+    $duser_button.Location = New-Object System.Drawing.Size(230, 250)
+    $duser_button.Text = "Domain User"
+    $duser_button.Add_Click({DomainUser})
+    $UMTK_Form.Controls.Add($duser_button)
+
+    $luser_button = New-Object System.Windows.Forms.Button 
+    $luser_button.Size = New-Object System.Drawing.Size(120, 30)
+    $luser_button.Location = New-Object System.Drawing.Size(230, 290)
+    $luser_button.Text = "Local User"
+    $luser_button.Add_Click({LocalUser})
+    $UMTK_Form.Controls.Add($luser_button)
 
 
 
