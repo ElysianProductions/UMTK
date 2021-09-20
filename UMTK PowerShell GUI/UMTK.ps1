@@ -21,56 +21,106 @@ Function DomainUser
     $Domain_Form.minimumSize = New-Object System.Drawing.Size(600,600) 
     $Domain_Form.maximumSize = New-Object System.Drawing.Size(600,600) 
     $Domain_Form.FormBorderStyle = 'Fixed3D'
+    $Domain_Form.StartPosition = 'CenterScreen'
+
+    $ou_combo = New-Object Windows.Forms.ComboBox 
+    $ou_combo.size = New-Object System.Drawing.Size(350, 150)
+    $ou_combo.location = New-Object System.Drawing.Size(150, 10)
+    $clean_ous = Get-ADOrganizationalUnit -Filter * | Select-Object -ExpandProperty Name
+    $distinguished_ous = Get-ADOrganizationalUnit -Filter * | Select-Object -ExpandProperty Distinguishedname
+    Foreach($ou in $clean_ous)
+    {
+        $ou_combo.Items.Add($ou)
+    }
+    
+    #
+    $Domain_Form.Controls.Add($ou_combo)
+
+   
+    $users_combo = New-Object Windows.Forms.ComboBox 
+    $users_combo.size = New-Object System.Drawing.Size(350, 150)
+    $users_combo.location = New-Object System.Drawing.Size(150, 40)
+    $pull_users = Get-ADUser -Filter * | Select-Object -ExpandProperty Name
+    Foreach($usr in $pull_users)
+    {
+        $users_combo.Items.Add($usr)
+    }
+    
+    #
+    $Domain_Form.Controls.Add($users_combo)
+
+
+     #special combo box
+    $special_combo = New-Object Windows.Forms.ComboBox 
+    $special_combo.size = New-Object System.Drawing.Size(350, 150)
+    $special_combo.location = New-Object System.Drawing.Size(150, 70)
+    $domain_lookup = Get-ADForest | Select-Object -ExpandProperty Domains
+    $upn_lookup = Get-ADForest | Select-Object -ExpandProperty UPNSuffixes
+    if($upn_lookup.Count -gt 0)
+    {
+        Foreach($upn in $upn_lookup)
+        {
+            $special_combo.Items.Add($upn)
+        }
+    }
+    else
+    {
+        Foreach($domain in $domain_lookup)
+        {
+            $special_combo.Items.Add($domain)
+        }
+    }
+    $Domain_Form.Controls.Add($special_combo)
 
 
     $employee_name_label = New-Object Windows.Forms.Label
     $employee_name_label.size = New-Object System.Drawing.Size(150, 50)
-    $employee_name_label.location = New-Object System.Drawing.Size(0, 50)
+    $employee_name_label.location = New-Object System.Drawing.Size(0, 160)
     $employee_name_label.text = "Employee name:"
     $Domain_Form.Controls.Add($employee_name_label)
 
 
     $employee_name_input = New-Object Windows.Forms.TextBox
-    $employee_name_input.size = New-Object System.Drawing.Size(180, 50)
-    $employee_name_input.location = New-Object System.Drawing.Size(150, 50)
+    $employee_name_input.size = New-Object System.Drawing.Size(350, 75)
+    $employee_name_input.location = New-Object System.Drawing.Size(150, 160)
     $Domain_Form.Controls.Add($employee_name_input)
 
 
     $username_label = New-Object Windows.Forms.Label
     $username_label.size = New-Object System.Drawing.Size(150, 50)
-    $username_label.location = New-Object System.Drawing.Size(0, 100)
+    $username_label.location = New-Object System.Drawing.Size(0, 210)
     $username_label.text = "Username:"
     $Domain_Form.Controls.Add($username_label)
 
 
     $username_input = New-Object Windows.Forms.TextBox
-    $username_input.size = New-Object System.Drawing.Size(50, 50)
-    $username_input.location = New-Object System.Drawing.Size(150, 100)
+    $username_input.size = New-Object System.Drawing.Size(350, 75)
+    $username_input.location = New-Object System.Drawing.Size(150, 210)
     $Domain_Form.Controls.Add($username_input)
 
 
     $password_label = New-Object Windows.Forms.Label
     $password_label.size = New-Object System.Drawing.Size(150, 50)
-    $password_label.location = New-Object System.Drawing.Size(0, 150)
+    $password_label.location = New-Object System.Drawing.Size(0, 260)
     $password_label.text = "Password:"
     $Domain_Form.Controls.Add($password_label)
 
 
     $password_input = New-Object Windows.Forms.TextBox
-    $password_input.size = New-Object System.Drawing.Size(50, 50)
-    $password_input.location = New-Object System.Drawing.Size(200, 150)
+    $password_input.size = New-Object System.Drawing.Size(350, 75)
+    $password_input.location = New-Object System.Drawing.Size(150, 260)
     $Domain_Form.Controls.Add($password_input)
 
     $email_label = New-Object Windows.Forms.Label
     $email_label.size = New-Object System.Drawing.Size(150, 50)
-    $email_label.location = New-Object System.Drawing.Size(0, 350)
+    $email_label.location = New-Object System.Drawing.Size(0, 310)
     $email_label.text = "Email address:"
     $Domain_Form.Controls.Add($email_label)
 
 
     $email_input = New-Object Windows.Forms.TextBox
     $email_input.size = New-Object System.Drawing.Size(350, 75)
-    $email_input.location = New-Object System.Drawing.Size(0, 350)
+    $email_input.location = New-Object System.Drawing.Size(150, 310)
     $Domain_Form.Controls.Add($email_input)
 
 
@@ -110,6 +160,7 @@ Function Main
     $UMTK_Form.minimumSize = New-Object System.Drawing.Size(600,600) 
     $UMTK_Form.maximumSize = New-Object System.Drawing.Size(600,600) 
     $UMTK_Form.FormBorderStyle = 'Fixed3D'
+    $UMTK_Form.StartPosition = 'CenterScreen'
 
     $duser_button = New-Object System.Windows.Forms.Button 
     $duser_button.Size = New-Object System.Drawing.Size(120, 30)
