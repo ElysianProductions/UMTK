@@ -23,9 +23,70 @@ Function DomainUser
     $Domain_Form.FormBorderStyle = 'Fixed3D'
     $Domain_Form.StartPosition = 'CenterScreen'
 
+    $menu_bar = New-Object System.Windows.Forms.MenuStrip
+    $menu_tool_strip = New-Object System.Windows.Forms.ToolStrip
+    $Domain_Form.MainMenuStrip = $menu_bar
+    
+    # FILE MENU ITEM
+    $file_action = New-Object System.Windows.Forms.ToolStripMenuItem
+    $file_action.Text = "File"
+    # save command 
+    $save_command = New-Object System.Windows.Forms.ToolStripButton
+    $save_command.Text = "Save Command"
+    # save to file
+    $save_command_file = New-Object System.Windows.Forms.ToolStripButton
+    $save_command_file.Text = "Save to File" 
+    # Close program 
+    $close_program = New-Object System.Windows.Forms.ToolStripButton
+    $close_program.Text = "Close Program"
+    
+    # EDIT MENU ITEM
+    $edit_action = New-Object System.Windows.Forms.ToolStripMenuItem
+    $edit_action.Text = "Edit"
+    
+
+    # SETTINGS MENU ITEM
+    $settings_action = New-Object System.Windows.Forms.ToolStripMenuItem
+    $settings_action.Text = "Settings"
+    # Set additional proxy 
+    $add_proxies= New-Object System.Windows.Forms.ToolStripButton
+    $add_proxies.Text = "Set Aditional proxy"
+
+    # set display name
+    $add_display_name = New-Object System.Windows.Forms.ToolStripButton
+    $add_display_name.Text = "Set Display Name"
+
+    # HELP MENU ITEM
+    $help_action = New-Object System.Windows.Forms.ToolStripMenuItem
+    $help_action.Text = "Help"
+
+    # Help function
+    $save_me = New-Object System.Windows.Forms.ToolStripButton
+    $save_me.Text = "Help"    
+
+    # Add items to menu bar
+    $menu_bar.Items.Add($file_action)
+    $menu_bar.Items.Add($edit_action)
+    $menu_bar.Items.Add($settings_action)
+    $menu_bar.Items.Add($help_action)
+
+    # Add submenu items
+    $file_action.DropDownItems.Add($save_command)
+    $file_action.DropDownItems.Add($save_command_file)
+    $file_action.DropDownItems.Add($close_program)
+
+    $settings_action.DropDownItems.Add($add_proxies)
+    $settings_action.DropDownItems.Add($add_display_name)
+
+    $help_action.DropDownItems.Add($save_me)
+
+    # Add menu to form
+    $Domain_form.Controls.Add($menu_tool_strip)
+    $Domain_Form.Controls.Add($menu_bar)
+
     $ou_combo = New-Object Windows.Forms.ComboBox 
     $ou_combo.size = New-Object System.Drawing.Size(350, 150)
-    $ou_combo.location = New-Object System.Drawing.Size(150, 10)
+    $ou_combo.location = New-Object System.Drawing.Size(150, 70)
     $clean_ous = Get-ADOrganizationalUnit -Filter * | Select-Object -ExpandProperty Name
     $distinguished_ous = Get-ADOrganizationalUnit -Filter * | Select-Object -ExpandProperty Distinguishedname
     Foreach($ou in $clean_ous)
@@ -39,7 +100,7 @@ Function DomainUser
    
     $users_combo = New-Object Windows.Forms.ComboBox 
     $users_combo.size = New-Object System.Drawing.Size(350, 150)
-    $users_combo.location = New-Object System.Drawing.Size(150, 40)
+    $users_combo.location = New-Object System.Drawing.Size(150, 100)
     $pull_users = Get-ADUser -Filter * | Select-Object -ExpandProperty Name
     Foreach($usr in $pull_users)
     {
@@ -53,7 +114,7 @@ Function DomainUser
      #special combo box
     $special_combo = New-Object Windows.Forms.ComboBox 
     $special_combo.size = New-Object System.Drawing.Size(350, 150)
-    $special_combo.location = New-Object System.Drawing.Size(150, 70)
+    $special_combo.location = New-Object System.Drawing.Size(150, 130)
     $domain_lookup = Get-ADForest | Select-Object -ExpandProperty Domains
     $upn_lookup = Get-ADForest | Select-Object -ExpandProperty UPNSuffixes
     if($upn_lookup.Count -gt 0)
@@ -124,9 +185,71 @@ Function DomainUser
     $Domain_Form.Controls.Add($email_input)
 
 
+    $create_button = New-Object Windows.Forms.Button
+    $create_button.Text = "Create"
+    $create_button.size = New-Object System.Drawing.Size(120, 30)
+    $create_button.location = New-Object System.Drawing.Size(150, 360)
+    $create_button.Add_Click({CreateDomainUser -domain_ou_selection $ou_combo.Text -domain_template_user $users_combo.Text -domain_upn $special_combo.Text -domain_employee_name $employee_name_input.Text -domain_user_name $username_input.Text -domain_user_password $password_input.Text -domain_email_address $email_input.Text})
+    $Domain_Form.Controls.Add($create_button)
+
+
+    $close_button = New-Object Windows.Forms.Button
+    $close_button.Text = "Close"
+    $close_button.size = New-Object System.Drawing.Size(120, 30)
+    $close_button.location = New-Object System.Drawing.Size(310, 360)
+    $Domain_Form.Controls.Add($close_button)
+
 
     $Domain_Form.Add_Shown({$Domain_Form.Activate()})
     [void] $Domain_Form.ShowDialog()
+}
+
+
+Function CreateDomainUser
+{
+    param (
+        [string]$domain_ou_selection,
+        [string]$domain_template_user,
+        [string]$domain_upn,
+        [string]$domain_employee_name,
+        [string]$domain_user_name, 
+        [string]$domain_user_password,
+        [string]$domain_email_address,
+        [string]$domain_display_name,
+        [array[]]$domain_proxies
+    )
+
+    if($domain_ou_selection.Count -le 0 -or $domain_template_user.Count -le 0 -or
+       $domain_upn.Count -le 0 -or $domain_employee_name.Count -le 0 -or $domain_user_name -le 0 -or 
+       $domain_user_password.Count -le 0 -or $domain_email_address -le 0) 
+    {
+        if($domain_display_name.Count -le 0)
+        {
+            $domain_display_name = $domain_employee_name
+        }
+        if($domain_proxies.Count -gt 0)
+        {
+            if($domain_proxies.Count -eq 1)
+            {
+                $primary_proxy = $domain_proxies[1]
+            }
+            elseif($domain_proxies.Count -gt 1)
+            {
+                $primary_proxy = $domain_proxies[1]
+                $secondary_proxy = $domain_proxies[$domain_proxies.Count - 1]
+            }
+        }
+        elseif($domain_proxies -le 0)
+        {
+            $primary_proxy = "SMTP:" + $domain_email_address
+        }
+
+         $_given, $_surname = $domain_employee_name.Split(' ')
+         $tmp_pass = $domain_user_password | ConvertTo-SecureString -AsPlainText -Force
+         New-ADUser -Name $domain_employee_name -GivenName $_given -Surname $_surname -AccountPassword $tmp_pass -UserPrincipalName $domain_upn -DisplayName $domain_display_name  -EmailAddress $domain_email_address -SamAccountName $domain_user_name  -Enabled 1
+
+        
+    }
 }
 
 
