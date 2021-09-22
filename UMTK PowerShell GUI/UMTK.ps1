@@ -6,15 +6,6 @@ Function DomainUser
     [void] [System.Reflection.Assembly]::LoadWithPartialName("System.Drawing")
     [void] [System.Reflection.Assembly]::LoadWithPartialName("System.Windows.Forms")
 
-    $user_screens = [System.Windows.Forms.Screen]::AllScreens
-    foreach($screen in $user_screens)
-    {
-        $screen_name = $screen.DeviceName
-        $width = $screen.Bounds.Width
-        $height = $screen.Bounds.Height
-        $primary = $screen.Primary
-    }
-
     $Domain_Form = New-Object System.Windows.Forms.Form
     $Domain_Form.Text = "UMTK: Domain User Creation"
     $Domain_Form.Size = New-Object System.Drawing.Size(600, 600)
@@ -88,7 +79,6 @@ Function DomainUser
     $ou_combo.size = New-Object System.Drawing.Size(350, 150)
     $ou_combo.location = New-Object System.Drawing.Size(150, 70)
     $clean_ous = Get-ADOrganizationalUnit -Filter * | Select-Object -ExpandProperty Name
-    $distinguished_ous = Get-ADOrganizationalUnit -Filter * | Select-Object -ExpandProperty Distinguishedname
     Foreach($ou in $clean_ous)
     {
         $ou_combo.Items.Add($ou)
@@ -189,7 +179,7 @@ Function DomainUser
     $create_button.Text = "Create"
     $create_button.size = New-Object System.Drawing.Size(120, 30)
     $create_button.location = New-Object System.Drawing.Size(150, 360)
-    $create_button.Add_Click({CreateDomainUser -domain_ou_selection $ou_combo.Text -domain_template_user $users_combo.Text -domain_upn $special_combo.Text -domain_employee_name $employee_name_input.Text -domain_user_name $username_input.Text -domain_user_password $password_input.Text -domain_email_address $email_input.Text})
+    $create_button.Add_Click({CreateDomainUser -_ou $ou_combo.SelectedIndex -_template $users_combo.Text -_upn $special_combo.Text -_fullname $employee_name_input.Text -_username $username_input.Text -_password $password_input.Text -_email $email_input.Text})
     $Domain_Form.Controls.Add($create_button)
 
 
@@ -197,6 +187,7 @@ Function DomainUser
     $close_button.Text = "Close"
     $close_button.size = New-Object System.Drawing.Size(120, 30)
     $close_button.location = New-Object System.Drawing.Size(310, 360)
+    $close_button.Add_Click({$Domain_Form.Add_FormClosing({$_.Cancel=$false});$Domain_Form.Close()})   
     $Domain_Form.Controls.Add($close_button)
 
 
@@ -208,47 +199,53 @@ Function DomainUser
 Function CreateDomainUser
 {
     param (
-        [string]$domain_ou_selection,
-        [string]$domain_template_user,
-        [string]$domain_upn,
-        [string]$domain_employee_name,
-        [string]$domain_user_name, 
-        [string]$domain_user_password,
-        [string]$domain_email_address,
-        [string]$domain_display_name,
-        [array[]]$domain_proxies
+        [int]$_ou,
+        [string]$_template,
+        [string]$_upn,
+        [string]$_fullname,
+        [string]$_username, 
+        [string]$_password,
+        [string]$_email,
+        [string]$_displayname,
+        [array[]]$_proxies
     )
-
-    if($domain_ou_selection.Count -le 0 -or $domain_template_user.Count -le 0 -or
-       $domain_upn.Count -le 0 -or $domain_employee_name.Count -le 0 -or $domain_user_name -le 0 -or 
-       $domain_user_password.Count -le 0 -or $domain_email_address -le 0) 
+    if($_ou -gt 0 -and $_template.Count -gt 0 -and $_upn.Count -gt 0 -and $_fullname.Count -gt 0 -and $_username -gt 0 -and $_password.Count -gt 0 -and $_email -gt 0) 
     {
-        if($domain_display_name.Count -le 0)
+        if($_displayname.Count -le 0)
         {
-            $domain_display_name = $domain_employee_name
+            $_displayname = $_fullname
         }
-        if($domain_proxies.Count -gt 0)
+        if($_proxies.Count -gt 0)
         {
-            if($domain_proxies.Count -eq 1)
+            if($_proxies.Count -eq 1)
             {
-                $primary_proxy = $domain_proxies[1]
+                $primary_proxy = $_proxies[1]
             }
             elseif($domain_proxies.Count -gt 1)
             {
-                $primary_proxy = $domain_proxies[1]
-                $secondary_proxy = $domain_proxies[$domain_proxies.Count - 1]
+                $primary_proxy = $_proxies[1]
+                $secondary_proxy = $_proxies[$_proxies.Count - 1]
             }
         }
-        elseif($domain_proxies -le 0)
+        elseif($_proxies -le 0)
         {
-            $primary_proxy = "SMTP:" + $domain_email_address
+            $primary_proxy = "SMTP:" + $_email
         }
 
-         $_given, $_surname = $domain_employee_name.Split(' ')
-         $tmp_pass = $domain_user_password | ConvertTo-SecureString -AsPlainText -Force
-         New-ADUser -Name $domain_employee_name -GivenName $_given -Surname $_surname -AccountPassword $tmp_pass -UserPrincipalName $domain_upn -DisplayName $domain_display_name  -EmailAddress $domain_email_address -SamAccountName $domain_user_name  -Enabled 1
+         $_given, $_surname = $_fullname.Split(' ')
+         $tmp_pass = $_password | ConvertTo-SecureString -AsPlainText -Force
+         New-ADUser -Name $_fullname -GivenName $_given -Surname $_surname -AccountPassword $tmp_pass -UserPrincipalName $_upn -displayName $_displayname  -EmailAddress $_email -SamAccountName $_username  -Enabled 1
+         $g = (Get-ADUser -Filter {name -like $_template})
+         $groups = (Get-ADUser $g -Properties MemberOf).MemberOF
+         Foreach($group in $groups)
+         {
+             Add-ADGroupMember -Identity (Get-ADGroup $group).name -Members $_username
+         }
 
-        
+         $distinguished_ous = (Get-ADOrganizationalUnit -Filter * | Select-Object -ExpandProperty Distinguishedname)
+         $tuser = (Get-ADUser -Filter {samAccountName -like $_username} | Select-Object -ExpandProperty DistinguishedName) 
+         Move-ADObject -Identity $tuser -TargetPath $distinguished_ous[$_ou]
+
     }
 }
 
@@ -267,15 +264,6 @@ Function Main
 {
     [void] [System.Reflection.Assembly]::LoadWithPartialName("System.Drawing")
     [void] [System.Reflection.Assembly]::LoadWithPartialName("System.Windows.Forms")
-
-    $user_screens = [System.Windows.Forms.Screen]::AllScreens
-    foreach($screen in $user_screens)
-    {
-        $screen_name = $screen.DeviceName
-        $width = $screen.Bounds.Width
-        $height = $screen.Bounds.Height
-        $primary = $screen.Primary
-    }
 
     $UMTK_Form = New-Object System.Windows.Forms.Form
     $UMTK_Form.Text = "User Maintenance Tool Kit"
@@ -308,17 +296,15 @@ Function Main
     $UMTK_Form.Controls.Add($euser_button)
 
 
+    $exit_button = New-Object System.Windows.Forms.Button 
+    $exit_button.Size = New-Object System.Drawing.Size(120, 30)
+    $exit_button.Location = New-Object System.Drawing.Size(230, 340)
+    $exit_button.Text = "Exit"
+    $exit_button.Add_Click({$UMTK_Form.Add_FormClosing({$_.Cancel=$false});$UMTK_Form.Close()})   
+    $UMTK_Form.Controls.Add($exit_button)
+
     $UMTK_Form.Add_Shown({$UMTK_Form.Activate()})
     [void] $UMTK_Form.ShowDialog()
 }
 
 Main
-
-# This is straightforward, it will be a lightweight easily modifiable script for Windows only.
-# It will follow the same layout as the C++ GUI does to the letter. The purpose of creating 
-# this is to ensure that those comfortable with PS can use and tailor to their needs. The 
-# overal intent of the C++ program is to prove an easily usable, portable system for the 
-# addition, removal, and or modification of a user account on any system. It will essentially 
-# be the communcation utility which executes the same or very similar commands in the hard coded
-# native scripted utilities. The reason these are going to be GUI based is because people want things 
-# to be as easy as possible while preventing as many mistakes as possible.
