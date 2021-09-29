@@ -190,6 +190,10 @@ Function DomainUser
     $close_button.Add_Click({$Domain_Form.Add_FormClosing({$_.Cancel=$false});$Domain_Form.Close()})   
     $Domain_Form.Controls.Add($close_button)
 
+    $message_label = New-Object Windows.Forms.Label
+    $message_label.size = New-Object System.Drawing.Size(350, 50)
+    $message_label.location = New-Object System.Drawing.Size(150, 410)
+    $Domain_Form.Controls.Add($message_label)
 
     $Domain_Form.Add_Shown({$Domain_Form.Activate()})
     [void] $Domain_Form.ShowDialog()
@@ -232,21 +236,66 @@ Function CreateDomainUser
             $primary_proxy = "SMTP:" + $_email
         }
 
-         $_given, $_surname = $_fullname.Split(' ')
-         $tmp_pass = $_password | ConvertTo-SecureString -AsPlainText -Force
-         New-ADUser -Name $_fullname -GivenName $_given -Surname $_surname -AccountPassword $tmp_pass -UserPrincipalName $_upn -displayName $_displayname  -EmailAddress $_email -SamAccountName $_username  -Enabled 1
-         $g = (Get-ADUser -Filter {name -like $_template})
-         $groups = (Get-ADUser $g -Properties MemberOf).MemberOF
-         Foreach($group in $groups)
+         $user_exists = DoesUser-Exist $_username
+         if($user_exists -eq 1)
          {
-             Add-ADGroupMember -Identity (Get-ADGroup $group).name -Members $_username
+             $message_label.Text =  "A user account with the username: " + $_username + " already exists, please try again"
          }
+         elseif($user_exists -eq 0)
+         {
+             
+             $userpname = $_username + "@" + $_upn
+             $_given, $_surname = $_fullname.Split(' ')
+             $tmp_pass = $_password | ConvertTo-SecureString -AsPlainText -Force
+             New-ADUser -Name $_fullname -GivenName $_given -Surname $_surname -AccountPassword $tmp_pass -UserPrincipalName $userpname -displayName $_displayname  -EmailAddress $_email -SamAccountName $_username  -Enabled 1
+             $g = (Get-ADUser -Filter {name -like $_template})
+             $groups = (Get-ADUser $g -Properties MemberOf).MemberOF
+             Foreach($group in $groups)
+             {
+                 Add-ADGroupMember -Identity (Get-ADGroup $group).name -Members $_username
+             }
+             $distinguished_ous = (Get-ADOrganizationalUnit -Filter * | Select-Object -ExpandProperty Distinguishedname)
+             $tuser = (Get-ADUser -Filter {samAccountName -like $_username} | Select-Object -ExpandProperty DistinguishedName) 
+             Move-ADObject -Identity $tuser -TargetPath $distinguished_ous[$_ou]
 
-         $distinguished_ous = (Get-ADOrganizationalUnit -Filter * | Select-Object -ExpandProperty Distinguishedname)
-         $tuser = (Get-ADUser -Filter {samAccountName -like $_username} | Select-Object -ExpandProperty DistinguishedName) 
-         Move-ADObject -Identity $tuser -TargetPath $distinguished_ous[$_ou]
-
+             $user_exists = DoesUser-Exist $_username
+             if($user_exists -eq 0)
+             {
+                $message_label.Text = "Something very terrible has happened. Gross, what have you done?!"
+             }
+             elseif($user_exists -eq 1)
+             {
+                 
+                $message_label.Text =  "The user account for " + $_fullname + " has been created..."
+             }
+         }
     }
+}
+
+
+Function DoesUser-Exist
+{
+    param (
+        [parameter(Mandatory = $true)]
+        [string]$username
+    )
+    
+    $test = (Get-ADUser -Filter {SamAccountName -like $username})
+    if($test -ne $null)
+    {
+        return 1
+    }
+    elseif($test -eq $null)
+    {
+        return 0
+    }
+    # Very straightforward boolean check:
+    #    If the username (SamAccountName) supplied is found in AD 
+    #        Return 1 for true 
+    #    If the username (SamAccountName) supplied is not found in AD
+    #        Return 0 for false
+    # If this function returns a 1 then a user with that name already exists and the user should not be created.
+    # If this function returns a 0 then the user does not alread yexist and can be created.
 }
 
 
