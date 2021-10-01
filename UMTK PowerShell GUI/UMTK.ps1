@@ -254,7 +254,7 @@ Function DomainUser
 
     $displayname_label = New-Object Windows.Forms.Label
     $displayname_label.size = New-Object System.Drawing.Size(150, 35)
-    $displayname_label.location = New-Object System.Drawing.Size(0, 365)
+    $displayname_label.location = New-Object System.Drawing.Size(0, 370)
     $displayname_label.Font = New-Object System.Drawing.Font("Courier",8,[System.Drawing.FontStyle]::Regular)
     $displayname_label.text = "Display name:"
     $displayname_label.Visible = $false
@@ -263,7 +263,7 @@ Function DomainUser
 
     $displayname_input = New-Object Windows.Forms.TextBox
     $displayname_input.size = New-Object System.Drawing.Size(350, 75)
-    $displayname_input.location = New-Object System.Drawing.Size(150, 365)
+    $displayname_input.location = New-Object System.Drawing.Size(150, 370)
     $displayname_input.Font = New-Object System.Drawing.Font("Courier",8,[System.Drawing.FontStyle]::Regular)
     $displayname_input.Visible = $false
     $Domain_Form.Controls.Add($displayname_input)
@@ -466,7 +466,95 @@ Function Is-DisplaynameNull
 
 Function LocalUser 
 {
-    Write-Host "Local User"
+    [void] [System.Reflection.Assembly]::LoadWithPartialName("System.Drawing")
+    [void] [System.Reflection.Assembly]::LoadWithPartialName("System.Windows.Forms")
+
+    $Luser_Form = New-Object System.Windows.Forms.Form
+    $Luser_Form.Text = "UMTK: Local User Creation"
+    $Luser_Form.Size = New-Object System.Drawing.Size(600, 600)
+    $Luser_Form.minimumSize = New-Object System.Drawing.Size(600,600) 
+    $Luser_Form.maximumSize = New-Object System.Drawing.Size(600,600) 
+    $Luser_Form.FormBorderStyle = 'Fixed3D'
+    $Luser_Form.StartPosition = 'CenterScreen'
+
+
+    $lemployee_name_label = New-Object Windows.Forms.Label
+    $lemployee_name_label.size = New-Object System.Drawing.Size(150, 35)
+    $lemployee_name_label.location = New-Object System.Drawing.Size(0, 55)
+    $lemployee_name_label.Font = New-Object System.Drawing.Font("Courier",8,[System.Drawing.FontStyle]::Regular)
+    $lemployee_name_label.text = "Employee name:"
+    $Luser_Form.Controls.Add($lemployee_name_label)
+
+
+    $lemployee_name_input = New-Object Windows.Forms.TextBox
+    $lemployee_name_input.size = New-Object System.Drawing.Size(350, 75)
+    $lemployee_name_input.location = New-Object System.Drawing.Size(150, 55)
+    $lemployee_name_input.Font = New-Object System.Drawing.Font("Courier",8,[System.Drawing.FontStyle]::Regular)
+    $Luser_Form.Controls.Add($lemployee_name_input)
+
+
+    
+    $lusername_label = New-Object Windows.Forms.Label
+    $lusername_label.size = New-Object System.Drawing.Size(150, 35)
+    $lusername_label.location = New-Object System.Drawing.Size(0, 90)
+    $lusername_label.Font = New-Object System.Drawing.Font("Courier",8,[System.Drawing.FontStyle]::Regular)
+    $lusername_label.text = "Username:"
+    $Luser_Form.Controls.Add($lusername_label)
+
+
+    $lusername_input = New-Object Windows.Forms.TextBox
+    $lusername_input.size = New-Object System.Drawing.Size(350, 75)
+    $lusername_input.location = New-Object System.Drawing.Size(150, 90)
+    $lusername_input.Font = New-Object System.Drawing.Font("Courier",8,[System.Drawing.FontStyle]::Regular)
+    $Luser_Form.Controls.Add($lusername_input)
+
+
+    
+    $lpassword_label = New-Object Windows.Forms.Label
+    $lpassword_label.size = New-Object System.Drawing.Size(150, 35)
+    $lpassword_label.location = New-Object System.Drawing.Size(0, 125)
+    $lpassword_label.Font = New-Object System.Drawing.Font("Courier",8,[System.Drawing.FontStyle]::Regular)
+    $lpassword_label.text = "Password:"
+    $Luser_Form.Controls.Add($lpassword_label)
+
+
+    $lpassword_input = New-Object Windows.Forms.TextBox
+    $lpassword_input.size = New-Object System.Drawing.Size(350, 75)
+    $lpassword_input.location = New-Object System.Drawing.Size(150, 125)
+    $lpassword_input.Font = New-Object System.Drawing.Font("Courier",8,[System.Drawing.FontStyle]::Regular)
+    $Luser_Form.Controls.Add($lpassword_input)
+
+    
+    $admin_button = New-Object Windows.Forms.CheckBox
+    $admin_button.Font = New-Object System.Drawing.Font("Courier",8,[System.Drawing.FontStyle]::Regular)
+    $admin_button.Text = "Admin"
+    $admin_button.size = New-Object System.Drawing.Size(120, 30)
+    $admin_button.location = New-Object System.Drawing.Size(150, 160)
+    $Luser_Form.Controls.Add($admin_button)
+
+
+    $lcreate_button = New-Object Windows.Forms.Button
+    $lcreate_button.Font = New-Object System.Drawing.Font("Courier",8,[System.Drawing.FontStyle]::Regular)
+    $lcreate_button.Text = "Create"
+    $lcreate_button.size = New-Object System.Drawing.Size(120, 30)
+    $lcreate_button.location = New-Object System.Drawing.Size(150, 190)
+    $lcreate_button.Add_Click({"Clicked"})   
+    $Luser_Form.Controls.Add($lcreate_button)
+
+
+    $lclose_button = New-Object Windows.Forms.Button
+    $lclose_button.Font = New-Object System.Drawing.Font("Courier",8,[System.Drawing.FontStyle]::Regular)
+    $lclose_button.Text = "Close"
+    $lclose_button.size = New-Object System.Drawing.Size(120, 30)
+    $lclose_button.location = New-Object System.Drawing.Size(380, 190)
+    $lclose_button.Add_Click({$Luser_Form.Add_FormClosing({$_.Cancel=$false});$Luser_Form.Close()})   
+    $Luser_Form.Controls.Add($lclose_button)
+
+
+    # success label
+
+    $Luser_Form.Add_Shown({$Luser_Form.Activate()})
+    [void] $Luser_Form.ShowDialog()
 }
 
 Function EditUser 
