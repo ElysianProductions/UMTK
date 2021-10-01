@@ -46,11 +46,15 @@ Function DomainUser
     $add_proxies = New-Object System.Windows.Forms.ToolStripButton
     $add_proxies.Font = New-Object System.Drawing.Font("Courier",8,[System.Drawing.FontStyle]::Regular)
     $add_proxies.Text = "Set Aditional proxy"
+    $proxies_clicked = 0
+    $add_proxies.Add_Click({AreProxies-Hidden})
 
     # set display name
     $add_display_name = New-Object System.Windows.Forms.ToolStripButton
     $add_display_name.Font = New-Object System.Drawing.Font("Courier",8,[System.Drawing.FontStyle]::Regular)
     $add_display_name.Text = "Set Display Name"
+    $displayname_clicked = 0
+    $add_display_name.Add_Click({ if($displayname_clicked -eq 0) {Show-AddDisplayname} elseif($displayname_clicked -eq 1) {Hide-AddDisplayname} })
 
     # HELP MENU ITEM
     $help_action = New-Object System.Windows.Forms.ToolStripMenuItem
@@ -94,6 +98,14 @@ Function DomainUser
     #
     $Domain_Form.Controls.Add($ou_combo)
 
+
+    $ou_combo_label = New-Object Windows.Forms.Label
+    $ou_combo_label.size = New-Object System.Drawing.Size(150, 35)
+    $ou_combo_label.location = New-Object System.Drawing.Size(0, 70)
+    $ou_combo_label.Font = New-Object System.Drawing.Font("Courier",7,[System.Drawing.FontStyle]::Regular)
+    $ou_combo_label.text = "OU:"
+    $Domain_Form.Controls.Add($ou_combo_label)
+
    
     $users_combo = New-Object Windows.Forms.ComboBox 
     $users_combo.size = New-Object System.Drawing.Size(350, 150)
@@ -107,6 +119,14 @@ Function DomainUser
     
     #
     $Domain_Form.Controls.Add($users_combo)
+
+
+    $users_combo_label = New-Object Windows.Forms.Label
+    $users_combo_label.size = New-Object System.Drawing.Size(150, 35)
+    $users_combo_label.location = New-Object System.Drawing.Size(0, 100)
+    $users_combo_label.Font = New-Object System.Drawing.Font("Courier",7,[System.Drawing.FontStyle]::Regular)
+    $users_combo_label.text = "Template:"
+    $Domain_Form.Controls.Add($users_combo_label)
 
 
      #special combo box
@@ -131,6 +151,14 @@ Function DomainUser
         }
     }
     $Domain_Form.Controls.Add($special_combo)
+
+
+    $special_combo_label = New-Object Windows.Forms.Label
+    $special_combo_label.size = New-Object System.Drawing.Size(150, 35)
+    $special_combo_label.location = New-Object System.Drawing.Size(0, 130)
+    $special_combo_label.Font = New-Object System.Drawing.Font("Courier",7,[System.Drawing.FontStyle]::Regular)
+    $special_combo_label.text = "Doamin\UPN:"
+    $Domain_Form.Controls.Add($special_combo_label)
 
 
     $employee_name_label = New-Object Windows.Forms.Label
@@ -192,11 +220,64 @@ Function DomainUser
     $Domain_Form.Controls.Add($email_input)
 
 
+    $primary_proxy_label = New-Object Windows.Forms.Label
+    $primary_proxy_label.size = New-Object System.Drawing.Size(150, 35)
+    $primary_proxy_label.location = New-Object System.Drawing.Size(0, 300)
+    $primary_proxy_label.Font = New-Object System.Drawing.Font("Courier",8,[System.Drawing.FontStyle]::Regular)
+    $primary_proxy_label.text = "Primary Proxy:"
+    $primary_proxy_label.Visible = $false
+    $Domain_Form.Controls.Add($primary_proxy_label)
+
+
+
+    $primary_proxy_input = New-Object Windows.Forms.TextBox
+    $primary_proxy_input.size = New-Object System.Drawing.Size(350, 75)
+    $primary_proxy_input.location = New-Object System.Drawing.Size(150, 300)
+    $primary_proxy_input.Font = New-Object System.Drawing.Font("Courier",8,[System.Drawing.FontStyle]::Regular)
+    $primary_proxy_input.Visible = $false
+    $Domain_Form.Controls.Add($primary_proxy_input)
+
+
+    $secondary_proxy_label = New-Object Windows.Forms.Label
+    $secondary_proxy_label.size = New-Object System.Drawing.Size(150, 35)
+    $secondary_proxy_label.location = New-Object System.Drawing.Size(0, 335)
+    $secondary_proxy_label.Font = New-Object System.Drawing.Font("Courier",8,[System.Drawing.FontStyle]::Regular)
+    $secondary_proxy_label.text = "Secondary Proxy:"
+    $secondary_proxy_label.Visible = $false
+    $Domain_Form.Controls.Add($secondary_proxy_label)
+
+
+
+    $secondary_proxy_input = New-Object Windows.Forms.TextBox
+    $secondary_proxy_input.size = New-Object System.Drawing.Size(350, 75)
+    $secondary_proxy_input.location = New-Object System.Drawing.Size(150, 335)
+    $secondary_proxy_input.Font = New-Object System.Drawing.Font("Courier",8,[System.Drawing.FontStyle]::Regular)
+    $secondary_proxy_input.Visible = $false
+    $Domain_Form.Controls.Add($secondary_proxy_input)
+    
+
+    $displayname_label = New-Object Windows.Forms.Label
+    $displayname_label.size = New-Object System.Drawing.Size(150, 35)
+    $displayname_label.location = New-Object System.Drawing.Size(0, 365)
+    $displayname_label.Font = New-Object System.Drawing.Font("Courier",8,[System.Drawing.FontStyle]::Regular)
+    $displayname_label.text = "Display name:"
+    $displayname_label.Visible = $false
+    $Domain_Form.Controls.Add($displayname_label)
+
+
+    $displayname_input = New-Object Windows.Forms.TextBox
+    $displayname_input.size = New-Object System.Drawing.Size(350, 75)
+    $displayname_input.location = New-Object System.Drawing.Size(150, 365)
+    $displayname_input.Font = New-Object System.Drawing.Font("Courier",8,[System.Drawing.FontStyle]::Regular)
+    $displayname_input.Visible = $false
+    $Domain_Form.Controls.Add($displayname_input)
+
+
     $create_button = New-Object Windows.Forms.Button
     $create_button.Font = New-Object System.Drawing.Font("Courier",8,[System.Drawing.FontStyle]::Regular)
     $create_button.Text = "Create"
     $create_button.size = New-Object System.Drawing.Size(120, 30)
-    $create_button.location = New-Object System.Drawing.Size(150, 360)
+    $create_button.location = New-Object System.Drawing.Size(150, 395)
     $create_button.Add_Click({CreateDomainUser -_ou $ou_combo.SelectedIndex -_template $users_combo.Text -_upn $special_combo.Text -_fullname $employee_name_input.Text -_username $username_input.Text -_password $password_input.Text -_email $email_input.Text})
     $Domain_Form.Controls.Add($create_button)
 
@@ -205,13 +286,13 @@ Function DomainUser
     $close_button.Font = New-Object System.Drawing.Font("Courier",8,[System.Drawing.FontStyle]::Regular)
     $close_button.Text = "Close"
     $close_button.size = New-Object System.Drawing.Size(120, 30)
-    $close_button.location = New-Object System.Drawing.Size(310, 360)
+    $close_button.location = New-Object System.Drawing.Size(310, 395)
     $close_button.Add_Click({$Domain_Form.Add_FormClosing({$_.Cancel=$false});$Domain_Form.Close()})   
     $Domain_Form.Controls.Add($close_button)
 
     $message_label = New-Object Windows.Forms.Label
     $message_label.size = New-Object System.Drawing.Size(350, 50)
-    $message_label.location = New-Object System.Drawing.Size(150, 410)
+    $message_label.location = New-Object System.Drawing.Size(150, 510) # was 410
     $message_label.Font = New-Object System.Drawing.Font("Courier",8,[System.Drawing.FontStyle]::Regular)
     $Domain_Form.Controls.Add($message_label)
 
@@ -229,33 +310,32 @@ Function CreateDomainUser
         [string]$_fullname,
         [string]$_username, 
         [string]$_password,
-        [string]$_email,
-        [string]$_displayname,
-        [array[]]$_proxies
+        [string]$_email
     )
+
+    if(Are-PrimaryProxiesNull -eq 1)
+    {
+        $primary_proxy = "SMTP:" + $_email
+    }
+    elseif(Are-PrimaryProxiesNull -eq 0)
+    {
+        $primary_proxy = $primary_proxy_input.Text
+    }
+    if(Are-SecondaryProxiesNull -eq 0)
+    {
+        $secondary_proxy = $secondary_proxy_input.Text
+    }
+    if(Is-DisplaynameNull -eq 1)
+    {
+        $_displayname = $displayname_input.Text
+    }
+    elseif(Is-DisplaynameNull -eq 0)
+    {
+        $_displayname = $_fullname
+    }
+
     if($_ou -gt 0 -and $_template.Count -gt 0 -and $_upn.Count -gt 0 -and $_fullname.Count -gt 0 -and $_username -gt 0 -and $_password.Count -gt 0 -and $_email -gt 0) 
     {
-        if($_displayname.Count -le 0)
-        {
-            $_displayname = $_fullname
-        }
-        if($_proxies.Count -gt 0)
-        {
-            if($_proxies.Count -eq 1)
-            {
-                $primary_proxy = $_proxies[1]
-            }
-            elseif($domain_proxies.Count -gt 1)
-            {
-                $primary_proxy = $_proxies[1]
-                $secondary_proxy = $_proxies[$_proxies.Count - 1]
-            }
-        }
-        elseif($_proxies -le 0)
-        {
-            $primary_proxy = "SMTP:" + $_email
-        }
-
          $user_exists = DoesUser-Exist $_username
          if($user_exists -eq 1)
          {
@@ -263,8 +343,7 @@ Function CreateDomainUser
              $message_label.Text =  "An account with the username: " + $_username + " already exists, please try again..."
          }
          elseif($user_exists -eq 0)
-         {
-             
+         { 
              $userpname = $_username + "@" + $_upn
              $_given, $_surname = $_fullname.Split(' ')
              $tmp_pass = $_password | ConvertTo-SecureString -AsPlainText -Force
@@ -274,6 +353,16 @@ Function CreateDomainUser
              Foreach($group in $groups)
              {
                  Add-ADGroupMember -Identity (Get-ADGroup $group).name -Members $_username
+             }
+             
+             if($primary_proxy.Length -ge 1 -and $secondary_proxy.Length -le 0)
+             {
+                 Set-ADUser -Identity $_username -Add @{Proxyaddresses = $primary_proxy}
+             }
+             elseif($primary_proxy.Length -ge 1 -and $secondary_proxy -ge 1)
+             {
+                 Set-ADUser -Identity $_username -Add @{Proxyaddresses = $primary_proxy}
+                 Set-ADUser -Identity $_username -Add @{Proxyaddresses = $secondary_proxy}
              }
              $distinguished_ous = (Get-ADOrganizationalUnit -Filter * | Select-Object -ExpandProperty Distinguishedname)
              $tuser = (Get-ADUser -Filter {samAccountName -like $_username} | Select-Object -ExpandProperty DistinguishedName) 
@@ -318,6 +407,88 @@ Function DoesUser-Exist
     #        Return 0 for false
     # If this function returns a 1 then a user with that name already exists and the user should not be created.
     # If this function returns a 0 then the user does not alread yexist and can be created.
+}
+
+
+
+Function AreProxies-Hidden
+{
+    if($proxies_clicked -eq 1)
+    {
+        Hide-AddProxies
+    }
+    elseif($proxies_clicked -eq 0)
+    {
+       Show-AddProxies
+    }
+}
+
+Function Show-AddProxies
+{
+    $proxies_clicked = 1
+    $primary_proxy_label.Visible = $true
+    $primary_proxy_input.Visible = $true
+    $secondary_proxy_label.Visible = $true
+    $secondary_proxy_input.Visible = $true
+}
+
+Function Hide-AddProxies # Proxies
+{
+    $displayname_clicked = 0
+    $displayname_label.Visible = $false
+    $displayname_input.Visible = $false
+}
+
+
+Function Are-PrimaryProxiesNull 
+{
+    if($primary_proxy_input.Text.Length -le 0)
+    {
+        return 1
+    }
+    elseif($primary_proxy_input.Text.Length -ge 1)
+    {
+        return 0
+    }
+}
+
+Function Are-SecondaryProxiesNull
+{
+    if($secondary_proxy_input.Text.Length -le 0)
+    {
+        return 1
+    }
+    elseif($secondary_proxy_input.Text.Length -ge 1)
+    {
+        return 0
+    }
+}
+
+
+Function Show-AddDisplayname
+{
+    $displayname_clicked = 1
+    $displayname_label.Visible = $true
+    $displayname_input.Visible = $true
+}
+
+
+Function Hide-AddDisplayname 
+{
+
+}
+
+
+Function Is-DisplaynameNull 
+{
+    if($displayname_input.Text.Length -le 0)
+    {
+        return 1
+    }
+    elseif($displayname_input.Text.Length -ge 1)
+    {
+        return 0
+    }
 }
 
 
