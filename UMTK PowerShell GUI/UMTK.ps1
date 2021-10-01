@@ -313,25 +313,26 @@ Function CreateDomainUser
         [string]$_email
     )
 
-    if(Are-PrimaryProxiesNull -eq 1)
+    if($primary_proxy_input.Text.Length -eq 0)
     {
-        $primary_proxy = "SMTP:" + $_email
+        $pprox = "SMTP:" + $_email
     }
-    elseif(Are-PrimaryProxiesNull -eq 0)
+    elseif($primary_proxy_input.Text.Length -ge 1)
     {
-        $primary_proxy = $primary_proxy_input.Text
+        $pprox = "SMTP:" + $primary_proxy_input.Text
     }
-    if(Are-SecondaryProxiesNull -eq 0)
+    if($secondary_proxy_input.Text.Length -ge 1)
     {
-        $secondary_proxy = $secondary_proxy_input.Text
+        $secprox = "smtp:" + $secondary_proxy_input.Text
     }
-    if(Is-DisplaynameNull -eq 1)
-    {
-        $_displayname = $displayname_input.Text
-    }
-    elseif(Is-DisplaynameNull -eq 0)
+
+    if($displayname_input.Text.Length -eq 0)
     {
         $_displayname = $_fullname
+    }
+    elseif($displayname_input.Text.Length -ge 1)
+    {
+        $_displayname = $displayname_input.Text
     }
 
     if($_ou -gt 0 -and $_template.Count -gt 0 -and $_upn.Count -gt 0 -and $_fullname.Count -gt 0 -and $_username -gt 0 -and $_password.Count -gt 0 -and $_email -gt 0) 
@@ -355,14 +356,14 @@ Function CreateDomainUser
                  Add-ADGroupMember -Identity (Get-ADGroup $group).name -Members $_username
              }
              
-             if($primary_proxy.Length -ge 1 -and $secondary_proxy.Length -le 0)
+             if($pprox.Length -ge 1)
              {
-                 Set-ADUser -Identity $_username -Add @{Proxyaddresses = $primary_proxy}
+                 Set-ADUser -Identity $_username -Add @{Proxyaddresses = $pprox}
              }
-             elseif($primary_proxy.Length -ge 1 -and $secondary_proxy -ge 1)
+             if($secprox.Length -gt 1)
              {
-                 Set-ADUser -Identity $_username -Add @{Proxyaddresses = $primary_proxy}
-                 Set-ADUser -Identity $_username -Add @{Proxyaddresses = $secondary_proxy}
+                 # Set-ADUser -Identity $_username -Add @{Proxyaddresses = $primary_proxy}
+                 Set-ADUser -Identity $_username -Add @{Proxyaddresses = $secprox}
              }
              $distinguished_ous = (Get-ADOrganizationalUnit -Filter * | Select-Object -ExpandProperty Distinguishedname)
              $tuser = (Get-ADUser -Filter {samAccountName -like $_username} | Select-Object -ExpandProperty DistinguishedName) 
@@ -410,7 +411,6 @@ Function DoesUser-Exist
 }
 
 
-
 Function AreProxies-Hidden
 {
     if($proxies_clicked -eq 1)
@@ -442,24 +442,28 @@ Function Hide-AddProxies # Proxies
 
 Function Are-PrimaryProxiesNull 
 {
-    if($primary_proxy_input.Text.Length -le 0)
+    if($primary_proxy_input.Text.Length -eq 0)
     {
+        Write-Host "1"
         return 1
     }
     elseif($primary_proxy_input.Text.Length -ge 1)
     {
+        Write-Host "0"
         return 0
     }
 }
 
 Function Are-SecondaryProxiesNull
 {
-    if($secondary_proxy_input.Text.Length -le 0)
+    if($secondary_proxy_input.Text.Length -eq 0)
     {
+        Write-Host "1"
         return 1
     }
     elseif($secondary_proxy_input.Text.Length -ge 1)
     {
+        Write-Host "0"
         return 0
     }
 }
@@ -481,12 +485,14 @@ Function Hide-AddDisplayname
 
 Function Is-DisplaynameNull 
 {
-    if($displayname_input.Text.Length -le 0)
+    if($displayname_input.Text.Length -eq 0)
     {
+        Write-Host "1"
         return 1
     }
     elseif($displayname_input.Text.Length -ge 1)
     {
+        Write-Host "0"
         return 0
     }
 }
