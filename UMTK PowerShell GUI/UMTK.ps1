@@ -551,7 +551,11 @@ Function LocalUser
     $Luser_Form.Controls.Add($lclose_button)
 
 
-    # success label
+    $lmessage_label = New-Object Windows.Forms.Label
+    $lmessage_label.size = New-Object System.Drawing.Size(350, 50)
+    $lmessage_label.location = New-Object System.Drawing.Size(150, 510)
+    $lmessage_label.Font = New-Object System.Drawing.Font("Courier",8,[System.Drawing.FontStyle]::Regular)
+    $lUser_Form.Controls.Add($lmessage_label)
 
     $Luser_Form.Add_Shown({$Luser_Form.Activate()})
     [void] $Luser_Form.ShowDialog()
