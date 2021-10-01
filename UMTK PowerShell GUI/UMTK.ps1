@@ -20,39 +20,46 @@ Function DomainUser
     
     # FILE MENU ITEM
     $file_action = New-Object System.Windows.Forms.ToolStripMenuItem
+    $file_action.Font = New-Object System.Drawing.Font("Courier",8,[System.Drawing.FontStyle]::Regular)
     $file_action.Text = "File"
     # save command 
     $save_command = New-Object System.Windows.Forms.ToolStripButton
+    $save_command.Font = New-Object System.Drawing.Font("Courier",8,[System.Drawing.FontStyle]::Regular)
     $save_command.Text = "Save Command"
-    # save to file
-    $save_command_file = New-Object System.Windows.Forms.ToolStripButton
-    $save_command_file.Text = "Save to File" 
+
     # Close program 
     $close_program = New-Object System.Windows.Forms.ToolStripButton
+    $close_program.Font = New-Object System.Drawing.Font("Courier",8,[System.Drawing.FontStyle]::Regular)
     $close_program.Text = "Close Program"
     
     # EDIT MENU ITEM
     $edit_action = New-Object System.Windows.Forms.ToolStripMenuItem
+    $edit_action.Font = New-Object System.Drawing.Font("Courier",8,[System.Drawing.FontStyle]::Regular)
     $edit_action.Text = "Edit"
     
 
     # SETTINGS MENU ITEM
     $settings_action = New-Object System.Windows.Forms.ToolStripMenuItem
+    $settings_Action.Font = New-Object System.Drawing.Font("Courier",8,[System.Drawing.FontStyle]::Regular)
     $settings_action.Text = "Settings"
     # Set additional proxy 
-    $add_proxies= New-Object System.Windows.Forms.ToolStripButton
+    $add_proxies = New-Object System.Windows.Forms.ToolStripButton
+    $add_proxies.Font = New-Object System.Drawing.Font("Courier",8,[System.Drawing.FontStyle]::Regular)
     $add_proxies.Text = "Set Aditional proxy"
 
     # set display name
     $add_display_name = New-Object System.Windows.Forms.ToolStripButton
+    $add_display_name.Font = New-Object System.Drawing.Font("Courier",8,[System.Drawing.FontStyle]::Regular)
     $add_display_name.Text = "Set Display Name"
 
     # HELP MENU ITEM
     $help_action = New-Object System.Windows.Forms.ToolStripMenuItem
+    $help_Action.Font = New-Object System.Drawing.Font("Courier",8,[System.Drawing.FontStyle]::Regular)
     $help_action.Text = "Help"
 
     # Help function
     $save_me = New-Object System.Windows.Forms.ToolStripButton
+    $save_me.Font = New-Object System.Drawing.Font("Courier",8,[System.Drawing.FontStyle]::Regular)
     $save_me.Text = "Help"    
 
     # Add items to menu bar
@@ -63,7 +70,6 @@ Function DomainUser
 
     # Add submenu items
     $file_action.DropDownItems.Add($save_command)
-    $file_action.DropDownItems.Add($save_command_file)
     $file_action.DropDownItems.Add($close_program)
 
     $settings_action.DropDownItems.Add($add_proxies)
@@ -78,6 +84,7 @@ Function DomainUser
     $ou_combo = New-Object Windows.Forms.ComboBox 
     $ou_combo.size = New-Object System.Drawing.Size(350, 150)
     $ou_combo.location = New-Object System.Drawing.Size(150, 70)
+    $ou_combo.Font = New-Object System.Drawing.Font("Courier",8,[System.Drawing.FontStyle]::Regular)
     $clean_ous = Get-ADOrganizationalUnit -Filter * | Select-Object -ExpandProperty Name
     Foreach($ou in $clean_ous)
     {
@@ -91,6 +98,7 @@ Function DomainUser
     $users_combo = New-Object Windows.Forms.ComboBox 
     $users_combo.size = New-Object System.Drawing.Size(350, 150)
     $users_combo.location = New-Object System.Drawing.Size(150, 100)
+    $users_combo.Font = New-Object System.Drawing.Font("Courier",8,[System.Drawing.FontStyle]::Regular)
     $pull_users = Get-ADUser -Filter * | Select-Object -ExpandProperty Name
     Foreach($usr in $pull_users)
     {
@@ -105,6 +113,7 @@ Function DomainUser
     $special_combo = New-Object Windows.Forms.ComboBox 
     $special_combo.size = New-Object System.Drawing.Size(350, 150)
     $special_combo.location = New-Object System.Drawing.Size(150, 130)
+    $special_combo.Font = New-Object System.Drawing.Font("Courier",8,[System.Drawing.FontStyle]::Regular)
     $domain_lookup = Get-ADForest | Select-Object -ExpandProperty Domains
     $upn_lookup = Get-ADForest | Select-Object -ExpandProperty UPNSuffixes
     if($upn_lookup.Count -gt 0)
@@ -125,8 +134,9 @@ Function DomainUser
 
 
     $employee_name_label = New-Object Windows.Forms.Label
-    $employee_name_label.size = New-Object System.Drawing.Size(150, 50)
+    $employee_name_label.size = New-Object System.Drawing.Size(150, 35)
     $employee_name_label.location = New-Object System.Drawing.Size(0, 160)
+    $employee_name_label.Font = New-Object System.Drawing.Font("Courier",8,[System.Drawing.FontStyle]::Regular)
     $employee_name_label.text = "Employee name:"
     $Domain_Form.Controls.Add($employee_name_label)
 
@@ -134,48 +144,56 @@ Function DomainUser
     $employee_name_input = New-Object Windows.Forms.TextBox
     $employee_name_input.size = New-Object System.Drawing.Size(350, 75)
     $employee_name_input.location = New-Object System.Drawing.Size(150, 160)
+    $employee_name_input.Font = New-Object System.Drawing.Font("Courier",8,[System.Drawing.FontStyle]::Regular)
     $Domain_Form.Controls.Add($employee_name_input)
 
 
     $username_label = New-Object Windows.Forms.Label
-    $username_label.size = New-Object System.Drawing.Size(150, 50)
-    $username_label.location = New-Object System.Drawing.Size(0, 210)
+    $username_label.size = New-Object System.Drawing.Size(150, 35)
+    $username_label.location = New-Object System.Drawing.Size(0, 195)
+    $username_label.Font = New-Object System.Drawing.Font("Courier",8,[System.Drawing.FontStyle]::Regular)
     $username_label.text = "Username:"
     $Domain_Form.Controls.Add($username_label)
 
 
     $username_input = New-Object Windows.Forms.TextBox
     $username_input.size = New-Object System.Drawing.Size(350, 75)
-    $username_input.location = New-Object System.Drawing.Size(150, 210)
+    $username_input.location = New-Object System.Drawing.Size(150, 195)
+    $username_input.Font = New-Object System.Drawing.Font("Courier",8,[System.Drawing.FontStyle]::Regular)
     $Domain_Form.Controls.Add($username_input)
 
 
     $password_label = New-Object Windows.Forms.Label
-    $password_label.size = New-Object System.Drawing.Size(150, 50)
-    $password_label.location = New-Object System.Drawing.Size(0, 260)
+    $password_label.size = New-Object System.Drawing.Size(150, 35)
+    $password_label.location = New-Object System.Drawing.Size(0, 230)
+    $password_label.Font = New-Object System.Drawing.Font("Courier",8,[System.Drawing.FontStyle]::Regular)
     $password_label.text = "Password:"
     $Domain_Form.Controls.Add($password_label)
 
 
     $password_input = New-Object Windows.Forms.TextBox
     $password_input.size = New-Object System.Drawing.Size(350, 75)
-    $password_input.location = New-Object System.Drawing.Size(150, 260)
+    $password_input.location = New-Object System.Drawing.Size(150, 230)
+    $password_input.Font = New-Object System.Drawing.Font("Courier",8,[System.Drawing.FontStyle]::Regular)
     $Domain_Form.Controls.Add($password_input)
 
     $email_label = New-Object Windows.Forms.Label
-    $email_label.size = New-Object System.Drawing.Size(150, 50)
-    $email_label.location = New-Object System.Drawing.Size(0, 310)
+    $email_label.size = New-Object System.Drawing.Size(150, 35)
+    $email_label.location = New-Object System.Drawing.Size(0, 265)
+    $email_label.Font = New-Object System.Drawing.Font("Courier",8,[System.Drawing.FontStyle]::Regular)
     $email_label.text = "Email address:"
     $Domain_Form.Controls.Add($email_label)
 
 
     $email_input = New-Object Windows.Forms.TextBox
     $email_input.size = New-Object System.Drawing.Size(350, 75)
-    $email_input.location = New-Object System.Drawing.Size(150, 310)
+    $email_input.location = New-Object System.Drawing.Size(150, 265)
+    $email_input.Font = New-Object System.Drawing.Font("Courier",8,[System.Drawing.FontStyle]::Regular)
     $Domain_Form.Controls.Add($email_input)
 
 
     $create_button = New-Object Windows.Forms.Button
+    $create_button.Font = New-Object System.Drawing.Font("Courier",8,[System.Drawing.FontStyle]::Regular)
     $create_button.Text = "Create"
     $create_button.size = New-Object System.Drawing.Size(120, 30)
     $create_button.location = New-Object System.Drawing.Size(150, 360)
@@ -184,6 +202,7 @@ Function DomainUser
 
 
     $close_button = New-Object Windows.Forms.Button
+    $close_button.Font = New-Object System.Drawing.Font("Courier",8,[System.Drawing.FontStyle]::Regular)
     $close_button.Text = "Close"
     $close_button.size = New-Object System.Drawing.Size(120, 30)
     $close_button.location = New-Object System.Drawing.Size(310, 360)
@@ -193,6 +212,7 @@ Function DomainUser
     $message_label = New-Object Windows.Forms.Label
     $message_label.size = New-Object System.Drawing.Size(350, 50)
     $message_label.location = New-Object System.Drawing.Size(150, 410)
+    $message_label.Font = New-Object System.Drawing.Font("Courier",8,[System.Drawing.FontStyle]::Regular)
     $Domain_Form.Controls.Add($message_label)
 
     $Domain_Form.Add_Shown({$Domain_Form.Activate()})
