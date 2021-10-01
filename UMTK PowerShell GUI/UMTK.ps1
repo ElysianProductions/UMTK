@@ -239,7 +239,8 @@ Function CreateDomainUser
          $user_exists = DoesUser-Exist $_username
          if($user_exists -eq 1)
          {
-             $message_label.Text =  "A user account with the username: " + $_username + " already exists, please try again"
+             $message_label.ForeColor = "Red"
+             $message_label.Text =  "An account with the username: " + $_username + " already exists, please try again..."
          }
          elseif($user_exists -eq 0)
          {
@@ -261,11 +262,12 @@ Function CreateDomainUser
              $user_exists = DoesUser-Exist $_username
              if($user_exists -eq 0)
              {
+                $message_label.ForeColor = "Red"
                 $message_label.Text = "Something very terrible has happened. Gross, what have you done?!"
              }
              elseif($user_exists -eq 1)
              {
-                 
+                $message_label.ForeColor = "Green"
                 $message_label.Text =  "The user account for " + $_fullname + " has been created..."
              }
          }
