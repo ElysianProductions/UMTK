@@ -87,52 +87,48 @@ Function DomainUser
 
     $ou_combo = New-Object Windows.Forms.ComboBox 
     $ou_combo.size = New-Object System.Drawing.Size(350, 150)
-    $ou_combo.location = New-Object System.Drawing.Size(150, 70)
+    $ou_combo.location = New-Object System.Drawing.Size(150, 55)
     $ou_combo.Font = New-Object System.Drawing.Font("Courier",8,[System.Drawing.FontStyle]::Regular)
     $clean_ous = Get-ADOrganizationalUnit -Filter * | Select-Object -ExpandProperty Name
     Foreach($ou in $clean_ous)
     {
         $ou_combo.Items.Add($ou)
     }
-    
-    #
     $Domain_Form.Controls.Add($ou_combo)
 
 
     $ou_combo_label = New-Object Windows.Forms.Label
     $ou_combo_label.size = New-Object System.Drawing.Size(150, 35)
-    $ou_combo_label.location = New-Object System.Drawing.Size(0, 70)
-    $ou_combo_label.Font = New-Object System.Drawing.Font("Courier",7,[System.Drawing.FontStyle]::Regular)
+    $ou_combo_label.location = New-Object System.Drawing.Size(0, 55)
+    $ou_combo_label.Font = New-Object System.Drawing.Font("Courier",8,[System.Drawing.FontStyle]::Regular)
     $ou_combo_label.text = "OU:"
     $Domain_Form.Controls.Add($ou_combo_label)
 
    
     $users_combo = New-Object Windows.Forms.ComboBox 
     $users_combo.size = New-Object System.Drawing.Size(350, 150)
-    $users_combo.location = New-Object System.Drawing.Size(150, 100)
+    $users_combo.location = New-Object System.Drawing.Size(150, 90)
     $users_combo.Font = New-Object System.Drawing.Font("Courier",8,[System.Drawing.FontStyle]::Regular)
     $pull_users = Get-ADUser -Filter * | Select-Object -ExpandProperty Name
     Foreach($usr in $pull_users)
     {
         $users_combo.Items.Add($usr)
     }
-    
-    #
     $Domain_Form.Controls.Add($users_combo)
 
 
     $users_combo_label = New-Object Windows.Forms.Label
     $users_combo_label.size = New-Object System.Drawing.Size(150, 35)
-    $users_combo_label.location = New-Object System.Drawing.Size(0, 100)
-    $users_combo_label.Font = New-Object System.Drawing.Font("Courier",7,[System.Drawing.FontStyle]::Regular)
+    $users_combo_label.location = New-Object System.Drawing.Size(0, 90)
+    $users_combo_label.Font = New-Object System.Drawing.Font("Courier",8,[System.Drawing.FontStyle]::Regular)
     $users_combo_label.text = "Template:"
     $Domain_Form.Controls.Add($users_combo_label)
 
 
-     #special combo box
+
     $special_combo = New-Object Windows.Forms.ComboBox 
     $special_combo.size = New-Object System.Drawing.Size(350, 150)
-    $special_combo.location = New-Object System.Drawing.Size(150, 130)
+    $special_combo.location = New-Object System.Drawing.Size(150, 125)
     $special_combo.Font = New-Object System.Drawing.Font("Courier",8,[System.Drawing.FontStyle]::Regular)
     $domain_lookup = Get-ADForest | Select-Object -ExpandProperty Domains
     $upn_lookup = Get-ADForest | Select-Object -ExpandProperty UPNSuffixes
@@ -155,8 +151,8 @@ Function DomainUser
 
     $special_combo_label = New-Object Windows.Forms.Label
     $special_combo_label.size = New-Object System.Drawing.Size(150, 35)
-    $special_combo_label.location = New-Object System.Drawing.Size(0, 130)
-    $special_combo_label.Font = New-Object System.Drawing.Font("Courier",7,[System.Drawing.FontStyle]::Regular)
+    $special_combo_label.location = New-Object System.Drawing.Size(0, 125)
+    $special_combo_label.Font = New-Object System.Drawing.Font("Courier",8,[System.Drawing.FontStyle]::Regular)
     $special_combo_label.text = "Doamin\UPN:"
     $Domain_Form.Controls.Add($special_combo_label)
 
@@ -313,25 +309,26 @@ Function CreateDomainUser
         [string]$_email
     )
 
-    if(Are-PrimaryProxiesNull -eq 1)
+    if($primary_proxy_input.Text.Length -eq 0)
     {
-        $primary_proxy = "SMTP:" + $_email
+        $pprox = "SMTP:" + $_email
     }
-    elseif(Are-PrimaryProxiesNull -eq 0)
+    elseif($primary_proxy_input.Text.Length -ge 1)
     {
-        $primary_proxy = $primary_proxy_input.Text
+        $pprox = "SMTP:" + $primary_proxy_input.Text
     }
-    if(Are-SecondaryProxiesNull -eq 0)
+    if($secondary_proxy_input.Text.Length -ge 1)
     {
-        $secondary_proxy = $secondary_proxy_input.Text
+        $secprox = "smtp:" + $secondary_proxy_input.Text
     }
-    if(Is-DisplaynameNull -eq 1)
-    {
-        $_displayname = $displayname_input.Text
-    }
-    elseif(Is-DisplaynameNull -eq 0)
+
+    if($displayname_input.Text.Length -eq 0)
     {
         $_displayname = $_fullname
+    }
+    elseif($displayname_input.Text.Length -ge 1)
+    {
+        $_displayname = $displayname_input.Text
     }
 
     if($_ou -gt 0 -and $_template.Count -gt 0 -and $_upn.Count -gt 0 -and $_fullname.Count -gt 0 -and $_username -gt 0 -and $_password.Count -gt 0 -and $_email -gt 0) 
@@ -355,14 +352,13 @@ Function CreateDomainUser
                  Add-ADGroupMember -Identity (Get-ADGroup $group).name -Members $_username
              }
              
-             if($primary_proxy.Length -ge 1 -and $secondary_proxy.Length -le 0)
+             if($pprox.Length -ge 1)
              {
-                 Set-ADUser -Identity $_username -Add @{Proxyaddresses = $primary_proxy}
+                 Set-ADUser -Identity $_username -Add @{Proxyaddresses = $pprox}
              }
-             elseif($primary_proxy.Length -ge 1 -and $secondary_proxy -ge 1)
+             if($secprox.Length -gt 1)
              {
-                 Set-ADUser -Identity $_username -Add @{Proxyaddresses = $primary_proxy}
-                 Set-ADUser -Identity $_username -Add @{Proxyaddresses = $secondary_proxy}
+                 Set-ADUser -Identity $_username -Add @{Proxyaddresses = $secprox}
              }
              $distinguished_ous = (Get-ADOrganizationalUnit -Filter * | Select-Object -ExpandProperty Distinguishedname)
              $tuser = (Get-ADUser -Filter {samAccountName -like $_username} | Select-Object -ExpandProperty DistinguishedName) 
@@ -410,7 +406,6 @@ Function DoesUser-Exist
 }
 
 
-
 Function AreProxies-Hidden
 {
     if($proxies_clicked -eq 1)
@@ -432,36 +427,11 @@ Function Show-AddProxies
     $secondary_proxy_input.Visible = $true
 }
 
-Function Hide-AddProxies # Proxies
+Function Hide-AddProxies
 {
     $displayname_clicked = 0
     $displayname_label.Visible = $false
     $displayname_input.Visible = $false
-}
-
-
-Function Are-PrimaryProxiesNull 
-{
-    if($primary_proxy_input.Text.Length -le 0)
-    {
-        return 1
-    }
-    elseif($primary_proxy_input.Text.Length -ge 1)
-    {
-        return 0
-    }
-}
-
-Function Are-SecondaryProxiesNull
-{
-    if($secondary_proxy_input.Text.Length -le 0)
-    {
-        return 1
-    }
-    elseif($secondary_proxy_input.Text.Length -ge 1)
-    {
-        return 0
-    }
 }
 
 
@@ -481,12 +451,14 @@ Function Hide-AddDisplayname
 
 Function Is-DisplaynameNull 
 {
-    if($displayname_input.Text.Length -le 0)
+    if($displayname_input.Text.Length -eq 0)
     {
+        Write-Host "1"
         return 1
     }
     elseif($displayname_input.Text.Length -ge 1)
     {
+        Write-Host "0"
         return 0
     }
 }
