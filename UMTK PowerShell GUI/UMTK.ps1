@@ -392,9 +392,8 @@ Function CreateLocalUser
         # $lpassword -cmatch "(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[^A-Za-z0-9])(?=.{8,})" 
         $user_exists = Validate-LocalUser -username $lusername
         if($user_exists -eq 0)
-        {
-            
-            NET USER $lusername $lpassword /ADD
+        { 
+            net user /add $lusername $lpassword 
             if($admin_button.Checked -eq $true)
             {
                 net localgroup administrators $lusername /add
@@ -410,10 +409,10 @@ Function CreateLocalUser
     }
     else
     {
-        if($lusername_input.Text.Length -eq 0)
+        if($lusername_input.Text.Length -eq 0 -or $lusername_input.Text.Length -le 2)
         {
             $lmessage_label.ForeColor = "Red"
-            $lmessage_label.Text = "FAILURE: The username feild is empty"
+            $lmessage_label.Text = "FAILURE: Either the username feild is empty or it's 2 characters or less. Make sure the username is at least three characters longs"
         }
 
         if($lpassword_input.Text.Length -eq 0 -or $lpassword.Text.Length -le 7)
