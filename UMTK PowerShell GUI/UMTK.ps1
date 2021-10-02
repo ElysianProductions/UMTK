@@ -387,10 +387,10 @@ Function CreateLocalUser
         [string]$lusername,
         [string]$lpassword
     )
-    if($lusername.Length -ge 3 -and $lpassword -ge 8)
+    $pass_eval = Validate-Password $lpassword
+    $user_exists = Validate-LocalUser -username $lusername
+    if($lusername.Length -ge 3 -and $pass_eval -eq 1)
     {
-        # $lpassword -cmatch "(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[^A-Za-z0-9])(?=.{8,})" 
-        $user_exists = Validate-LocalUser -username $lusername
         if($user_exists -eq 0)
         { 
             net user /add $lusername $lpassword 
@@ -403,19 +403,19 @@ Function CreateLocalUser
         }
         elseif($user_exists -eq 1)
         {
-            $lmessage_label.ForeColor = "Green"
+            $lmessage_label.ForeColor = "Red"
             $lmessage_label.Text = "The user Account for " + $lusername + " already exists, please try again."
         }
     }
     else
     {
-        if($lusername_input.Text.Length -eq 0 -or $lusername_input.Text.Length -le 2)
+        if($lusername_input.Text.Length -le 2)
         {
             $lmessage_label.ForeColor = "Red"
             $lmessage_label.Text = "FAILURE: Either the username feild is empty or it's 2 characters or less. Make sure the username is at least three characters longs"
         }
 
-        if($lpassword_input.Text.Length -eq 0 -or $lpassword.Text.Length -le 7)
+        if($pass_eval -eq 0)
         {
             $lmessage_label.ForeColor = "Red"
             $lmessage_label.Text = "FAILURE: Either the password " + $lpassword + " is less than 8 characters or it's not secure. Please add 1 uppercase, 1 lowercase character, a number and at least one symbol and make sure it's 8 or more characters"
@@ -468,6 +468,27 @@ Function Validate-DomainUser
     # If this function returns a 1 then a user with that name already exists and the user should not be created.
     # If this function returns a 0 then the user does not alread yexist and can be created.
 }
+
+Function Validate-Password
+{
+    param (
+        [parameter (Mandatory = $true)]
+        [string]$password
+    )
+    $pattern = "(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[^A-Za-z0-9])(?=.{8,})" 
+    if($password -cmatch $pattern)
+    {
+        return 1
+    }
+    else
+    {
+        return 0
+    }
+    # If secure return 1
+    # If not secure return 0
+    # Pretty straightforward forcing 1 Capital letter, one lower case letter, 1 number, 1 symbol and it has an 8 character minimum requirement
+}
+
 
 Function AreProxies-Hidden
 {
