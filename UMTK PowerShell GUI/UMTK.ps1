@@ -333,10 +333,7 @@ Function CreateDomainUser
 
     if($_ou -gt 0 -and $_template.Count -gt 0 -and $_upn.Count -gt 0 -and $_fullname.Count -gt 0 -and $_username -gt 0 -and $_password.Count -gt 8 -and $_email -gt 0) 
     {
-         
-         
-         
-         $user_exists = Validate-DomainUser $_username
+         $user_exists = Validate-DomainUser -username $_username
          if($user_exists -eq 1)
          {
              $message_label.ForeColor = "Red"
@@ -367,7 +364,7 @@ Function CreateDomainUser
              $tuser = (Get-ADUser -Filter {samAccountName -like $_username} | Select-Object -ExpandProperty DistinguishedName) 
              Move-ADObject -Identity $tuser -TargetPath $distinguished_ous[$_ou]
 
-             $user_exists = Validate-DomainUser $_username
+             $user_exists = Validate-DomainUser -username $_username
              if($user_exists -eq 0)
              {
                 $message_label.ForeColor = "Red"
@@ -388,36 +385,27 @@ Function CreateLocalUser
      param (
         [int]$is_admin,
         [string]$lusername,
-        [string]$lfullname,
         [string]$lpassword
     )
-    if($lusername.Length -gt 1 -and $lfullname.Length -gt 1 -and $lpassword -ge 1)
+    if($lusername.Length -ge 3 -and $lpassword -ge 8)
     {
         # $lpassword -cmatch "(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[^A-Za-z0-9])(?=.{8,})" 
-        if(Validate-LocalUSer -username $lusername -eq 0)
+        $user_exists = Validate-LocalUser -username $lusername
+        if($user_exists -eq 0)
         {
-            if($lpassword.Length -gt 7)
-            {
-                NET USER $lusername $lpassword /ADD
-                if($admin_button.Checked -eq $true)
-                {
-                    net localgroup administrators $lusername /add
-                }
-                $lmessage_label.ForeColor = "Green"
-                $lmessage_label.Text = "The user Account for " + $lfullname + " has been created."
-            }
-            else
-            {
-                $lmessage_label.ForeColor = "Red"
-                $lmessage_label.Text = "FAILURE: Either the password " + $lpassword + " is less than 8 characters is not secure. Please add 1 uppercase, 1 lowercase character, a number and at least one symbol"
-            }
             
-
+            NET USER $lusername $lpassword /ADD
+            if($admin_button.Checked -eq $true)
+            {
+                net localgroup administrators $lusername /add
+            }
+            $lmessage_label.ForeColor = "Green"
+            $lmessage_label.Text = "The user Account for " + $lusername + " has been created."
         }
-        elseif($lvar.Length -ge 1) 
+        elseif($user_exists -eq 1)
         {
-           $lmessage_label.ForeColor = "Red"
-           $lmessage_label.Text = "FAILURE: The user " + $lusername + " already exists"
+            $lmessage_label.ForeColor = "Green"
+            $lmessage_label.Text = "The user Account for " + $lusername + " already exists, please try again."
         }
     }
     else
@@ -428,20 +416,13 @@ Function CreateLocalUser
             $lmessage_label.Text = "FAILURE: The username feild is empty"
         }
 
-        if($lemployee_name_input.Text.Length -eq 0)
+        if($lpassword_input.Text.Length -eq 0 -or $lpassword.Text.Length -le 7)
         {
             $lmessage_label.ForeColor = "Red"
-            $lmessage_label.Text = "FAILURE: The employee name field is empty"
-        }
-
-        if($lpassword_input.Text.Length -eq 0)
-        {
-            $lmessage_label.ForeColor = "Red"
-            $lmessage_label.Text = "FAILURE: The password field is empty"
+            $lmessage_label.Text = "FAILURE: Either the password " + $lpassword + " is less than 8 characters or it's not secure. Please add 1 uppercase, 1 lowercase character, a number and at least one symbol and make sure it's 8 or more characters"
         }
     }
 }
-
 
 Function Validate-LocalUser 
 {
@@ -464,8 +445,6 @@ Function Validate-LocalUser
     # it throws a UserNotFoundException. It still returns correctly and allows you to carry on but that's not the point. So, instead of fighting I just 
     # added -ErrorAction SilentlyContinue which does supress it from view.
 }
-
-
 
 Function Validate-DomainUser
 {
@@ -491,8 +470,6 @@ Function Validate-DomainUser
     # If this function returns a 0 then the user does not alread yexist and can be created.
 }
 
-
-
 Function AreProxies-Hidden
 {
     if($proxies_clicked -eq 1)
@@ -514,14 +491,6 @@ Function Show-AddProxies
     $secondary_proxy_input.Visible = $true
 }
 
-Function Hide-AddProxies
-{
-    $displayname_clicked = 0
-    $displayname_label.Visible = $false
-    $displayname_input.Visible = $false
-}
-
-
 Function Show-AddDisplayname
 {
     $displayname_clicked = 1
@@ -529,27 +498,17 @@ Function Show-AddDisplayname
     $displayname_input.Visible = $true
 }
 
-
-Function Hide-AddDisplayname 
-{
-
-}
-
-
 Function Is-DisplaynameNull 
 {
     if($displayname_input.Text.Length -eq 0)
-    {
-        Write-Host "1"
+    {   
         return 1
     }
     elseif($displayname_input.Text.Length -ge 1)
     {
-        Write-Host "0"
         return 0
     }
 }
-
 
 Function LocalUser 
 {
@@ -563,22 +522,6 @@ Function LocalUser
     $Luser_Form.maximumSize = New-Object System.Drawing.Size(600,600) 
     $Luser_Form.FormBorderStyle = 'Fixed3D'
     $Luser_Form.StartPosition = 'CenterScreen'
-
-
-    $lemployee_name_label = New-Object Windows.Forms.Label
-    $lemployee_name_label.size = New-Object System.Drawing.Size(150, 35)
-    $lemployee_name_label.location = New-Object System.Drawing.Size(0, 55)
-    $lemployee_name_label.Font = New-Object System.Drawing.Font("Courier",8,[System.Drawing.FontStyle]::Regular)
-    $lemployee_name_label.text = "Employee name:"
-    $Luser_Form.Controls.Add($lemployee_name_label)
-
-
-    $lemployee_name_input = New-Object Windows.Forms.TextBox
-    $lemployee_name_input.size = New-Object System.Drawing.Size(350, 75)
-    $lemployee_name_input.location = New-Object System.Drawing.Size(150, 55)
-    $lemployee_name_input.Font = New-Object System.Drawing.Font("Courier",8,[System.Drawing.FontStyle]::Regular)
-    $Luser_Form.Controls.Add($lemployee_name_input)
-
 
     
     $lusername_label = New-Object Windows.Forms.Label
