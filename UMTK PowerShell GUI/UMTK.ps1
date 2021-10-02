@@ -331,9 +331,12 @@ Function CreateDomainUser
         $_displayname = $displayname_input.Text
     }
 
-    if($_ou -gt 0 -and $_template.Count -gt 0 -and $_upn.Count -gt 0 -and $_fullname.Count -gt 0 -and $_username -gt 0 -and $_password.Count -gt 0 -and $_email -gt 0) 
+    if($_ou -gt 0 -and $_template.Count -gt 0 -and $_upn.Count -gt 0 -and $_fullname.Count -gt 0 -and $_username -gt 0 -and $_password.Count -gt 8 -and $_email -gt 0) 
     {
-         $user_exists = DoesUser-Exist $_username
+         
+         
+         
+         $user_exists = Validate-DomainUser $_username
          if($user_exists -eq 1)
          {
              $message_label.ForeColor = "Red"
@@ -364,7 +367,7 @@ Function CreateDomainUser
              $tuser = (Get-ADUser -Filter {samAccountName -like $_username} | Select-Object -ExpandProperty DistinguishedName) 
              Move-ADObject -Identity $tuser -TargetPath $distinguished_ous[$_ou]
 
-             $user_exists = DoesUser-Exist $_username
+             $user_exists = Validate-DomainUser $_username
              if($user_exists -eq 0)
              {
                 $message_label.ForeColor = "Red"
@@ -380,13 +383,96 @@ Function CreateDomainUser
 }
 
 
-Function DoesUser-Exist
+Function CreateLocalUser
+{
+     param (
+        [int]$is_admin,
+        [string]$lusername,
+        [string]$lfullname,
+        [string]$lpassword
+    )
+    if($lusername.Length -gt 1 -and $lfullname.Length -gt 1 -and $lpassword -ge 1)
+    {
+        # $lpassword -cmatch "(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[^A-Za-z0-9])(?=.{8,})" 
+        if(Validate-LocalUSer -username $lusername -eq 0)
+        {
+            if($lpassword.Length -gt 7)
+            {
+                NET USER $lusername $lpassword /ADD
+                if($admin_button.Checked -eq $true)
+                {
+                    net localgroup administrators $lusername /add
+                }
+                $lmessage_label.ForeColor = "Green"
+                $lmessage_label.Text = "The user Account for " + $lfullname + " has been created."
+            }
+            else
+            {
+                $lmessage_label.ForeColor = "Red"
+                $lmessage_label.Text = "FAILURE: Either the password " + $lpassword + " is less than 8 characters is not secure. Please add 1 uppercase, 1 lowercase character, a number and at least one symbol"
+            }
+            
+
+        }
+        elseif($lvar.Length -ge 1) 
+        {
+           $lmessage_label.ForeColor = "Red"
+           $lmessage_label.Text = "FAILURE: The user " + $lusername + " already exists"
+        }
+    }
+    else
+    {
+        if($lusername_input.Text.Length -eq 0)
+        {
+            $lmessage_label.ForeColor = "Red"
+            $lmessage_label.Text = "FAILURE: The username feild is empty"
+        }
+
+        if($lemployee_name_input.Text.Length -eq 0)
+        {
+            $lmessage_label.ForeColor = "Red"
+            $lmessage_label.Text = "FAILURE: The employee name field is empty"
+        }
+
+        if($lpassword_input.Text.Length -eq 0)
+        {
+            $lmessage_label.ForeColor = "Red"
+            $lmessage_label.Text = "FAILURE: The password field is empty"
+        }
+    }
+}
+
+
+Function Validate-LocalUser 
 {
     param (
         [parameter(Mandatory = $true)]
         [string]$username
     )
-    
+
+    $test = (Get-LocalUser -Name $username -ErrorAction SilentlyContinue | Select-Object Name )
+    if($test.Name -ne $null)
+    {
+        return 1    
+    }
+    elseif($test.Name -eq $null)
+    {    
+        return 0
+    }
+    # This was frustrating for me, I wanted to redirect/supress the error differently but I couldn't https://github.com/PowerShell/PowerShell/issues/11133     
+    # It's messed up because the purpose of the function is to check to see if the local user exists. The problem is that if the local user does not exist
+    # it throws a UserNotFoundException. It still returns correctly and allows you to carry on but that's not the point. So, instead of fighting I just 
+    # added -ErrorAction SilentlyContinue which does supress it from view.
+}
+
+
+
+Function Validate-DomainUser
+{
+    param (
+        [parameter(Mandatory = $true)]
+        [string]$username
+    )
     $test = (Get-ADUser -Filter {SamAccountName -like $username})
     if($test -ne $null)
     {
@@ -404,6 +490,7 @@ Function DoesUser-Exist
     # If this function returns a 1 then a user with that name already exists and the user should not be created.
     # If this function returns a 0 then the user does not alread yexist and can be created.
 }
+
 
 
 Function AreProxies-Hidden
@@ -538,7 +625,7 @@ Function LocalUser
     $lcreate_button.Text = "Create"
     $lcreate_button.size = New-Object System.Drawing.Size(120, 30)
     $lcreate_button.location = New-Object System.Drawing.Size(150, 190)
-    $lcreate_button.Add_Click({"Clicked"})   
+    $lcreate_button.Add_Click({CreateLocalUser -lfullname $lemployee_name_input.Text -lusername $lusername_input.Text -lpassword $lpassword_input.Text})   
     $Luser_Form.Controls.Add($lcreate_button)
 
 
@@ -552,8 +639,8 @@ Function LocalUser
 
 
     $lmessage_label = New-Object Windows.Forms.Label
-    $lmessage_label.size = New-Object System.Drawing.Size(350, 50)
-    $lmessage_label.location = New-Object System.Drawing.Size(150, 510)
+    $lmessage_label.size = New-Object System.Drawing.Size(350, 100)
+    $lmessage_label.location = New-Object System.Drawing.Size(150, 220)
     $lmessage_label.Font = New-Object System.Drawing.Font("Courier",8,[System.Drawing.FontStyle]::Regular)
     $lUser_Form.Controls.Add($lmessage_label)
 
