@@ -110,8 +110,6 @@ Function CreateDomainUser
     }
 }
 
-
-
 Function CreateLocalUser
 {
      param (
@@ -258,6 +256,47 @@ Function Validate-Email
     # See https://docs.microsoft.com/en-us/dotnet/api/system.net.mail.mailaddress?view=net-5.0
 }
 
+Function Dump-UserForm
+{
+    param (
+        [string]$employee,
+        [string]$username,
+        [string]$email,
+        [string]$UPN,
+        [string]$OU,
+        [string]$membership,
+        [string]$template,
+        [int]$is_domain
+    )
+    if($is_domain -eq 1)
+    {
+        $wstring = "
+                     <h1><center>Below this line is a print out of the information that you provided to us, it's our acknowledgement that we not only received but carried out the work that you requested.</center></h1>                    
+                     <body><h5>Employee Name: " + $employee + "</h5><h5>Username: " + $username + "</h5><h5>Email Address: " + $email + "</h5><br>The user was placed into the following groups using the template user " + "(" + $template + ") that you provided " + $membership + "
+                     We placed the user into the same Orginizational Unit as the template user that you provided (" + $template + ") " + $OU + ".<br><br><center>If there are issues with users not receiving the appropriate access or required items to complete their
+                     day to day jobs please provide us with a thorough list containing what they need. Please also understand that this is what the template user is intended to be used for. Using another user account with all of the appropriate access 
+                     levels prevents mistakes that cause productivity issues!</center> 
+                   " 
+        $t = (Get-ItemProperty -Path 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\User Shell Folders\' -Name Desktop | Select-Object Desktop -ErrorAction SilentlyContinue)
+        if($t.Desktop -ne $null)
+        {
+            $str = $t.Desktop.toString() + "\" + $username + ".html"
+            # New-Item -Path $str -ItemType File
+            $wstring | Out-File -FilePath $str 
+        }
+        else
+        {
+            $str = $ENV:USERPROFILE + "\Downloads\" + $username + ".html"
+            $wstring | Out-File -FilePath $str 
+            # New-Item -Path $str -ItemType File
+        }
+    }
+    elseif($is_domain -eq 0)
+    {
+        $str = $ENV:USERPROFILE + "\Downloads\" + $username + ".html"
+        $wstring | Out-File -FilePath $str 
+    }
+}
 
 Function AreProxies-Hidden
 {
