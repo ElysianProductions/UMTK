@@ -126,9 +126,18 @@ Function CreateLocalUser
         if($admin_button.Checked -eq $true)
         {
             NET localgroup administrators $lusername /add
+            $path_var = Validate-Path 
+            Dump-UserForm -username $lusername -password $lpassword -path $path_var -is_domain 0 -local_administrator 1
+            $lmessage_label.ForeColor = "Green"
+            $lmessage_label.Text = "The user Account for " + $lusername + " has been created, a file has been created and can be found at " + $path_var + "<username.html> please take this file and present it to the user. Once transfered, delete this file."
+        } 
+        elseif($admin_button.Checked -eq $false)
+        {
+            $path_var = Validate-Path 
+            Dump-UserForm -username $lusername -password $lpassword -path $path_var -is_domain 0 -local_administrator 0
+            $lmessage_label.ForeColor = "Green"
+            $lmessage_label.Text = "The user Account for " + $lusername + " has been created, a file has been created and can be found at " + $path_var + "<username.html>  please take this file and present it to the user. Once transfered, delete this file."
         }
-        $lmessage_label.ForeColor = "Green"
-        $lmessage_label.Text = "The user Account for " + $lusername + " has been created."
     }
     else
     {
@@ -256,6 +265,25 @@ Function Validate-Email
     # See https://docs.microsoft.com/en-us/dotnet/api/system.net.mail.mailaddress?view=net-5.0
 }
 
+Function Validate-Path 
+{
+   $t = (Get-ItemProperty -Path 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\User Shell Folders\' -Name Desktop | Select-Object Desktop -ErrorAction SilentlyContinue)
+   if($t.Desktop -ne $null)
+   {     
+       $str = $t.Desktop.toString() + "\"
+       return $str
+   }
+   else
+   {
+       $str = $ENV:USERPROFILE + "\Downloads\"
+       return $str
+   }
+   # This one had originally been part of the Dump-UserForm message but I moved it into it's own unique function. 
+   # When called it attempts to locate the listed registry key and find the Desktop dword value. This value should, 
+   # if it exists, contain the folder redirection path of the user. If it does not exist (null) we just shift the path
+   # to the users downloads folder using the USERPROFILE environment variable.
+}
+
 Function Dump-UserForm
 {
     param (
@@ -266,35 +294,43 @@ Function Dump-UserForm
         [string]$OU,
         [string]$membership,
         [string]$template,
-        [int]$is_domain
+        [string]$password,
+        [int]$is_domain,
+        [int]$local_administrator,
+        [string]$path
     )
     if($is_domain -eq 1)
     {
         $wstring = "
-                     <h1><center>Below this line is a print out of the information that you provided to us, it's our acknowledgement that we not only received but carried out the work that you requested.</center></h1>                    
-                     <body><h5>Employee Name: " + $employee + "</h5><h5>Username: " + $username + "</h5><h5>Email Address: " + $email + "</h5><br>The user was placed into the following groups using the template user " + "(" + $template + ") that you provided " + $membership + "
-                     We placed the user into the same Orginizational Unit as the template user that you provided (" + $template + ") " + $OU + ".<br><br><center>If there are issues with users not receiving the appropriate access or required items to complete their
-                     day to day jobs please provide us with a thorough list containing what they need. Please also understand that this is what the template user is intended to be used for. Using another user account with all of the appropriate access 
-                     levels prevents mistakes that cause productivity issues!</center> 
-                   " 
-        $t = (Get-ItemProperty -Path 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\User Shell Folders\' -Name Desktop | Select-Object Desktop -ErrorAction SilentlyContinue)
-        if($t.Desktop -ne $null)
-        {
-            $str = $t.Desktop.toString() + "\" + $username + ".html"
-            # New-Item -Path $str -ItemType File
-            $wstring | Out-File -FilePath $str 
-        }
-        else
-        {
-            $str = $ENV:USERPROFILE + "\Downloads\" + $username + ".html"
-            $wstring | Out-File -FilePath $str 
-            # New-Item -Path $str -ItemType File
-        }
+                    <h1><center>Below this line is a print out of the information that you provided to us, it's our acknowledgement that we not only received but carried out the work that you requested.</center></h1>                    
+                    <body><h5>Employee Name: " + $employee + "</h5><h5>Username: " + $username + "</h5><h5>Email Address: " + $email + "</h5><h5>Password: " + $password + "</h5><br>The user was placed into the following groups using the template user " + "(" + $template + ") that you provided " + $membership + "
+                    We placed the user into the same Orginizational Unit as the template user that you provided (" + $template + ") " + $OU + ".<br><br><center>If there are issues with users not receiving the appropriate access or required items to complete their
+                    day to day jobs please provide us with a thorough list containing what they need. Please also understand that this is what the template user is intended to be used for. Using another user account with all of the appropriate access 
+                    levels prevents mistakes that cause productivity issues!</center> 
+                   "
+        $path = $path + $username + ".html"
+        $wstring | Out-File -FilePath $path
     }
     elseif($is_domain -eq 0)
     {
-        $str = $ENV:USERPROFILE + "\Downloads\" + $username + ".html"
-        $wstring | Out-File -FilePath $str 
+       if($local_administrator -eq 1)
+       {
+           $wstring = "
+                        <h1><center>Below this line is a print out of the information that you provided to us. It's our acknowledgement that we not only received but carried out the work that you requested.</center></h1>                    
+                        <body><h5>Username: " + $username + "</h5><h5>Password: " + $password + "</h5><br>The user was given local administrator access per your request; to the local computer (individual mahcine) that you specified.
+                      "
+           $path = $path + $username + ".html"
+           $wstring | Out-File -FilePath $path
+       }
+       elseif($local_administrator -eq 0)
+       {
+           $wstring = "
+                        <h1><center>Below this line is a print out of the information that you provided to us. It's our acknowledgement that we not only received but also carried out the work that you requested.</center></h1>                    
+                        <body><h5>Username: " + $username + "</h5><h5>Password: " + $password + "</h5> This user has been created and granted access to the local (individual machine) that you specified.
+                      "
+            $path = $path + $username + ".html"
+            $wstring | Out-File -FilePath $path
+       }
     }
 }
 
