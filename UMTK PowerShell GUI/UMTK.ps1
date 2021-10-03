@@ -1,6 +1,5 @@
 ﻿[System.Reflection.Assembly]::LoadWithPartialName("System.Windows.Forms")
 
-
 Function CreateDomainUser
 {
     param (
@@ -17,11 +16,11 @@ Function CreateDomainUser
     {
         $pprox = "SMTP:" + $_email
     }
-    elseif($primary_proxy_input.Text.Length -ge 1)
+    elseif($primary_proxy_input.Text.Length -ge 4)
     {
         $pprox = "SMTP:" + $primary_proxy_input.Text
     }
-    if($secondary_proxy_input.Text.Length -ge 1)
+    if($secondary_proxy_input.Text.Length -ge 4)
     {
         $secprox = "smtp:" + $secondary_proxy_input.Text
     }
@@ -30,58 +29,88 @@ Function CreateDomainUser
     {
         $_displayname = $_fullname
     }
-    elseif($displayname_input.Text.Length -ge 1)
+    elseif($displayname_input.Text.Length -ge 3)
     {
         $_displayname = $displayname_input.Text
     }
 
-    if($_ou -gt 0 -and $_template.Count -gt 0 -and $_upn.Count -gt 0 -and $_fullname.Count -gt 0 -and $_username -gt 0 -and $_password.Count -gt 8 -and $_email -gt 0) 
+    $pass_eval = Validate-Password -password $_password # Should == 1
+    $user_leng = Validate-UserLength -uname $_username # Should == 1
+    $user_exists = Validate-DomainUser -username $_username # Should == 0
+    $email_eval = Validate-Email -emailaddress $_email # Should == 1
+    
+    if($_fullname.Split(' ').Count -eq 1)
     {
-         $user_exists = Validate-DomainUser -username $_username
-         if($user_exists -eq 1)
-         {
-             $message_label.ForeColor = "Red"
-             $message_label.Text =  "An account with the username: " + $_username + " already exists, please try again..."
-         }
-         elseif($user_exists -eq 0)
-         { 
-             $userpname = $_username + "@" + $_upn
-             $_given, $_surname = $_fullname.Split(' ')
-             $tmp_pass = $_password | ConvertTo-SecureString -AsPlainText -Force
-             New-ADUser -Name $_fullname -GivenName $_given -Surname $_surname -AccountPassword $tmp_pass -UserPrincipalName $userpname -displayName $_displayname  -EmailAddress $_email -SamAccountName $_username  -Enabled 1
-             $g = (Get-ADUser -Filter {name -like $_template})
-             $groups = (Get-ADUser $g -Properties MemberOf).MemberOF
-             Foreach($group in $groups)
-             {
-                 Add-ADGroupMember -Identity (Get-ADGroup $group).name -Members $_username
-             }
-             
-             if($pprox.Length -ge 1)
-             {
-                 Set-ADUser -Identity $_username -Add @{Proxyaddresses = $pprox}
-             }
-             if($secprox.Length -gt 1)
-             {
-                 Set-ADUser -Identity $_username -Add @{Proxyaddresses = $secprox}
-             }
-             $distinguished_ous = (Get-ADOrganizationalUnit -Filter * | Select-Object -ExpandProperty Distinguishedname)
-             $tuser = (Get-ADUser -Filter {samAccountName -like $_username} | Select-Object -ExpandProperty DistinguishedName) 
-             Move-ADObject -Identity $tuser -TargetPath $distinguished_ous[$_ou]
+        # Fail with message letting user know that First and Last names are required..
+    }
+    elseif($_fullname.Split(' ').Count -eq 2)
+    {
+        $_given, $_surname = $_fullname.Split(' ')
+    }
+    elseif($_fullname.Split(' ').Count -ge 3)
+    {
+        $_given, $_middle, $_surname = $_fullname.Split(' ')
+    }
+    if($_ou -gt 0 -and $_template.Length -gt 0 -and $_upn.Count -gt 0 -and $_fullname.Length -gt 0 -and $_username.Length -gt 0 -and $_password.Length -gt 0 -and $_email.Length -gt 0)
+    {
+        if($pass_eval -eq 1 -and $user_leng -eq 1 -and $user_exists -eq 0 -and $email_eval -eq 1)
+        {
+            $userpname = $_username + "@" + $_upn
+            $tmp_pass = $_password | ConvertTo-SecureString -AsPlainText -Force
 
-             $user_exists = Validate-DomainUser -username $_username
-             if($user_exists -eq 0)
-             {
-                $message_label.ForeColor = "Red"
-                $message_label.Text = "Something very terrible has happened. Gross, what have you done?!"
-             }
-             elseif($user_exists -eq 1)
-             {
-                $message_label.ForeColor = "Green"
-                $message_label.Text =  "The user account for " + $_fullname + " has been created..."
-             }
-         }
+            if($_middle.Length -eq 0)
+            {
+                New-ADUser -Name $_fullname -GivenName $_given -Surname $_surname -AccountPassword $tmp_pass -UserPrincipalName $userpname -displayName $_displayname  -EmailAddress $_email -SamAccountName $_username  -Enabled 1
+            }
+            elseif($_middle.Length -gt 0)
+            {
+                New-ADUser -Name $_fullname -GivenName $_given -middleName $_middle -Surname $_surname -AccountPassword $tmp_pass -UserPrincipalName $userpname -displayName $_displayname  -EmailAddress $_email -SamAccountName $_username  -Enabled 1
+            }
+            $g = (Get-ADUser -Filter {name -like $_template})
+            $groups = (Get-ADUser $g -Properties MemberOf).MemberOF
+            Foreach($group in $groups)
+            {
+                Add-ADGroupMember -Identity (Get-ADGroup $group).name -Members $_username
+            }        
+            if($pprox.Length -ge 1)
+            {
+                Set-ADUser -Identity $_username -Add @{Proxyaddresses = $pprox}
+            }
+            if($secprox.Length -gt 1)
+            {
+                Set-ADUser -Identity $_username -Add @{Proxyaddresses = $secprox}
+            }
+            $distinguished_ous = (Get-ADOrganizationalUnit -Filter * | Select-Object -ExpandProperty Distinguishedname)
+            $tuser = (Get-ADUser -Filter {samAccountName -like $_username} | Select-Object -ExpandProperty DistinguishedName) 
+            Move-ADObject -Identity $tuser -TargetPath $distinguished_ous[$_ou]
+            $message_label.ForeColor = "Green"
+            $message_label.Text =  "Success: The user account for " + $_fullname + " has been created and can be found in: " + $distinguished_ous[$_ou] 
+
+        }
+        elseif($pass_eval -eq 0)
+        {
+            $message_label.ForeColor = "Red"
+            $message_label.Text =  "Failure:" + $_password + " is either null or not secure. You must have at minimum 8 characters. You must include 1 Capital letter, 1 lower case letter, 1 number, 1 special character\symbol."
+        }
+        elseif($user_leng -eq 0)
+        {
+            $message_label.ForeColor = "Red"
+            $message_label.Text =  "FAILURE:" + $_username + " is either null or to short. Please make sure it has at least 3 characters."
+        }
+        elseif($user_exists -eq 1)
+        {
+            $message_label.ForeColor = "Red"
+            $message_label.Text =  "An account with the username: " + $_username + " already exists, please try again..."
+        }
+        elseif($email_eval -eq 0)
+        {
+            $message_label.ForeColor = "Red"
+            $message_label.Text =  "FAILURE: You have used an invalid email format. It must be username@domain.tld - Not: " + $_email
+        }
     }
 }
+
+
 
 Function CreateLocalUser
 {
@@ -209,6 +238,26 @@ Function Validate-UserLength
     #    If the length of $uname is -lt 3 return false (as in not valid)
     #    If the length of $uname is -gt 3 return true (as in valid)
 }
+
+Function Validate-Email
+{
+    param (
+        [parameter (Mandatory = $true)]
+        [string]$emailaddress
+    )
+    $pattern = "^([\w-\.]+)@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.)|(([\w-]+\.)+))([a-zA-Z]{2,4}|[0-9]{1,3})(\]?)$"
+    $validate = [mailaddress]$emailaddress 
+    if($validate.Address -cmatch $pattern)
+    {
+        return 1
+    }
+    else
+    {
+        return 0
+    }
+    # See https://docs.microsoft.com/en-us/dotnet/api/system.net.mail.mailaddress?view=net-5.0
+}
+
 
 Function AreProxies-Hidden
 {
@@ -565,7 +614,7 @@ Function DomainUser
 
     $message_label = New-Object Windows.Forms.Label
     $message_label.size = New-Object System.Drawing.Size(700, 180)
-    $message_label.location = New-Object System.Drawing.Size(0, 400) # was 410
+    $message_label.location = New-Object System.Drawing.Size(0, 445) # was 410
     $message_label.Font = New-Object System.Drawing.Font("Courier",12,[System.Drawing.FontStyle]::Regular)
     $Domain_Form.Controls.Add($message_label)
 
