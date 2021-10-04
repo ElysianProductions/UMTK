@@ -9,7 +9,8 @@ Function CreateDomainUser
         [string]$_fullname,
         [string]$_username, 
         [string]$_password,
-        [string]$_email
+        [string]$_email,
+        [int]$_cleaned_ous
     )
 
     if($primary_proxy_input.Text.Length -eq 0)
@@ -80,9 +81,19 @@ Function CreateDomainUser
             {
                 Set-ADUser -Identity $_username -Add @{Proxyaddresses = $secprox}
             }
-            $distinguished_ous = (Get-ADOrganizationalUnit -Filter * | Select-Object -ExpandProperty Distinguishedname)
+            # $distinguished_ous = (Get-ADOrganizationalUnit -Filter * | Select-Object -ExpandProperty Distinguishedname) can be uncommented if the experimental shit works.
             $tuser = (Get-ADUser -Filter {samAccountName -like $_username} | Select-Object -ExpandProperty DistinguishedName) 
-            Move-ADObject -Identity $tuser -TargetPath $distinguished_ous[$_ou]
+            
+            if($_cleaned_ous -eq 1)
+            {
+                Move-ADObject -Identity $tuser -TargetPath $distinguished_ous[$_ou]
+            }
+            elsesif($_cleaned_ous -eq 0)
+            {
+                Move-ADObject -Identity $tuser -TargetPath $distinguished_ous[$_ou]
+            }
+            
+            
             $message_label.ForeColor = "Green"
             $message_label.Text =  "Success: The user account for " + $_fullname + " has been created and can be found in: " + $distinguished_ous[$_ou] 
 
@@ -125,7 +136,7 @@ Function CreateLocalUser
         NET USER $lusername $lpassword /add 
         if($admin_button.Checked -eq $true)
         {
-            NET localgroup administrators $lusername /add
+            NET localgroup Administrators $lusername /add
             $path_var = Validate-Path 
             Dump-UserForm -username $lusername -password $lpassword -path $path_var -is_domain 0 -local_administrator 1
             $lmessage_label.ForeColor = "Green"
@@ -283,6 +294,26 @@ Function Validate-Path
    # if it exists, contain the folder redirection path of the user. If it does not exist (null) we just shift the path
    # to the users downloads folder using the USERPROFILE environment variable.
 }
+
+
+Function Validate-DistinguishedNames
+{
+    param (
+        [parameter (Mandatory = $true)]
+        [int]$index,
+        [string]$ou
+    )
+    $a,$b, $c = $ou.Split(',')
+    $a = $a.substring(2) -replace '[\W]', '' 
+    $b = $b.substring(2) -replace '[\W]', ''
+    $hacked = $b + " - " + $a 
+    return $hacked
+    
+    # Well this one was fun. I needed a way to turn this "OU=Administrators,OU=Elysium,DC=Elysium,DC=local" into this Elysium - Administrators
+    # It really needs to be built on and improved but it does the job it was made to do which is identify DC's with multi-client OUs that have 
+    # different UPNs tied to them.
+}
+
 
 Function Dump-UserForm
 {
@@ -447,7 +478,6 @@ Function DomainUser
     $edit_action = New-Object System.Windows.Forms.ToolStripMenuItem
     $edit_action.Font = New-Object System.Drawing.Font("Courier",12,[System.Drawing.FontStyle]::Regular)
     $edit_action.Text = "Edit"
-    
 
     # SETTINGS MENU ITEM
     $settings_action = New-Object System.Windows.Forms.ToolStripMenuItem
@@ -466,7 +496,6 @@ Function DomainUser
     $add_display_name.Text = "Set Display Name"
     $displayname_clicked = 0
     $add_display_name.Add_Click({ if($displayname_clicked -eq 0) {Show-AddDisplayname} elseif($displayname_clicked -eq 1) {Hide-AddDisplayname} })
-
 
     # Help function
     $save_me = New-Object System.Windows.Forms.ToolStripButton
@@ -489,26 +518,6 @@ Function DomainUser
     $Domain_form.Controls.Add($menu_tool_strip)
     $Domain_Form.Controls.Add($menu_bar)
 
-    $ou_combo = New-Object Windows.Forms.ComboBox 
-    $ou_combo.size = New-Object System.Drawing.Size(350, 150)
-    $ou_combo.location = New-Object System.Drawing.Size(205, 75)
-    $ou_combo.Font = New-Object System.Drawing.Font("Courier",12,[System.Drawing.FontStyle]::Regular)
-    $clean_ous = Get-ADOrganizationalUnit -Filter * | Select-Object -ExpandProperty Name
-    Foreach($ou in $clean_ous)
-    {
-        $ou_combo.Items.Add($ou)
-    }
-    $Domain_Form.Controls.Add($ou_combo)
-
-
-    $ou_combo_label = New-Object Windows.Forms.Label
-    $ou_combo_label.size = New-Object System.Drawing.Size(220, 35)
-    $ou_combo_label.location = New-Object System.Drawing.Size(0, 75)
-    $ou_combo_label.Font = New-Object System.Drawing.Font("Courier",12,[System.Drawing.FontStyle]::Regular)
-    $ou_combo_label.text = "Orginizational unit:"
-    $Domain_Form.Controls.Add($ou_combo_label)
-
-   
     $users_combo = New-Object Windows.Forms.ComboBox 
     $users_combo.size = New-Object System.Drawing.Size(350, 150)
     $users_combo.location = New-Object System.Drawing.Size(205, 110)
@@ -520,14 +529,12 @@ Function DomainUser
     }
     $Domain_Form.Controls.Add($users_combo)
 
-
     $users_combo_label = New-Object Windows.Forms.Label
     $users_combo_label.size = New-Object System.Drawing.Size(200, 35)
     $users_combo_label.location = New-Object System.Drawing.Size(0, 110)
     $users_combo_label.Font = New-Object System.Drawing.Font("Courier",12,[System.Drawing.FontStyle]::Regular)
     $users_combo_label.text = "Template user:"
     $Domain_Form.Controls.Add($users_combo_label)
-
 
     $special_combo = New-Object Windows.Forms.ComboBox 
     $special_combo.size = New-Object System.Drawing.Size(350, 150)
@@ -551,6 +558,40 @@ Function DomainUser
     }
     $Domain_Form.Controls.Add($special_combo)
 
+    $ou_combo = New-Object Windows.Forms.ComboBox 
+    $ou_combo.size = New-Object System.Drawing.Size(350, 150)
+    $ou_combo.location = New-Object System.Drawing.Size(205, 75)
+    $ou_combo.Font = New-Object System.Drawing.Font("Courier",12,[System.Drawing.FontStyle]::Regular)
+    $clean_ous = Get-ADOrganizationalUnit -Filter * | Select-Object -ExpandProperty Name
+    $distinguished_ous = Get-ADOrganizationalUnit -Filter * | Select-Object -ExpandProperty distinguishedName
+    #TEST CODE - EXPERIMENTAL
+    if($upn_lookup.Count -gt 2) # 2
+    {
+        $are_ous_cleaned = 0 
+        Foreach($ou in $distinguished_ous)
+        {
+            $adjusted = Validate-DistinguishedNames -ou $ou -index 0
+            $ou_combo.Items.Add($adjusted)       
+        }
+    }
+    elseif($upn_lookup.Count -le 2) # 2
+    {    
+         $are_ous_cleaned = 1
+         Foreach($ou in $clean_ous)
+        {
+            $ou_combo.Items.Add($ou)
+        }
+    }
+    #TEST CODE - EXPERIMENTAL
+    $Domain_Form.Controls.Add($ou_combo)
+
+    $ou_combo_label = New-Object Windows.Forms.Label
+    $ou_combo_label.size = New-Object System.Drawing.Size(220, 35)
+    $ou_combo_label.location = New-Object System.Drawing.Size(0, 75)
+    $ou_combo_label.Font = New-Object System.Drawing.Font("Courier",12,[System.Drawing.FontStyle]::Regular)
+    $ou_combo_label.text = "Orginizational unit:"
+    $Domain_Form.Controls.Add($ou_combo_label)
+
 
     $special_combo_label = New-Object Windows.Forms.Label
     $special_combo_label.size = New-Object System.Drawing.Size(200, 35)
@@ -559,7 +600,6 @@ Function DomainUser
     $special_combo_label.text = "Doamin or UPN:"
     $Domain_Form.Controls.Add($special_combo_label)
 
-
     $employee_name_label = New-Object Windows.Forms.Label
     $employee_name_label.size = New-Object System.Drawing.Size(200, 35)
     $employee_name_label.location = New-Object System.Drawing.Size(0, 180)
@@ -567,13 +607,11 @@ Function DomainUser
     $employee_name_label.text = "Employee name:"
     $Domain_Form.Controls.Add($employee_name_label)
 
-
     $employee_name_input = New-Object Windows.Forms.TextBox
     $employee_name_input.size = New-Object System.Drawing.Size(350, 75)
     $employee_name_input.location = New-Object System.Drawing.Size(205, 180)
     $employee_name_input.Font = New-Object System.Drawing.Font("Courier",12,[System.Drawing.FontStyle]::Regular)
     $Domain_Form.Controls.Add($employee_name_input)
-
 
     $username_label = New-Object Windows.Forms.Label
     $username_label.size = New-Object System.Drawing.Size(200, 35)
@@ -582,13 +620,11 @@ Function DomainUser
     $username_label.text = "Username:"
     $Domain_Form.Controls.Add($username_label)
 
-
     $username_input = New-Object Windows.Forms.TextBox
     $username_input.size = New-Object System.Drawing.Size(350, 75)
     $username_input.location = New-Object System.Drawing.Size(205, 215)
     $username_input.Font = New-Object System.Drawing.Font("Courier",12,[System.Drawing.FontStyle]::Regular)
     $Domain_Form.Controls.Add($username_input)
-
 
     $password_label = New-Object Windows.Forms.Label
     $password_label.size = New-Object System.Drawing.Size(200, 35)
@@ -596,7 +632,6 @@ Function DomainUser
     $password_label.Font = New-Object System.Drawing.Font("Courier",12,[System.Drawing.FontStyle]::Regular)
     $password_label.text = "Password:"
     $Domain_Form.Controls.Add($password_label)
-
 
     $password_input = New-Object Windows.Forms.TextBox
     $password_input.size = New-Object System.Drawing.Size(350, 75)
@@ -611,13 +646,11 @@ Function DomainUser
     $email_label.text = "Email address:"
     $Domain_Form.Controls.Add($email_label)
 
-
     $email_input = New-Object Windows.Forms.TextBox
     $email_input.size = New-Object System.Drawing.Size(350, 75)
     $email_input.location = New-Object System.Drawing.Size(205, 285)
     $email_input.Font = New-Object System.Drawing.Font("Courier",12,[System.Drawing.FontStyle]::Regular)
     $Domain_Form.Controls.Add($email_input)
-
 
     $primary_proxy_label = New-Object Windows.Forms.Label
     $primary_proxy_label.size = New-Object System.Drawing.Size(200, 35)
@@ -627,14 +660,12 @@ Function DomainUser
     $primary_proxy_label.Visible = $false
     $Domain_Form.Controls.Add($primary_proxy_label)
 
-
     $primary_proxy_input = New-Object Windows.Forms.TextBox
     $primary_proxy_input.size = New-Object System.Drawing.Size(350, 75)
     $primary_proxy_input.location = New-Object System.Drawing.Size(205, 320)
     $primary_proxy_input.Font = New-Object System.Drawing.Font("Courier",12,[System.Drawing.FontStyle]::Regular)
     $primary_proxy_input.Visible = $false
     $Domain_Form.Controls.Add($primary_proxy_input)
-
 
     $secondary_proxy_label = New-Object Windows.Forms.Label
     $secondary_proxy_label.size = New-Object System.Drawing.Size(204, 35)
@@ -644,14 +675,12 @@ Function DomainUser
     $secondary_proxy_label.Visible = $false
     $Domain_Form.Controls.Add($secondary_proxy_label)
 
-
     $secondary_proxy_input = New-Object Windows.Forms.TextBox
     $secondary_proxy_input.size = New-Object System.Drawing.Size(350, 75)
     $secondary_proxy_input.location = New-Object System.Drawing.Size(205, 355)
     $secondary_proxy_input.Font = New-Object System.Drawing.Font("Courier",12,[System.Drawing.FontStyle]::Regular)
     $secondary_proxy_input.Visible = $false
     $Domain_Form.Controls.Add($secondary_proxy_input)
-    
 
     $displayname_label = New-Object Windows.Forms.Label
     $displayname_label.size = New-Object System.Drawing.Size(200, 35)
@@ -661,14 +690,12 @@ Function DomainUser
     $displayname_label.Visible = $false
     $Domain_Form.Controls.Add($displayname_label)
 
-
     $displayname_input = New-Object Windows.Forms.TextBox
     $displayname_input.size = New-Object System.Drawing.Size(350, 75)
     $displayname_input.location = New-Object System.Drawing.Size(205, 390)
     $displayname_input.Font = New-Object System.Drawing.Font("Courier",12,[System.Drawing.FontStyle]::Regular)
     $displayname_input.Visible = $false
     $Domain_Form.Controls.Add($displayname_input)
-
 
     $create_button = New-Object Windows.Forms.Button
     $create_button.Font = New-Object System.Drawing.Font("Courier",12,[System.Drawing.FontStyle]::Regular)
@@ -677,7 +704,6 @@ Function DomainUser
     $create_button.location = New-Object System.Drawing.Size(205, 415)
     $create_button.Add_Click({CreateDomainUser -_ou $ou_combo.SelectedIndex -_template $users_combo.Text -_upn $special_combo.Text -_fullname $employee_name_input.Text -_username $username_input.Text -_password $password_input.Text -_email $email_input.Text})
     $Domain_Form.Controls.Add($create_button)
-
 
     $close_button = New-Object Windows.Forms.Button
     $close_button.Font = New-Object System.Drawing.Font("Courier",12,[System.Drawing.FontStyle]::Regular)
