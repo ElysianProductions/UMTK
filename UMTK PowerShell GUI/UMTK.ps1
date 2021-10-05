@@ -88,14 +88,20 @@ Function CreateDomainUser
             {
                 Move-ADObject -Identity $tuser -TargetPath $distinguished_ous[$_ou]
             }
-            elsesif($_cleaned_ous -eq 0)
+            elseif($_cleaned_ous -eq 0)
             {
                 Move-ADObject -Identity $tuser -TargetPath $distinguished_ous[$_ou]
             }
             
+            $tmpg =  (Get-ADPrincipalGroupMembership -Identity $_username | Select-Object Name)
+            $cleaned_groupnames = Clean-GroupNames -Groups $tmpg  # experimental
             
+            $path_var = Validate-Path
+            Dump-UserForm -username $_username -password $_password -path $path_var -is_domain 1 -employee $_fullname -email $_email -UPN $_upn -OU $clean_ous[$_ou] -membership $cleaned_groupnames -template $_template -local_administrator 0
             $message_label.ForeColor = "Green"
-            $message_label.Text =  "Success: The user account for " + $_fullname + " has been created and can be found in: " + $distinguished_ous[$_ou] 
+            $message_label.Text = "The user account for " + $_username + " has been created. A file has been created and can be found at " + $path_var + $_username + ".html  please take this file and present it to the user. Once transfered, delete this file. The user can be found in " + $distinguished_ous[$_ou]
+
+
 
         }
         elseif($pass_eval -eq 0)
@@ -140,14 +146,14 @@ Function CreateLocalUser
             $path_var = Validate-Path 
             Dump-UserForm -username $lusername -password $lpassword -path $path_var -is_domain 0 -local_administrator 1
             $lmessage_label.ForeColor = "Green"
-            $lmessage_label.Text = "The user Account for " + $lusername + " has been created, a file has been created and can be found at " + $path_var + "<username.html> please take this file and present it to the user. Once transfered, delete this file."
+            $lmessage_label.Text = "The user Account for " + $lusername + " has been created, a file has been created and can be found at " + $path_var + $lusername + ".html please take this file and present it to the user. Once transfered, delete this file."
         } 
         elseif($admin_button.Checked -eq $false)
         {
             $path_var = Validate-Path 
             Dump-UserForm -username $lusername -password $lpassword -path $path_var -is_domain 0 -local_administrator 0
             $lmessage_label.ForeColor = "Green"
-            $lmessage_label.Text = "The user Account for " + $lusername + " has been created, a file has been created and can be found at " + $path_var + "<username.html>  please take this file and present it to the user. Once transfered, delete this file."
+            $lmessage_label.Text = "The user Account for " + $lusername + " has been created, a file has been created and can be found at " + $path_var + $lusername + ".html  please take this file and present it to the user. Once transfered, delete this file."
         }
     }
     else
@@ -295,7 +301,6 @@ Function Validate-Path
    # to the users downloads folder using the USERPROFILE environment variable.
 }
 
-
 Function Validate-DistinguishedNames
 {
     param (
@@ -314,6 +319,21 @@ Function Validate-DistinguishedNames
     # different UPNs tied to them.
 }
 
+Function Clean-GroupNames 
+{
+    param (
+        [parameter (Mandatory = $true)]
+        [array[]]$Groups
+    )
+    $list = ""
+    foreach($group in $Groups)
+    {
+      $list = $list + "<break>" + $group
+    }
+    Write-Host $list 
+    return $list 
+
+}
 
 Function Dump-UserForm
 {
@@ -597,7 +617,7 @@ Function DomainUser
     $special_combo_label.size = New-Object System.Drawing.Size(200, 35)
     $special_combo_label.location = New-Object System.Drawing.Size(0, 145)
     $special_combo_label.Font = New-Object System.Drawing.Font("Courier",12,[System.Drawing.FontStyle]::Regular)
-    $special_combo_label.text = "Doamin or UPN:"
+    $special_combo_label.text = "Domain or UPN:"
     $Domain_Form.Controls.Add($special_combo_label)
 
     $employee_name_label = New-Object Windows.Forms.Label
