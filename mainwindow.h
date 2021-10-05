@@ -16,19 +16,6 @@
 #include "editwidget.h"
 
 
-
-#ifdef __linux__
-    // Linux shit
-#elif _WIN32
-    #include "windows.h"
-    #include "combaseapi.h"
-    #include "shellapi.h"
-    #include "LMaccess.h"
-#elif __APPLE__
-    // MAC shit
-#endif
-
-
 /*
     __linux__       Defined on Linux
     __sun           Defined on Solaris

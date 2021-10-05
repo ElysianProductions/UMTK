@@ -480,7 +480,7 @@ void MainWindow::initialize_connections()
 
  void MainWindow::write_debug_logs(QString datastring) // remove
  {
-     QFile data("C:\\Users\\Ajohnson\\Desktop\\output.txt");
+     QFile data("path\\to\\output.txt");
      if (data.open(QFile::WriteOnly)) {
          QTextStream out(&data);
          out << datastring;
