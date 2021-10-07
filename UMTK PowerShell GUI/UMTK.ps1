@@ -93,15 +93,13 @@ Function CreateDomainUser
                 Move-ADObject -Identity $tuser -TargetPath $distinguished_ous[$_ou]
             }
             
-            $tmpg =  (Get-ADPrincipalGroupMembership -Identity $_username | Select-Object Name)
-            $cleaned_groupnames = Clean-GroupNames -Groups $tmpg  # experimental
+            $_tmpg =  (Get-ADPrincipalGroupMembership $_username | Select-Object Name)
+            $_cleaned = Clean-GroupNames -Groups $_tmpg  # experimental
             
             $path_var = Validate-Path
-            Dump-UserForm -username $_username -password $_password -path $path_var -is_domain 1 -employee $_fullname -email $_email -UPN $_upn -OU $clean_ous[$_ou] -membership $cleaned_groupnames -template $_template -local_administrator 0
+            Dump-UserForm -username $_username -password $_password -path $path_var -is_domain 1 -employee $_fullname -email $_email -UPN $_upn -OU $clean_ous[$_ou] -membership $_cleaned -template $_template -local_administrator 0
             $message_label.ForeColor = "Green"
             $message_label.Text = "The user account for " + $_username + " has been created. A file has been created and can be found at " + $path_var + $_username + ".html  please take this file and present it to the user. Once transfered, delete this file. The user can be found in " + $distinguished_ous[$_ou]
-
-
 
         }
         elseif($pass_eval -eq 0)
@@ -244,6 +242,61 @@ Function Validate-Password
     # Pretty straightforward forcing 1 Capital letter, one lower case letter, 1 number, 1 symbol and it has an 8 character minimum requirement
 }
 
+Function Get-OrginizationalUnit 
+{
+    param (
+        [parameter (Mandatory = $true)]
+        $Identity
+    )
+
+    $temp = (Get-ADUser -Filter {Name -like $Identity})
+    $t = $temp.DistinguishedName
+    $garbage, $OU = $t.split(',', 2)
+    return $OU
+}
+
+Function Automate-FillForms 
+{
+    param (
+        [parameter (Mandatory = $true)]
+        $Identity,
+        $Template
+    )
+    
+    # TODO: 
+    # See issue described and outline here in the repo - https://github.com/ElysianProductions/UMTK/issues/32
+
+    $n_one, $n_two = $Identity.Split(' ')
+    $n_one = $n_one.Substring(0, $n_one.Length - ($n_one.Length - 1))
+    $_autouser = $n_one.toUpper() + $n_two.toLower()
+    $_dou_path = $Template
+    $_cou_name, $gou_name = $Template.split(',')
+    $_cou_name = $_cou_name.substring(3)  
+
+    $upn = Get-ADForest | Select-Object -ExpandProperty UPNSuffixes
+    $domain = Get-ADForest | Select-Object -ExpandProperty Domains
+    
+    if($upn.Length -ge 1)
+    {
+        $_autoemail = $_autouser + "@" + $upn    
+    }
+    elseif($upn.Length -eq 0)
+    {
+        $domain_temp, $garbage = $domain.split('.')
+        $_autoemail = $_autouser + "@" + $domain_templ + ".com"   
+    }
+
+    Add-Type -AssemblyName System.Web 
+    $good = 0
+    while($good -eq 0)
+    {
+        $_pass = [System.Web.Security.Membership]::GeneratePassword(8,1)
+        $good = Validate-Password -password $_pass 
+    }
+    return $_autouser, $_autoemail, $_pass, $_dou_path, $_cou_name, $domain
+    # Example usage - Automate-FillForms -Identity "Aaron Johnson" -Template (Get-OrginizationalUnit -Identity "Example User")
+}
+
 Function Validate-UserLength 
 {
     param (
@@ -325,14 +378,7 @@ Function Clean-GroupNames
         [parameter (Mandatory = $true)]
         [array[]]$Groups
     )
-    $list = ""
-    foreach($group in $Groups)
-    {
-      $list = $list + "<break>" + $group
-    }
-    Write-Host $list 
-    return $list 
-
+    return ($Groups -join ",")
 }
 
 Function Dump-UserForm
