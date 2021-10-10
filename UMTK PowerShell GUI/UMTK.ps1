@@ -242,59 +242,54 @@ Function Validate-Password
     # Pretty straightforward forcing 1 Capital letter, one lower case letter, 1 number, 1 symbol and it has an 8 character minimum requirement
 }
 
-Function Get-OrginizationalUnit 
+Function Validate-PasswordRedux
 {
     param (
-        [parameter (Mandatory = $true)]
-        $Identity
+        [parameter (Mandatory = $true, ParameterSetName = "password")]
+        [string]$password,
+        [int]$Case,
+        [int]$Length,
+        [int]$Complexity
     )
-
-    $temp = (Get-ADUser -Filter {Name -like $Identity})
-    $t = $temp.DistinguishedName
-    $garbage, $OU = $t.split(',', 2)
-    return $OU
-}
-
-Function Automate-FillForms 
-{
-    param (
-        [parameter (Mandatory = $true)]
-        $Identity,
-        $Template
-    )
-    
-    # TODO: 
-    # See issue described and outline here in the repo - https://github.com/ElysianProductions/UMTK/issues/32
-
-    $n_one, $n_two = $Identity.Split(' ')
-    $n_one = $n_one.Substring(0, $n_one.Length - ($n_one.Length - 1))
-    $_autouser = $n_one.toUpper() + $n_two.toLower()
-    $_dou_path = $Template
-    $_cou_name, $gou_name = $Template.split(',')
-    $_cou_name = $_cou_name.substring(3)  
-
-    $upn = Get-ADForest | Select-Object -ExpandProperty UPNSuffixes
-    $domain = Get-ADForest | Select-Object -ExpandProperty Domains
-    
-    if($upn.Length -ge 1)
+    if($Case -eq 1)
     {
-        $_autoemail = $_autouser + "@" + $upn    
+        if($Complexity -eq $true)
+        {
+            $pattern = "(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[^A-Za-z0-9])(?=.{$Length,})"
+        }
+        elseif($Complexity -eq $false)
+        {
+            # build out non complex regex for just letters?
+        }
     }
-    elseif($upn.Length -eq 0)
+    elseif($Case -eq 2)
     {
-        $domain_temp, $garbage = $domain.split('.')
-        $_autoemail = $_autouser + "@" + $domain_templ + ".com"   
+        
+        if($Complexity -eq $true)
+        {
+            $pattern = "(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[^A-Za-z0-9])(?=.{$Length,})"
+        }
+        elseif($Complexity -eq $false)
+        {
+            # build out non complex regex for just letters?
+        }
+        
     }
-
-    Add-Type -AssemblyName System.Web 
-    $good = 0
-    while($good -eq 0)
+    elseif($Case -eq 3)
     {
-        $_pass = [System.Web.Security.Membership]::GeneratePassword(8,1)
-        $good = Validate-Password -password $_pass 
+        $pattern = "(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[^A-Za-z0-9])(?=.{8,})" 
+        if($password -cmatch $pattern)
+        {
+            return 1
+        }
+        else
+        {
+            return 0
+        }
+        # If secure return 1
+        # If not secure return 0
+        # Pretty straightforward forcing 1 Capital letter, one lower case letter, 1 number, 1 symbol and it has an 8 character minimum requirement
     }
-    return $_autouser, $_autoemail, $_pass, $_dou_path, $_cou_name, $domain
-    # Example usage - Automate-FillForms -Identity "Aaron Johnson" -Template (Get-OrginizationalUnit -Identity "Example User")
 }
 
 Function Validate-UserLength 
@@ -370,6 +365,198 @@ Function Validate-DistinguishedNames
     # Well this one was fun. I needed a way to turn this "OU=Administrators,OU=Elysium,DC=Elysium,DC=local" into this Elysium - Administrators
     # It really needs to be built on and improved but it does the job it was made to do which is identify DC's with multi-client OUs that have 
     # different UPNs tied to them.
+}
+
+Function Get-UserIdentifier
+{
+    param (
+        [parameter (Mandatory = $true, ParameterSetName = "Identity")]
+        [string]$Identity
+    )
+    $upn = Get-ADForest | Select-Object -ExpandProperty UPNSuffixes
+    $domain = Get-ADForest | Select-Object -ExpandProperty Domains
+    if($upn.Count -eq 0)
+    {
+        $domain = Get-ADForest | Select-Object -ExpandProperty Domains
+        return $domain
+    }
+    elseif($upn.Count -ge 1)
+    {
+        $temp = (Get-ADUser -Filter {Name -like "Jackie Harvey"} -Properties UserPrincipalName).UserPrincipalName; $garbage, $upn = $temp.Split('@');
+        return $upn
+    }
+}
+
+Function Get-OrginizationalUnit 
+{
+    param (
+        [parameter (Mandatory = $true, ParameterSetName = "Identity")]
+        $Identity
+    )
+
+    $temp = (Get-ADUser -Filter {Name -like $Identity})
+    $t = $temp.DistinguishedName
+    $garbage, $OU = $t.split(',', 2)
+    return $OU
+}
+
+Function Get-UserGroups 
+{
+   param (
+       [parameter (Mandatory = $true, ParameterSetName = "Identity")]
+       [string]$Identity
+   )
+   $Groups = (Get-ADUser -Filter {Name -like $Identity} -Properties MemberOf).MemberOf
+   $GroupsHash = @{}
+   Foreach($element in $Groups)
+   {
+       $GroupsHash[$element] = Get-ADGroup $element | Select Name
+   }
+   return $GroupsHash
+}
+
+Function Get-PasswordPolicyType
+{
+    if(Get-Module -ListAvailable -Name "ActiveDirectory")
+    {
+        $test = (Get-ADFineGrainedPasswordPolicy -Filter * -ErrorAction SilentlyContinue)
+        if($test -eq $null)
+        {
+            return "Default"
+        }
+        elseif($test -ne $null)
+        {
+            return  "Default \ Fine Grained"
+        }
+    }
+    else
+    {
+        return "Arbitrary"
+    }
+}
+
+Function Get-AzureStatus
+{
+    if(Get-Module -ListAvailable -Name "ADSync")
+    {
+        return 1
+    }
+    else
+    {
+        return 0 
+        # "Do not forget to log onto the AD Server and execute `n`nImport-Module ADSync; Start-ADSyncSyncCycle -PolicyType Delta"
+    }
+}
+
+Function Get-FineGrainedPasswordPolicies 
+{
+    $Grains = @{}
+    $Grains = (Get-ADFineGrainedPasswordPolicy -Filter * | Select-Object AppliesTo, DistinguishedName, Name, ComplexityEnabled, MinPasswordLength)
+    return $Grains
+}
+
+Function Match-UserToFineGrainedPasswordPolicy 
+{
+    param (
+        [string]$Identity
+    )
+    $Groups = (Get-UserGroups -Identity $Identity)
+    $Grains = (Get-FineGrainedPasswordPolicies)
+    $var = $Groups.Keys | ?{$Grains.AppliesTo -contains $_} 
+    
+    foreach($key in $Grains)
+    {
+        if($key.AppliesTo -cmatch $var)
+        {
+            $policy_name = $key.Name
+            $is_complex = $key.ComplexityEnabled
+            $min_leng = $key.MinPasswordLength
+        }
+    }
+    return $policy_name
+}
+
+Function Automate-FillForms 
+{
+    param (
+        [parameter (Mandatory = $true)]
+        $Identity,
+        $Template
+    )
+    
+    # TODO: 
+    # See issue described and outline here in the repo - https://github.com/ElysianProductions/UMTK/issues/32
+
+    $n_one, $n_two = $Identity.Split(' ')
+    $n_one = $n_one.Substring(0, $n_one.Length - ($n_one.Length - 1))
+    $_autouser = $n_one.toUpper() + $n_two.toLower()
+    $_dou_path = $Template
+    $_cou_name, $gou_name = $Template.split(',')
+    $_cou_name = $_cou_name.substring(3)  
+
+    $upn = Get-ADForest | Select-Object -ExpandProperty UPNSuffixes
+    $domain = Get-ADForest | Select-Object -ExpandProperty Domains
+    $identifier = Get-UserIdentifier -Identity $Template
+    if($upn.Length -ge 1)
+    {
+        $_autoemail = $_autouser + "@" + $identifier
+    }
+    elseif($upn.Length -eq 0)
+    {
+        $domain_temp, $garbage = $domain.split('.')
+        $_autoemail = $_autouser + "@" + $identifier 
+    }
+
+    Add-Type -AssemblyName System.Web 
+    $good = 0  
+    switch(Get-PasswordPolicyType)
+    {
+        "Default" 
+        {
+             $is_complex = (Get-ADDefaultDomainPasswordPolicy | Select-Object ComplexityEnabled)
+               $min_length = (Get-ADDefaultDomainPasswordPolicy | Select-Object MinPasswordLength)
+               while($good -eq 0)
+               {
+                   $_pass = [System.Web.Security.Membership]::GeneratePassword($min_length,1)
+                   $good = Validate-PasswordRedux -password $_pass -Case 1
+               }
+        }
+        "Default \ Fine Grained" 
+        {
+            $policy = (Match-UserToFineGrainedPasswordPolicy -Identity $Template)
+            if($policy -eq $null)
+            {
+               $is_complex = (Get-ADDefaultDomainPasswordPolicy | Select-Object ComplexityEnabled)
+               $min_length = (Get-ADDefaultDomainPasswordPolicy | Select-Object MinPasswordLength)
+               while($good -eq 0)
+               {
+                   $_pass = [System.Web.Security.Membership]::GeneratePassword($min_length,1)
+                   $good = Validate-PasswordRedux -password $_pass -Case 2
+               }
+            }
+            elseif($policy -ne $null)
+            {
+                $is_complex = (Get-ADFineGrainedPasswordPolicy -Filter {Name -like $policy} -Properties ComplexityEnabled).ComplexityEnabled
+                $min_length = (Get-ADFineGrainedPasswordPolicy -Filter {Name -like "IT Staff FGPP"} -Properties MinPasswordLength).MinPasswordLength
+                while($good -eq 0)
+                {
+                    $_pass = [System.Web.Security.Membership]::GeneratePassword($min_length,1)
+                    $good = Validate-PasswordRedux -password $_pass -Case 2
+                }
+            }
+        }
+        "Arbitrary" 
+        {
+            while($good -eq 0)
+            {
+                $_pass = [System.Web.Security.Membership]::GeneratePassword(8,1)
+                $good = Validate-PasswordRedux -password $_pass -Case 3
+            }
+        }
+    }
+    
+    return $_autouser, $_autoemail, $_pass, $_dou_path, $_cou_name, $domain
+    # Example usage - Automate-FillForms -Identity "Aaron Johnson" -Template (Get-OrginizationalUnit -Identity "Example User")
 }
 
 Function Clean-GroupNames 
