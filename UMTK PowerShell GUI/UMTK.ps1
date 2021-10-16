@@ -190,9 +190,19 @@ Function CreateDomainUser
 
             $path_var = Validate-Path
             Dump-UserForm -username $_username -password $_password -path $path_var -is_domain 1 -employee $_fullname -email $_email -UPN $_upn -OU $clean_ous[$_ou] -membership (Get-UserGroups -Identity $_template).Values -template $_template -local_administrator 0
-            $message_label.ForeColor = "Green"
-            $message_label.Text = "The user account for " + $_username + " has been created. A file has been created and can be found at " + $path_var + $_username + ".html  please take this file and present it to the user. Once transfered, delete this file. The user can be found in " + $distinguished_ous[$_ou]
+            $azure =  Get-AzureStatus
+            if((Get-AzureStatus) -eq 1)
+            {
+                Start-ADSyncSyncCycle -PolicyType "Delta"
+                $message_label.ForeColor = "Green"
+                $message_label.Text = "The user account for " + $_username + " has been created. A file was created on your desktop it's called " + $_username + ".html  please take this file and present it to the user. Once transfered, delete this file. An Azure AD Sync has also been successfully executed."
+            }
+            elseif((Get-AzureStatus) -eq 0)
+            {
+                $message_label.ForeColor = "Green"
+                $message_label.Text = "The user account for " + $_username + " has been created. A file was created on your desktop it's called " + $_username + ".html  please take this file and present it to the user. Once transfered, delete this file. `n`nWARNING: The Azure AD Sync module was not found. Please logon to the appropriate server and execute the following commands in an administrative powershell: `nImport-Module ADSync`nStart-ADSyncSyncCycle -PolicyType Delta "
 
+            }
         }
         elseif($pass_eval -eq 0)
         {
@@ -617,7 +627,8 @@ Function Automate-FillForms
     }
     elseif($upn.Length -eq 0)
     {
-        $_autoemail = $_autouser + "@" + $identifier 
+        $cleaned, $garbage = $identifier.split('.')
+        $_autoemail = $_autouser + "@" + $cleaned.ToLower() + ".com" 
     }
 
     Add-Type -AssemblyName System.Web 
@@ -671,7 +682,7 @@ Function Automate-FillForms
 
 Function Automate-Generate
 {
-   $_genuser, $_genemail, $_genpass, $_gendou_path, $_gencou_name, $_gendomain = Automate-FillForms -Identity $employee_name_input.Text -Template $users_combo.Text # (Get-OrginizationalUnit -Identity $users_combo.Text)
+   $_genuser, $_genemail, $_genpass, $_gendou_path, $_gencou_name, $_gendomain = Automate-FillForms -Identity $employee_name_input.Text -Template $users_combo.Text
 
    $username_input.Text = $_genuser
    $email_input.Text = $_genemail
@@ -946,8 +957,7 @@ Function DomainUser
     $ou_combo.Font = New-Object System.Drawing.Font("Courier",12,[System.Drawing.FontStyle]::Regular)
     $clean_ous = Get-ADOrganizationalUnit -Filter * | Select-Object -ExpandProperty Name
     $distinguished_ous = Get-ADOrganizationalUnit -Filter * | Select-Object -ExpandProperty distinguishedName
-    #TEST CODE - EXPERIMENTAL
-    if($upn_lookup.Count -gt 2) # 2
+    if($upn_lookup.Count -gt 2)
     {
         $are_ous_cleaned = 0 
         Foreach($ou in $distinguished_ous)
@@ -956,7 +966,7 @@ Function DomainUser
             $ou_combo.Items.Add($adjusted)       
         }
     }
-    elseif($upn_lookup.Count -le 2) # 2
+    elseif($upn_lookup.Count -le 2)
     {    
          $are_ous_cleaned = 1
          Foreach($ou in $clean_ous)
@@ -965,7 +975,6 @@ Function DomainUser
         }
     }
     $ou_combo.Visible = $false
-    #TEST CODE - EXPERIMENTAL
     $Domain_Form.Controls.Add($ou_combo)
 
     $ou_combo_label = New-Object Windows.Forms.Label
@@ -1122,7 +1131,7 @@ Function DomainUser
     $Domain_Form.Controls.Add($generate_button)
 
     $message_label = New-Object Windows.Forms.Label
-    $message_label.size = New-Object System.Drawing.Size(700, 180)
+    $message_label.size = New-Object System.Drawing.Size(700, 300)
     $message_label.location = New-Object System.Drawing.Size(0, 450) # was 410
     $message_label.Font = New-Object System.Drawing.Font("Courier",12,[System.Drawing.FontStyle]::Regular)
     $Domain_Form.Controls.Add($message_label)
