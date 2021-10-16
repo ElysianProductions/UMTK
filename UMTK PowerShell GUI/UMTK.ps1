@@ -40,8 +40,6 @@ Function CreateDomainUser
     {
         "Default" 
         {
-               #$is_complex = (Get-ADDefaultDomainPasswordPolicy | Select-Object ComplexityEnabled)
-               #$min_length = (Get-ADDefaultDomainPasswordPolicy | Select-Object MinPasswordLength)
                $default_security = (Get-ADDefaultDomainPasswordPolicy)
                while($good -eq 0)
                {
@@ -63,11 +61,9 @@ Function CreateDomainUser
         }
         "Default \ Fine Grained" 
         {
-            $policy = (Match-UserToFineGrainedPasswordPolicy -Identity $Template)
-            if($policy.Length -eq 0)
+            $policy_group, $policy_name = (Match-UserToFineGrainedPasswordPolicy -Identity $_template)
+            if($policy_name.Length -eq 0)
             {
-               #$is_complex = (Get-ADDefaultDomainPasswordPolicy | Select-Object ComplexityEnabled)
-               #$min_length = (Get-ADDefaultDomainPasswordPolicy | Select-Object MinPasswordLength)
                $default_security = (Get-ADDefaultDomainPasswordPolicy)
                while($good -eq 0)
                {
@@ -88,11 +84,9 @@ Function CreateDomainUser
 
                }
             }
-            elseif($policy.Length -gt 1)
+            elseif($policy_name.Length -gt 1)
             {
-                #$is_complex = (Get-ADFineGrainedPasswordPolicy -Filter {Name -like $policy} -Properties ComplexityEnabled).ComplexityEnabled
-                #$min_length = (Get-ADFineGrainedPasswordPolicy -Filter {Name -like $policy} -Properties MinPasswordLength).MinPasswordLength
-                $Grained = (Get-ADFineGrainedPasswordPolicy -Filter {Name -like $policy})
+                $Grained = (Get-ADFineGrainedPasswordPolicy -Filter {Name -like $policy_name})
                 while($good -eq 0)
                 {
 
@@ -180,7 +174,6 @@ Function CreateDomainUser
             {
                 Set-ADUser -Identity $_username -Add @{Proxyaddresses = $secprox}
             }
-            # $distinguished_ous = (Get-ADOrganizationalUnit -Filter * | Select-Object -ExpandProperty Distinguishedname) can be uncommented if the experimental shit works.
             $tuser = (Get-ADUser -Filter {samAccountName -like $_username} | Select-Object -ExpandProperty DistinguishedName) 
             
             if($_cleaned_ous -eq 1)
@@ -193,10 +186,10 @@ Function CreateDomainUser
             }
             
             $_tmpg =  (Get-ADPrincipalGroupMembership $_username | Select-Object Name)
-            $_cleaned = Clean-GroupNames -Groups $_tmpg  # experimental
-            
+            $_cleaned = Get-UserGroups -Identity $_template
+
             $path_var = Validate-Path
-            Dump-UserForm -username $_username -password $_password -path $path_var -is_domain 1 -employee $_fullname -email $_email -UPN $_upn -OU $clean_ous[$_ou] -membership (Get-UserGroups -Identity $_template) -template $_template -local_administrator 0
+            Dump-UserForm -username $_username -password $_password -path $path_var -is_domain 1 -employee $_fullname -email $_email -UPN $_upn -OU $clean_ous[$_ou] -membership (Get-UserGroups -Identity $_template).Values -template $_template -local_administrator 0
             $message_label.ForeColor = "Green"
             $message_label.Text = "The user account for " + $_username + " has been created. A file has been created and can be found at " + $path_var + $_username + ".html  please take this file and present it to the user. Once transfered, delete this file. The user can be found in " + $distinguished_ous[$_ou]
 
@@ -356,7 +349,6 @@ Function Validate-PasswordRedux
         {
             if($Complexity -eq 1 -and $password.Length -ge $Length)
             {
-                #$pattern = "(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[^A-Za-z0-9])(?=.{$Length,})"
                 $pattern = "(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[^A-Za-z0-9])"
                 if($password -cmatch $pattern)
                 {
@@ -369,7 +361,6 @@ Function Validate-PasswordRedux
             }
             elseif($Complexity -eq 1 -and $password.Length -ge $Length)
             {
-                #$pattern = "(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[^A-Za-z0-9])(?=.{$Length,})"
                 $pattern = "(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[^A-Za-z0-9])"
                 if($password -cmatch $pattern)
                 {
@@ -418,9 +409,9 @@ Function Validate-UserLength
     {
         return 1
     }
-    # This may seem a little strange to folks but:
-    #    If the length of $uname is -lt 3 return false (as in not valid)
-    #    If the length of $uname is -gt 3 return true (as in valid)
+    # USAGE EXAMPLE:
+    #    Validate-UserLength -uname "username"
+    #    Validate-UserLength -uname $username_variable
 }
 
 Function Validate-Email
@@ -440,6 +431,7 @@ Function Validate-Email
         return 0
     }
     # See https://docs.microsoft.com/en-us/dotnet/api/system.net.mail.mailaddress?view=net-5.0
+    # USEAGE EXAMPLE - Validate-Email -Identity "example@example.com" or Validate-Email -Identity $email_variable 
 }
 
 Function Validate-Path 
@@ -498,12 +490,13 @@ Function Get-UserIdentifier
         $garbage, $upn = $temp.Split('@')
         return $upn
     }
+    # USAGE EXAMPLE: Get-USerIdentifier -Identity "Employee Name"
 }
 
 Function Get-OrginizationalUnit 
 {
     param (
-        [parameter (Mandatory = $true, ParameterSetName = "Identity")]
+        [parameter (Mandatory = $true)]
         $Identity
     )
 
@@ -516,7 +509,7 @@ Function Get-OrginizationalUnit
 Function Get-UserGroups 
 {
    param (
-       [parameter (Mandatory = $true, ParameterSetName = "Identity")]
+       [parameter (Mandatory = $true)]
        [string]$Identity
    )
    $Groups = (Get-ADUser -Filter {Name -like $Identity} -Properties MemberOf).MemberOf
@@ -559,6 +552,7 @@ Function Get-AzureStatus
         return 0 
         # "Do not forget to log onto the AD Server and execute `n`nImport-Module ADSync; Start-ADSyncSyncCycle -PolicyType Delta"
     }
+    # USAGE EXAMPLE - Get-AzureStatus 
 }
 
 Function Get-FineGrainedPasswordPolicies 
@@ -568,25 +562,31 @@ Function Get-FineGrainedPasswordPolicies
     return $Grains
 }
 
-Function Match-UserToFineGrainedPasswordPolicy 
+Function Match-UserToFineGrainedPasswordPolicy
 {
-    param (
-        [string]$Identity
+     param (
+         [parameter (Mandatory = $true)]
+         [string]$Identity
     )
     $Groups = (Get-UserGroups -Identity $Identity)
     $Grains = (Get-FineGrainedPasswordPolicies)
-    $var = $Groups.Keys | ?{$Grains.AppliesTo -contains $_} 
-    
+
     foreach($key in $Grains)
     {
-        if($key.AppliesTo -cmatch $var)
-        {
-            $policy_name = $key.Name
-            $is_complex = $key.ComplexityEnabled
-            $min_leng = $key.MinPasswordLength
-        }
+      
+       foreach($element in $Groups)
+       {
+           $var = $element.Values
+       }
+       $applied_to = $key.AppliesTo
+       $name = $key.Name
+       $good, $bad = $applied_to.split(',', 2)
+       $good = $good.substring(3)
+       if($var -match $good)
+       {
+           return $good, $name 
+       }
     }
-    return $policy_name
 }
 
 Function Automate-FillForms 
@@ -604,14 +604,12 @@ Function Automate-FillForms
     $n_one = $n_one.Substring(0, $n_one.Length - ($n_one.Length - 1))
     $_autouser = $n_one.toUpper() + $n_two.toLower()
     
-    #$_dou_path = $Template
     $_dou_path = (Get-OrginizationalUnit -Identity $Template)
     $t = (Get-OrginizationalUnit -Identity $Template)
     $_cou_name, $gou_name = $t.split(',')
     $_cou_name = $_cou_name.substring(3)  
 
     $upn = Get-ADForest | Select-Object -ExpandProperty UPNSuffixes
-    $domain = Get-ADForest | Select-Object -ExpandProperty Domains
     $identifier = Get-UserIdentifier -Identity $Template
     if($upn.Length -ge 1)
     {
@@ -619,7 +617,6 @@ Function Automate-FillForms
     }
     elseif($upn.Length -eq 0)
     {
-        $domain_temp, $garbage = $domain.split('.')
         $_autoemail = $_autouser + "@" + $identifier 
     }
 
@@ -629,8 +626,6 @@ Function Automate-FillForms
     {
         "Default" 
         {
-               #$is_complex = (Get-ADDefaultDomainPasswordPolicy | Select-Object ComplexityEnabled)
-               #$min_length = (Get-ADDefaultDomainPasswordPolicy | Select-Object MinPasswordLength)
                $default_security = (Get-ADDefaultDomainPasswordPolicy)
                while($good -eq 0)
                {
@@ -640,11 +635,9 @@ Function Automate-FillForms
         }
         "Default \ Fine Grained" 
         {
-            $policy = (Match-UserToFineGrainedPasswordPolicy -Identity $Template)
-            if($policy.Length -eq 0)
+            $policy_group, $policy_name = (Match-UserToFineGrainedPasswordPolicy -Identity $Template)
+            if($policy_name.Length -eq 0)
             {
-               #$is_complex = (Get-ADDefaultDomainPasswordPolicy | Select-Object ComplexityEnabled)
-               #$min_length = (Get-ADDefaultDomainPasswordPolicy | Select-Object MinPasswordLength)
                $default_security = (Get-ADDefaultDomainPasswordPolicy)
                while($good -eq 0)
                {
@@ -652,11 +645,9 @@ Function Automate-FillForms
                    $good = Validate-PasswordRedux -password $_pass -Case 1 -Length $default_security.MinPasswordLength -Complexity $default_security.ComplexityEnabled
                }
             }
-            elseif($policy.Length -gt 1)
+            elseif($policy_name.Length -gt 1)
             {
-                #$is_complex = (Get-ADFineGrainedPasswordPolicy -Filter {Name -like $policy} -Properties ComplexityEnabled).ComplexityEnabled
-                #$min_length = (Get-ADFineGrainedPasswordPolicy -Filter {Name -like $policy} -Properties MinPasswordLength).MinPasswordLength
-                $Grained = (Get-ADFineGrainedPasswordPolicy -Filter {Name -like $policy})
+                $Grained = (Get-ADFineGrainedPasswordPolicy -Filter {Name -like $policy_name})
                 while($good -eq 0)
                 {
                     $_pass = [System.Web.Security.Membership]::GeneratePassword($Grained.MinPasswordLength,1)
@@ -674,19 +665,13 @@ Function Automate-FillForms
         }
     }
     
-    return $_autouser, $_autoemail, $_pass, $_dou_path, $_cou_name, $domain
+    return $_autouser, $_autoemail, $_pass, $_dou_path, $_cou_name, $identifier
     # Example usage - Automate-FillForms -Identity "Aaron Johnson" -Template (Get-OrginizationalUnit -Identity "Example User")
 }
 
 Function Automate-Generate
 {
    $_genuser, $_genemail, $_genpass, $_gendou_path, $_gencou_name, $_gendomain = Automate-FillForms -Identity $employee_name_input.Text -Template $users_combo.Text # (Get-OrginizationalUnit -Identity $users_combo.Text)
-   Write-Host $_genuser 
-   Write-Host $_genemail 
-   Write-Host $_genpass 
-   Write-Host $_gendou_path 
-   Write-Host $_gencou_name 
-   Write-Host $gendomain
 
    $username_input.Text = $_genuser
    $email_input.Text = $_genemail
@@ -767,18 +752,6 @@ Function Dump-UserForm
     }
 }
 
-Function AreProxies-Hidden
-{
-    if($proxies_clicked -eq 1)
-    {
-        Hide-AddProxies
-    }
-    elseif($proxies_clicked -eq 0)
-    {
-       Show-AddProxies
-    }
-}
-
 Function AdvancedComponents
 {
     if($primary_proxy_label.Visible -eq $false -and $primary_proxy_input.Visible -eq $false -and $displayname_label.Visible -eq $false -and $displayname_input.Visible -eq $false)
@@ -799,22 +772,6 @@ Function AdvancedComponents
         $displayname_label.Visible = $false
         $displayname_input.Visible = $false
     }
-}
-
-Function Show-AddProxies
-{
-    $proxies_clicked = 1
-    $primary_proxy_label.Visible = $true
-    $primary_proxy_input.Visible = $true
-    $secondary_proxy_label.Visible = $true
-    $secondary_proxy_input.Visible = $true
-}
-
-Function Show-AddDisplayname
-{
-    $displayname_clicked = 1
-    $displayname_label.Visible = $true
-    $displayname_input.Visible = $true
 }
 
 Function Is-DisplaynameNull 
@@ -1015,7 +972,7 @@ Function DomainUser
     $ou_combo_label.size = New-Object System.Drawing.Size(220, 35)
     $ou_combo_label.location = New-Object System.Drawing.Size(0, 75)
     $ou_combo_label.Font = New-Object System.Drawing.Font("Courier",12,[System.Drawing.FontStyle]::Regular)
-    $ou_combo_label.text = "Orginizational unit:"
+    $ou_combo_label.text = "Organizational unit:"
     $ou_combo_label.Visible = $false 
     $Domain_Form.Controls.Add($ou_combo_label)
 
@@ -1104,7 +1061,7 @@ Function DomainUser
     $advanced_button.Font = New-Object System.Drawing.Font("Courier",12,[System.Drawing.FontStyle]::Regular)
     $advanced_button.Text = "Advanced"
     $advanced_button.size = New-Object System.Drawing.Size(145, 30)
-    $advanced_button.location = New-Object System.Drawing.Size(50, 415)
+    $advanced_button.location = New-Object System.Drawing.Size(50, 420)
     $advanced_button.Add_Click({AdvancedComponents})
     $advanced_button.Visible = $false
     $Domain_Form.Controls.Add($advanced_button)
@@ -1126,7 +1083,7 @@ Function DomainUser
 
     $displayname_label = New-Object Windows.Forms.Label
     $displayname_label.size = New-Object System.Drawing.Size(200, 35)
-    $displayname_label.location = New-Object System.Drawing.Size(0, 385)
+    $displayname_label.location = New-Object System.Drawing.Size(0, 390)
     $displayname_label.Font = New-Object System.Drawing.Font("Courier",12,[System.Drawing.FontStyle]::Regular)
     $displayname_label.text = "Display name:"
     $displayname_label.Visible = $false
@@ -1134,7 +1091,7 @@ Function DomainUser
 
     $displayname_input = New-Object Windows.Forms.TextBox
     $displayname_input.size = New-Object System.Drawing.Size(350, 75)
-    $displayname_input.location = New-Object System.Drawing.Size(205, 385)
+    $displayname_input.location = New-Object System.Drawing.Size(205, 390)
     $displayname_input.Font = New-Object System.Drawing.Font("Courier",12,[System.Drawing.FontStyle]::Regular)
     $displayname_input.Visible = $false
     $Domain_Form.Controls.Add($displayname_input)
@@ -1143,7 +1100,7 @@ Function DomainUser
     $create_button.Font = New-Object System.Drawing.Font("Courier",12,[System.Drawing.FontStyle]::Regular)
     $create_button.Text = "Create"
     $create_button.size = New-Object System.Drawing.Size(120, 30)
-    $create_button.location = New-Object System.Drawing.Size(195, 415)
+    $create_button.location = New-Object System.Drawing.Size(195, 420) #415
     $create_button.Add_Click({CreateDomainUser -_ou $ou_combo.SelectedIndex -_template $users_combo.Text -_upn $special_combo.Text -_fullname $employee_name_input.Text -_username $username_input.Text -_password $password_input.Text -_email $email_input.Text})
     $create_button.Visible = $false 
     $Domain_Form.Controls.Add($create_button)
@@ -1152,7 +1109,7 @@ Function DomainUser
     $close_button.Font = New-Object System.Drawing.Font("Courier",12,[System.Drawing.FontStyle]::Regular)
     $close_button.Text = "Close"
     $close_button.size = New-Object System.Drawing.Size(120, 30)
-    $close_button.location = New-Object System.Drawing.Size(435, 415)
+    $close_button.location = New-Object System.Drawing.Size(435, 420) # 415
     $close_button.Add_Click({$Domain_Form.Add_FormClosing({$_.Cancel=$false});$Domain_Form.Close()})   
     $Domain_Form.Controls.Add($close_button)
 
@@ -1160,13 +1117,13 @@ Function DomainUser
     $generate_button.Font = New-Object System.Drawing.Font("Courier",12,[System.Drawing.FontStyle]::Regular)
     $generate_button.Text = "Generate"
     $generate_button.size = New-Object System.Drawing.Size(120, 30)
-    $generate_button.location = New-Object System.Drawing.Size(315, 415)
+    $generate_button.location = New-Object System.Drawing.Size(315, 420) #415
     $generate_button.Add_Click({Automate-Generate})   
     $Domain_Form.Controls.Add($generate_button)
 
     $message_label = New-Object Windows.Forms.Label
     $message_label.size = New-Object System.Drawing.Size(700, 180)
-    $message_label.location = New-Object System.Drawing.Size(0, 445) # was 410
+    $message_label.location = New-Object System.Drawing.Size(0, 450) # was 410
     $message_label.Font = New-Object System.Drawing.Font("Courier",12,[System.Drawing.FontStyle]::Regular)
     $Domain_Form.Controls.Add($message_label)
 
@@ -1186,7 +1143,6 @@ Function LocalUser
     $Luser_Form.maximumSize = New-Object System.Drawing.Size(600,600) 
     $Luser_Form.FormBorderStyle = 'Fixed3D'
     $Luser_Form.StartPosition = 'CenterScreen'
-
     
     $lusername_label = New-Object Windows.Forms.Label
     $lusername_label.size = New-Object System.Drawing.Size(150, 35)
@@ -1195,14 +1151,12 @@ Function LocalUser
     $lusername_label.text = "Username:"
     $Luser_Form.Controls.Add($lusername_label)
 
-
     $lusername_input = New-Object Windows.Forms.TextBox
     $lusername_input.size = New-Object System.Drawing.Size(350, 75)
     $lusername_input.location = New-Object System.Drawing.Size(150, 90)
     $lusername_input.Font = New-Object System.Drawing.Font("Courier",12,[System.Drawing.FontStyle]::Regular)
     $Luser_Form.Controls.Add($lusername_input)
 
-    
     $lpassword_label = New-Object Windows.Forms.Label
     $lpassword_label.size = New-Object System.Drawing.Size(150, 35)
     $lpassword_label.location = New-Object System.Drawing.Size(0, 125)
@@ -1210,21 +1164,18 @@ Function LocalUser
     $lpassword_label.text = "Password:"
     $Luser_Form.Controls.Add($lpassword_label)
 
-
     $lpassword_input = New-Object Windows.Forms.TextBox
     $lpassword_input.size = New-Object System.Drawing.Size(350, 75)
     $lpassword_input.location = New-Object System.Drawing.Size(150, 125)
     $lpassword_input.Font = New-Object System.Drawing.Font("Courier",12,[System.Drawing.FontStyle]::Regular)
     $Luser_Form.Controls.Add($lpassword_input)
 
-    
     $admin_button = New-Object Windows.Forms.CheckBox
     $admin_button.Font = New-Object System.Drawing.Font("Courier",12,[System.Drawing.FontStyle]::Regular)
     $admin_button.Text = "Admin"
     $admin_button.size = New-Object System.Drawing.Size(120, 30)
     $admin_button.location = New-Object System.Drawing.Size(150, 160)
     $Luser_Form.Controls.Add($admin_button)
-
 
     $lcreate_button = New-Object Windows.Forms.Button
     $lcreate_button.Font = New-Object System.Drawing.Font("Courier",12,[System.Drawing.FontStyle]::Regular)
@@ -1234,7 +1185,6 @@ Function LocalUser
     $lcreate_button.Add_Click({CreateLocalUser -lfullname $lemployee_name_input.Text -lusername $lusername_input.Text -lpassword $lpassword_input.Text})   
     $Luser_Form.Controls.Add($lcreate_button)
 
-
     $lclose_button = New-Object Windows.Forms.Button
     $lclose_button.Font = New-Object System.Drawing.Font("Courier",12,[System.Drawing.FontStyle]::Regular)
     $lclose_button.Text = "Close"
@@ -1242,7 +1192,6 @@ Function LocalUser
     $lclose_button.location = New-Object System.Drawing.Size(380, 190)
     $lclose_button.Add_Click({$Luser_Form.Add_FormClosing({$_.Cancel=$false});$Luser_Form.Close()})   
     $Luser_Form.Controls.Add($lclose_button)
-
 
     $lmessage_label = New-Object Windows.Forms.Label
     $lmessage_label.size = New-Object System.Drawing.Size(600, 200)
