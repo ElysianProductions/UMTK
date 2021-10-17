@@ -185,22 +185,23 @@ Function CreateDomainUser
                 Move-ADObject -Identity $tuser -TargetPath $distinguished_ous[$_ou]
             }
             
-            $_tmpg =  (Get-ADPrincipalGroupMembership $_username | Select-Object Name)
-            $_cleaned = Get-UserGroups -Identity $_template
+            #$_tmpg =  (Get-ADPrincipalGroupMembership $_username | Select-Object Name)
+            #$_cleaned = Get-UserGroups -Identity $_template
+            $_tc_ = (Write-GroupsCleanly -Identity $_template)
 
             $path_var = Validate-Path
-            Dump-UserForm -username $_username -password $_password -path $path_var -is_domain 1 -employee $_fullname -email $_email -UPN $_upn -OU $clean_ous[$_ou] -membership (Get-UserGroups -Identity $_template).Values -template $_template -local_administrator 0
+            Dump-UserForm -username $_username -password $_password -path $path_var -is_domain 1 -employee $_fullname -email $_email -UPN $_upn -OU $clean_ous[$_ou] -membership ($_tc_ -join ", ") -template $_template -local_administrator 0
             $azure =  Get-AzureStatus
             if((Get-AzureStatus) -eq 1)
             {
                 Start-ADSyncSyncCycle -PolicyType "Delta"
                 $message_label.ForeColor = "Green"
-                $message_label.Text = "The user account for " + $_username + " has been created. A file was created on your desktop it's called " + $_username + ".html  please take this file and present it to the user. Once transfered, delete this file. An Azure AD Sync has also been successfully executed."
+                $message_label.Text = "The user account for " + $_username + " has been created. A file was created on your desktop ( " + $_username + ".html ) give this file to the user, then delete it. An Azure AD Sync has also been successfully executed."
             }
             elseif((Get-AzureStatus) -eq 0)
             {
                 $message_label.ForeColor = "Green"
-                $message_label.Text = "The user account for " + $_username + " has been created. A file was created on your desktop it's called " + $_username + ".html  please take this file and present it to the user. Once transfered, delete this file. `n`nWARNING: The Azure AD Sync module was not found. Please logon to the appropriate server and execute the following commands in an administrative powershell: `nImport-Module ADSync`nStart-ADSyncSyncCycle -PolicyType Delta "
+                $message_label.Text = "The user account for " + $_username + " has been created. A file was created on your desktop ( " + $_username + ".html ) give this file to the user, then delete it. `n`nWARNING: The Azure AD Sync module was not found. Logon the appropriate server and execute the following commands in an administrative powershell: `nImport-Module ADSync`nStart-ADSyncSyncCycle -PolicyType Delta "
 
             }
         }
@@ -732,8 +733,8 @@ Function Dump-UserForm
     {
         $wstring = "
                     <h1><center>Below this line is a print out of the information that you provided to us, it's our acknowledgement that we not only received but carried out the work that you requested.</center></h1>                    
-                    <body><h5>Employee Name: " + $employee + "</h5><h5>Username: " + $username + "</h5><h5>Email Address: " + $email + "</h5><h5>Password: " + $password + "</h5><br>The user was placed into the following groups using the template user " + "(" + $template + ") that you provided " + $membership + "
-                    We placed the user into the same Orginizational Unit as the template user that you provided (" + $template + ") " + $OU + ".<br><br><center>If there are issues with users not receiving the appropriate access or required items to complete their
+                    <body><h5>Employee Name: " + $employee + "</h5><h5>Username: " + $username + "</h5><h5>Email Address: " + $email + "</h5><h5>Password: " + $password + "</h5><h5>Group Membership: " + $membership + "
+                    </h5><h5>Organizational Unit: " + $OU + "</h5><br><br><center>If there are issues with users not receiving the appropriate access or required items to complete their
                     day to day jobs please provide us with a thorough list containing what they need. Please also understand that this is what the template user is intended to be used for. Using another user account with all of the appropriate access 
                     levels prevents mistakes that cause productivity issues!</center> 
                    "
@@ -761,6 +762,36 @@ Function Dump-UserForm
             $wstring | Out-File -FilePath $path
        }
     }
+}
+
+Function Write-GroupsCleanly
+{
+    param (
+        [parameter (Mandatory = $true)]
+        [string]$Identity
+    )
+    $tmp = @()
+    $tmp = ((Get-ADUser -Filter {Name -like $Identity} -Properties MemberOf).MemberOf)
+    $break_down = @()
+    foreach($element in $tmp)
+    {
+        $break_down += Get-ADGroup $element | Select Name
+
+    }
+
+    return $break_down.Name
+}
+
+Function Print-ToPdf
+{
+    param (
+        [parameter (Mandatory = $true)]
+        [string]$Path,
+        [string]$FileName,
+        [string]$Content
+    )
+    $printer = Get-Printer -Name "Microsoft Print to PDF" -ErrorAction SilentlyContinue
+    $Content | Out-Printer -Name $printer
 }
 
 Function AdvancedComponents
@@ -848,23 +879,23 @@ Function DomainUser
     $Domain_Form.FormBorderStyle = 'Fixed3D'
     $Domain_Form.StartPosition = 'CenterScreen'
 
-    $menu_bar = New-Object System.Windows.Forms.MenuStrip
-    $menu_tool_strip = New-Object System.Windows.Forms.ToolStrip
-    $Domain_Form.MainMenuStrip = $menu_bar
+    #$menu_bar = New-Object System.Windows.Forms.MenuStrip
+    #$menu_tool_strip = New-Object System.Windows.Forms.ToolStrip
+    #$Domain_Form.MainMenuStrip = $menu_bar
     
     # FILE MENU ITEM
-    $file_action = New-Object System.Windows.Forms.ToolStripMenuItem
-    $file_action.Font = New-Object System.Drawing.Font("Courier",12,[System.Drawing.FontStyle]::Regular)
-    $file_action.Text = "File"
+    #$file_action = New-Object System.Windows.Forms.ToolStripMenuItem
+    #$file_action.Font = New-Object System.Drawing.Font("Courier",12,[System.Drawing.FontStyle]::Regular)
+    #$file_action.Text = "File"
     # save command 
-    $save_command = New-Object System.Windows.Forms.ToolStripButton
-    $save_command.Font = New-Object System.Drawing.Font("Courier",12,[System.Drawing.FontStyle]::Regular)
-    $save_command.Text = "Save Command"
+    #$save_command = New-Object System.Windows.Forms.ToolStripButton
+    #$save_command.Font = New-Object System.Drawing.Font("Courier",12,[System.Drawing.FontStyle]::Regular)
+    #$save_command.Text = "Save Command"
 
     # Close program 
-    $close_program = New-Object System.Windows.Forms.ToolStripButton
-    $close_program.Font = New-Object System.Drawing.Font("Courier",12,[System.Drawing.FontStyle]::Regular)
-    $close_program.Text = "Close Program"
+    #$close_program = New-Object System.Windows.Forms.ToolStripButton
+    #$close_program.Font = New-Object System.Drawing.Font("Courier",12,[System.Drawing.FontStyle]::Regular)
+    #$close_program.Text = "Close Program"
     
     # EDIT MENU ITEM
     # $edit_action = New-Object System.Windows.Forms.ToolStripMenuItem
@@ -890,32 +921,33 @@ Function DomainUser
     # $add_display_name.Add_Click({ if($displayname_clicked -eq 0) {Show-AddDisplayname} elseif($displayname_clicked -eq 1) {Hide-AddDisplayname} })
 
     # Help function
-    $save_me = New-Object System.Windows.Forms.ToolStripButton
-    $save_me.Font = New-Object System.Drawing.Font("Courier",12,[System.Drawing.FontStyle]::Regular)
-    $save_me.Text = "Help"    
+    #$save_me = New-Object System.Windows.Forms.ToolStripButton
+    #$save_me.Font = New-Object System.Drawing.Font("Courier",12,[System.Drawing.FontStyle]::Regular)
+    #$save_me.Text = "Help"    
 
     # Add items to menu bar
-    $menu_bar.Items.Add($file_action)
+    #$menu_bar.Items.Add($file_action)
     # $menu_bar.Items.Add($edit_action)
     # $menu_bar.Items.Add($settings_action)
 
     # Add submenu items
-    $file_action.DropDownItems.Add($save_command)
-    $file_action.DropDownItems.Add($close_program)
+    #$file_action.DropDownItems.Add($save_command)
+    #$file_action.DropDownItems.Add($close_program)
 
     # $settings_action.DropDownItems.Add($add_proxies)
     # $settings_action.DropDownItems.Add($add_display_name)
 
     # Add menu to form
-    $Domain_form.Controls.Add($menu_tool_strip)
-    $Domain_Form.Controls.Add($menu_bar)
+    #$Domain_form.Controls.Add($menu_tool_strip)
+    #$Domain_Form.Controls.Add($menu_bar)
 
     $users_combo = New-Object Windows.Forms.ComboBox 
     $users_combo.size = New-Object System.Drawing.Size(350, 150)
     $users_combo.location = New-Object System.Drawing.Size(205, 110)
     $users_combo.Font = New-Object System.Drawing.Font("Courier",12,[System.Drawing.FontStyle]::Regular)
-    $pull_users = Get-ADUser -Filter * | Select-Object -ExpandProperty Name
-    Foreach($usr in $pull_users)
+    $pull_users = (Get-ADUser -Filter * | Select-Object Name, GivenNAme, SurName | Sort-Object SurName, GivenName) # Select-Object -ExpandProperty Name
+
+    Foreach($usr in $pull_users.Name)
     {
         $users_combo.Items.Add($usr)
     }
@@ -1249,6 +1281,7 @@ Function Main
     $euser_button.Location = New-Object System.Drawing.Size(230, 310)
     $euser_button.Text = "Edit User"
     $euser_button.Add_Click({EditUser})
+    $euser_button.Visible = $false
     $UMTK_Form.Controls.Add($euser_button)
 
     $exit_button = New-Object System.Windows.Forms.Button 
