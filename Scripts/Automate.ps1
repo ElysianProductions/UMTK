@@ -244,3 +244,4 @@ Function Automate-FillForms
     # Example usage - Automate-FillForms -Identity "Aaron Johnson" -Template (Get-OrginizationalUnit -Identity "Example User")
 }
 
+Export-ModuleMember -Function Automate-FillForms
