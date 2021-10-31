@@ -12,7 +12,6 @@ Function CreateDomainUser
         [string]$_email,
         [int]$_cleaned_ous
     )
-
     if($primary_proxy_input.Text.Length -eq 0)
     {
         $pprox = "SMTP:" + $_email
@@ -25,7 +24,6 @@ Function CreateDomainUser
     {
         $secprox = "smtp:" + $secondary_proxy_input.Text
     }
-
     if($displayname_input.Text.Length -eq 0)
     {
         $_displayname = $_fullname
@@ -128,11 +126,9 @@ Function CreateDomainUser
             }
         }
     }
-
-    $user_leng = Validate-UserLength -uname $_username # Should == 1
-    $user_exists = Validate-DomainUser -username $_username # Should == 0
-    $email_eval = Validate-Email -emailaddress $_email # Should == 1
-    
+    $user_leng = Validate-UserLength -uname $_username
+    $user_exists = Validate-DomainUser -username $_username
+    $email_eval = Validate-Email -emailaddress $_email
     if($_fullname.Split(' ').Count -eq 1)
     {
         # Fail with message letting user know that First and Last names are required..
@@ -175,7 +171,6 @@ Function CreateDomainUser
                 Set-ADUser -Identity $_username -Add @{Proxyaddresses = $secprox}
             }
             $tuser = (Get-ADUser -Filter {samAccountName -like $_username} | Select-Object -ExpandProperty DistinguishedName) 
-            
             if($_cleaned_ous -eq 1)
             {
                 Move-ADObject -Identity $tuser -TargetPath $distinguished_ous[$_ou]
@@ -184,23 +179,21 @@ Function CreateDomainUser
             {
                 Move-ADObject -Identity $tuser -TargetPath $distinguished_ous[$_ou]
             }
-            
-            $_tmpg =  (Get-ADPrincipalGroupMembership $_username | Select-Object Name)
-            $_cleaned = Get-UserGroups -Identity $_template
-
+            $_tc_ = (Write-GroupsCleanly -Identity $_template)
             $path_var = Validate-Path
-            Dump-UserForm -username $_username -password $_password -path $path_var -is_domain 1 -employee $_fullname -email $_email -UPN $_upn -OU $clean_ous[$_ou] -membership (Get-UserGroups -Identity $_template).Values -template $_template -local_administrator 0
-            $azure =  Get-AzureStatus
+            $final_form = (Dump-UserForm -username $_username -password $_password -path $path_var -is_domain 1 -employee $_fullname -email $_email -UPN $_upn -OU $clean_ous[$_ou] -membership ($_tc_ -join ", ") -template $_template -local_administrator 0)
             if((Get-AzureStatus) -eq 1)
             {
                 Start-ADSyncSyncCycle -PolicyType "Delta"
                 $message_label.ForeColor = "Green"
-                $message_label.Text = "The user account for " + $_username + " has been created. A file was created on your desktop it's called " + $_username + ".html  please take this file and present it to the user. Once transfered, delete this file. An Azure AD Sync has also been successfully executed."
+                Print-ToPdf -Content $final_form 
+                $message_label.Text = "The user account for " + $_username + " has been created. A file was created on your desktop ( " + $_username + ".html ) give this file to the user, then delete it. An Azure AD Sync has also been successfully executed."
             }
             elseif((Get-AzureStatus) -eq 0)
             {
                 $message_label.ForeColor = "Green"
-                $message_label.Text = "The user account for " + $_username + " has been created. A file was created on your desktop it's called " + $_username + ".html  please take this file and present it to the user. Once transfered, delete this file. `n`nWARNING: The Azure AD Sync module was not found. Please logon to the appropriate server and execute the following commands in an administrative powershell: `nImport-Module ADSync`nStart-ADSyncSyncCycle -PolicyType Delta "
+                Print-ToPdf -Content $final_form 
+                $message_label.Text = "The user account for " + $_username + " has been created. A file was created on your desktop ( " + $_username + ".html ) give this file to the user, then delete it. `n`nWARNING: The Azure AD Sync module was not found. Logon the appropriate server and execute the following commands in an administrative powershell: `nImport-Module ADSync`nStart-ADSyncSyncCycle -PolicyType Delta "
 
             }
         }
@@ -226,7 +219,6 @@ Function CreateDomainUser
         }
     }
 }
-
 Function CreateLocalUser
 {
      param (
@@ -277,7 +269,6 @@ Function CreateLocalUser
         }
     }
 }
-
 Function Validate-LocalUser 
 {
     param (
@@ -286,20 +277,15 @@ Function Validate-LocalUser
     )
 
     $test = (Get-LocalUser -Name $username -ErrorAction SilentlyContinue | Select-Object Name )
-    if($test.Name -ne $null)
+    if($null -ne $test.Name)
     {
         return 1    
     }
-    elseif($test.Name -eq $null)
+    elseif($null -eq $test.Name)
     {    
         return 0
     }
-    # This was frustrating for me, I wanted to redirect/supress the error differently but I couldn't https://github.com/PowerShell/PowerShell/issues/11133     
-    # It's messed up because the purpose of the function is to check to see if the local user exists. The problem is that if the local user does not exist
-    # it throws a UserNotFoundException. It still returns correctly and allows you to carry on but that's not the point. So, instead of fighting I just 
-    # added -ErrorAction SilentlyContinue which does supress it from view.
 }
-
 Function Validate-DomainUser
 {
     param (
@@ -307,23 +293,15 @@ Function Validate-DomainUser
         [string]$username
     )
     $test = (Get-ADUser -Filter {SamAccountName -like $username})
-    if($test -ne $null)
+    if($null -ne $test)
     {
         return 1
     }
-    elseif($test -eq $null)
+    elseif($null -eq $test)
     {
         return 0
     }
-    # Very straightforward boolean check:
-    #    If the username (SamAccountName) supplied is found in AD 
-    #        Return 1 for true 
-    #    If the username (SamAccountName) supplied is not found in AD
-    #        Return 0 for false
-    # If this function returns a 1 then a user with that name already exists and the user should not be created.
-    # If this function returns a 0 then the user does not alread yexist and can be created.
 }
-
 Function Validate-Password
 {
     param (
@@ -339,11 +317,7 @@ Function Validate-Password
     {
         return 0
     }
-    # If secure return 1
-    # If not secure return 0
-    # Pretty straightforward forcing 1 Capital letter, one lower case letter, 1 number, 1 symbol and it has an 8 character minimum requirement
 }
-
 Function Validate-PasswordRedux
 {
     param (
@@ -398,13 +372,9 @@ Function Validate-PasswordRedux
             {
                 return 0
             }
-            # If secure return 1
-            # If not secure return 0
-            # Pretty straightforward forcing 1 Capital letter, one lower case letter, 1 number, 1 symbol and it has an 8 character minimum requirement
         }
     }
 }
-
 Function Validate-UserLength 
 {
     param (
@@ -419,11 +389,7 @@ Function Validate-UserLength
     {
         return 1
     }
-    # USAGE EXAMPLE:
-    #    Validate-UserLength -uname "username"
-    #    Validate-UserLength -uname $username_variable
 }
-
 Function Validate-Email
 {
     param (
@@ -440,14 +406,11 @@ Function Validate-Email
     {
         return 0
     }
-    # See https://docs.microsoft.com/en-us/dotnet/api/system.net.mail.mailaddress?view=net-5.0
-    # USEAGE EXAMPLE - Validate-Email -Identity "example@example.com" or Validate-Email -Identity $email_variable 
 }
-
 Function Validate-Path 
 {
    $t = (Get-ItemProperty -Path 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\User Shell Folders\' -Name Desktop | Select-Object Desktop -ErrorAction SilentlyContinue)
-   if($t.Desktop -ne $null)
+   if($null -ne $t.Desktop)
    {     
        $str = $t.Desktop.toString() + "\"
        return $str
@@ -457,12 +420,7 @@ Function Validate-Path
        $str = $ENV:USERPROFILE + "\Downloads\"
        return $str
    }
-   # This one had originally been part of the Dump-UserForm message but I moved it into it's own unique function. 
-   # When called it attempts to locate the listed registry key and find the Desktop dword value. This value should, 
-   # if it exists, contain the folder redirection path of the user. If it does not exist (null) we just shift the path
-   # to the users downloads folder using the USERPROFILE environment variable.
 }
-
 Function Validate-DistinguishedNames
 {
     param (
@@ -475,12 +433,28 @@ Function Validate-DistinguishedNames
     $b = $b.substring(2) -replace '[\W]', ''
     $hacked = $b + " - " + $a 
     return $hacked
-    
-    # Well this one was fun. I needed a way to turn this "OU=Administrators,OU=Elysium,DC=Elysium,DC=local" into this Elysium - Administrators
-    # It really needs to be built on and improved but it does the job it was made to do which is identify DC's with multi-client OUs that have 
-    # different UPNs tied to them.
 }
+Function Validate-MultiEnvUserNames
+{
+    param (
+        [parameter (Mandatory = $true)]
+        [int]$Index,
+        [string]$User
+    )
+    $dirty = Get-OrginizationalUnit -Identity $User
+    $comma_count = ($dirty.ToCharArray() | Where-Object {$_ -eq ','} | Measure-Object).Count + 1
 
+    if($comma_count -gt 1)
+    {
+        [System.Collections.ArrayList]$a = $dirty.split(',')
+       
+        $a.RemoveAt($a.Count - 1)
+        $a.RemoveAt($a.Count - 1)
+        $var = $a -join "->"
+        
+    }
+    return $var + " - " + $User
+}
 Function Get-UserIdentifier
 {
     param (
@@ -500,9 +474,7 @@ Function Get-UserIdentifier
         $garbage, $upn = $temp.Split('@')
         return $upn
     }
-    # USAGE EXAMPLE: Get-USerIdentifier -Identity "Employee Name"
 }
-
 Function Get-OrginizationalUnit 
 {
     param (
@@ -515,7 +487,6 @@ Function Get-OrginizationalUnit
     $garbage, $OU = $t.split(',', 2)
     return $OU
 }
-
 Function Get-UserGroups 
 {
    param (
@@ -526,21 +497,20 @@ Function Get-UserGroups
    $GroupsHash = @{}
    Foreach($element in $Groups)
    {
-       $GroupsHash[$element] = Get-ADGroup $element | Select Name
+       $GroupsHash[$element] = Get-ADGroup $element | Select-Object Name
    }
    return $GroupsHash
 }
-
 Function Get-PasswordPolicyType
 {
     if(Get-Module -ListAvailable -Name "ActiveDirectory")
     {
         $test = (Get-ADFineGrainedPasswordPolicy -Filter * -ErrorAction SilentlyContinue)
-        if($test -eq $null)
+        if($null -eq $test)
         {
             return "Default"
         }
-        elseif($test -ne $null)
+        elseif($null -ne $test)
         {
             return  "Default \ Fine Grained"
         }
@@ -550,7 +520,6 @@ Function Get-PasswordPolicyType
         return "Arbitrary"
     }
 }
-
 Function Get-AzureStatus
 {
     if(Get-Module -ListAvailable -Name "ADSync")
@@ -560,18 +529,14 @@ Function Get-AzureStatus
     else
     {
         return 0 
-        # "Do not forget to log onto the AD Server and execute `n`nImport-Module ADSync; Start-ADSyncSyncCycle -PolicyType Delta"
     }
-    # USAGE EXAMPLE - Get-AzureStatus 
 }
-
 Function Get-FineGrainedPasswordPolicies 
 {
     $Grains = @{}
     $Grains = (Get-ADFineGrainedPasswordPolicy -Filter * | Select-Object AppliesTo, DistinguishedName, Name, ComplexityEnabled, MinPasswordLength)
     return $Grains
 }
-
 Function Match-UserToFineGrainedPasswordPolicy
 {
      param (
@@ -598,7 +563,6 @@ Function Match-UserToFineGrainedPasswordPolicy
        }
     }
 }
-
 Function Automate-FillForms 
 {
     param (
@@ -606,10 +570,6 @@ Function Automate-FillForms
         $Identity,
         $Template
     )
-    
-    # TODO: 
-    # See issue described and outline here in the repo - https://github.com/ElysianProductions/UMTK/issues/32
-
     $n_one, $n_two = $Identity.Split(' ')
     $n_one = $n_one.Substring(0, $n_one.Length - ($n_one.Length - 1))
     $_autouser = $n_one.toUpper() + $n_two.toLower()
@@ -630,7 +590,6 @@ Function Automate-FillForms
         $cleaned, $garbage = $identifier.split('.')
         $_autoemail = $_autouser + "@" + $cleaned.ToLower() + ".com" 
     }
-
     Add-Type -AssemblyName System.Web 
     $good = 0  
     switch(Get-PasswordPolicyType)
@@ -675,15 +634,12 @@ Function Automate-FillForms
             }
         }
     }
-    
     return $_autouser, $_autoemail, $_pass, $_dou_path, $_cou_name, $identifier
-    # Example usage - Automate-FillForms -Identity "Aaron Johnson" -Template (Get-OrginizationalUnit -Identity "Example User")
 }
-
 Function Automate-Generate
 {
    $_genuser, $_genemail, $_genpass, $_gendou_path, $_gencou_name, $_gendomain = Automate-FillForms -Identity $employee_name_input.Text -Template $users_combo.Text
-
+ 
    $username_input.Text = $_genuser
    $email_input.Text = $_genemail
    $password_input.Text = $_genpass
@@ -703,16 +659,6 @@ Function Automate-Generate
    $create_button.Visible = $true
    $advanced_button.Visible = $true
 }
-
-Function Clean-GroupNames 
-{
-    param (
-        [parameter (Mandatory = $true)]
-        [array[]]$Groups
-    )
-    return ($Groups -join ",")
-}
-
 Function Dump-UserForm
 {
     param (
@@ -730,39 +676,48 @@ Function Dump-UserForm
     )
     if($is_domain -eq 1)
     {
-        $wstring = "
-                    <h1><center>Below this line is a print out of the information that you provided to us, it's our acknowledgement that we not only received but carried out the work that you requested.</center></h1>                    
-                    <body><h5>Employee Name: " + $employee + "</h5><h5>Username: " + $username + "</h5><h5>Email Address: " + $email + "</h5><h5>Password: " + $password + "</h5><br>The user was placed into the following groups using the template user " + "(" + $template + ") that you provided " + $membership + "
-                    We placed the user into the same Orginizational Unit as the template user that you provided (" + $template + ") " + $OU + ".<br><br><center>If there are issues with users not receiving the appropriate access or required items to complete their
-                    day to day jobs please provide us with a thorough list containing what they need. Please also understand that this is what the template user is intended to be used for. Using another user account with all of the appropriate access 
-                    levels prevents mistakes that cause productivity issues!</center> 
-                   "
-        $path = $path + $username + ".html"
-        $wstring | Out-File -FilePath $path
+        $wstring = "Employee Name: " + $employee + "`nUsername: " + $username + "`nEmail Address: " + $email + "`nPassword: " + $password + "`nGroup Membership: " + $membership + "`nOrganizational Unit: " + $OU + ""
+        return $wstring
     }
     elseif($is_domain -eq 0)
     {
        if($local_administrator -eq 1)
        {
-           $wstring = "
-                        <h1><center>Below this line is a print out of the information that you provided to us. It's our acknowledgement that we not only received but carried out the work that you requested.</center></h1>                    
-                        <body><h5>Username: " + $username + "</h5><h5>Password: " + $password + "</h5><br>The user was given local administrator access per your request; to the local computer (individual mahcine) that you specified.
-                      "
-           $path = $path + $username + ".html"
-           $wstring | Out-File -FilePath $path
+           $wstring = "Username: " + $username + "`nPassword: " + $password + "`nThe user was given local administrator access per your request; to the local computer (individual mahcine) that you specified."
+            return $wstring
        }
        elseif($local_administrator -eq 0)
        {
-           $wstring = "
-                        <h1><center>Below this line is a print out of the information that you provided to us. It's our acknowledgement that we not only received but also carried out the work that you requested.</center></h1>                    
-                        <body><h5>Username: " + $username + "</h5><h5>Password: " + $password + "</h5> This user has been created and granted access to the local (individual machine) that you specified.
-                      "
-            $path = $path + $username + ".html"
-            $wstring | Out-File -FilePath $path
+           $wstring = "Username: " + $username + "`nPassword: " + $password + "`nThis user has been created and granted access to the local (individual machine) that you specified."
+            return $wstring
        }
     }
 }
+Function Write-GroupsCleanly
+{
+    param (
+        [parameter (Mandatory = $true)]
+        [string]$Identity
+    )
+    $tmp = @()
+    $tmp = ((Get-ADUser -Filter {Name -like $Identity} -Properties MemberOf).MemberOf)
+    $break_down = @()
+    foreach($element in $tmp)
+    {
+        $break_down += Get-ADGroup $element | Select-Object Name
 
+    }
+
+    return $break_down.Name
+}
+Function Print-ToPdf
+{
+    param (
+        [parameter (Mandatory = $true)]
+        [string]$Content
+    )
+    $Content | Out-Printer -Name "Microsoft Print to PDF"
+}
 Function AdvancedComponents
 {
     if($primary_proxy_label.Visible -eq $false -and $primary_proxy_input.Visible -eq $false -and $displayname_label.Visible -eq $false -and $displayname_input.Visible -eq $false)
@@ -784,19 +739,6 @@ Function AdvancedComponents
         $displayname_input.Visible = $false
     }
 }
-
-Function Is-DisplaynameNull 
-{
-    if($displayname_input.Text.Length -eq 0)
-    {   
-        return 1
-    }
-    elseif($displayname_input.Text.Length -ge 1)
-    {
-        return 0
-    }
-}
-
 Function Split-FullName
 {
     param (
@@ -834,8 +776,7 @@ Function Split-FullName
         return $Name 
     }
 }
-
-Function DomainUser 
+Function DomainUserWidget
 {
     [void] [System.Reflection.Assembly]::LoadWithPartialName("System.Drawing")
     [void] [System.Reflection.Assembly]::LoadWithPartialName("System.Windows.Forms")
@@ -848,74 +789,13 @@ Function DomainUser
     $Domain_Form.FormBorderStyle = 'Fixed3D'
     $Domain_Form.StartPosition = 'CenterScreen'
 
-    $menu_bar = New-Object System.Windows.Forms.MenuStrip
-    $menu_tool_strip = New-Object System.Windows.Forms.ToolStrip
-    $Domain_Form.MainMenuStrip = $menu_bar
-    
-    # FILE MENU ITEM
-    $file_action = New-Object System.Windows.Forms.ToolStripMenuItem
-    $file_action.Font = New-Object System.Drawing.Font("Courier",12,[System.Drawing.FontStyle]::Regular)
-    $file_action.Text = "File"
-    # save command 
-    $save_command = New-Object System.Windows.Forms.ToolStripButton
-    $save_command.Font = New-Object System.Drawing.Font("Courier",12,[System.Drawing.FontStyle]::Regular)
-    $save_command.Text = "Save Command"
-
-    # Close program 
-    $close_program = New-Object System.Windows.Forms.ToolStripButton
-    $close_program.Font = New-Object System.Drawing.Font("Courier",12,[System.Drawing.FontStyle]::Regular)
-    $close_program.Text = "Close Program"
-    
-    # EDIT MENU ITEM
-    # $edit_action = New-Object System.Windows.Forms.ToolStripMenuItem
-    # $edit_action.Font = New-Object System.Drawing.Font("Courier",12,[System.Drawing.FontStyle]::Regular)
-    # $edit_action.Text = "Edit"
-
-    # SETTINGS MENU ITEM
-    # $settings_action = New-Object System.Windows.Forms.ToolStripMenuItem
-    # $settings_Action.Font = New-Object System.Drawing.Font("Courier",12,[System.Drawing.FontStyle]::Regular)
-    # $settings_action.Text = "Settings"
-    # Set additional proxy 
-    # $add_proxies = New-Object System.Windows.Forms.ToolStripButton
-    # $add_proxies.Font = New-Object System.Drawing.Font("Courier",12,[System.Drawing.FontStyle]::Regular)
-    # $add_proxies.Text = "Set Aditional proxy"
-    # $proxies_clicked = 0
-    # $add_proxies.Add_Click({AreProxies-Hidden})
-
-    # set display name
-    # $add_display_name = New-Object System.Windows.Forms.ToolStripButton
-    # $add_display_name.Font = New-Object System.Drawing.Font("Courier",12,[System.Drawing.FontStyle]::Regular)
-    # $add_display_name.Text = "Set Display Name"
-    # $displayname_clicked = 0
-    # $add_display_name.Add_Click({ if($displayname_clicked -eq 0) {Show-AddDisplayname} elseif($displayname_clicked -eq 1) {Hide-AddDisplayname} })
-
-    # Help function
-    $save_me = New-Object System.Windows.Forms.ToolStripButton
-    $save_me.Font = New-Object System.Drawing.Font("Courier",12,[System.Drawing.FontStyle]::Regular)
-    $save_me.Text = "Help"    
-
-    # Add items to menu bar
-    $menu_bar.Items.Add($file_action)
-    # $menu_bar.Items.Add($edit_action)
-    # $menu_bar.Items.Add($settings_action)
-
-    # Add submenu items
-    $file_action.DropDownItems.Add($save_command)
-    $file_action.DropDownItems.Add($close_program)
-
-    # $settings_action.DropDownItems.Add($add_proxies)
-    # $settings_action.DropDownItems.Add($add_display_name)
-
-    # Add menu to form
-    $Domain_form.Controls.Add($menu_tool_strip)
-    $Domain_Form.Controls.Add($menu_bar)
-
     $users_combo = New-Object Windows.Forms.ComboBox 
     $users_combo.size = New-Object System.Drawing.Size(350, 150)
     $users_combo.location = New-Object System.Drawing.Size(205, 110)
     $users_combo.Font = New-Object System.Drawing.Font("Courier",12,[System.Drawing.FontStyle]::Regular)
-    $pull_users = Get-ADUser -Filter * | Select-Object -ExpandProperty Name
-    Foreach($usr in $pull_users)
+    $pull_users = (Get-ADUser -Filter * | Select-Object Name, GivenNAme, SurName | Sort-Object SurName, GivenName) # Select-Object -ExpandProperty Name
+
+    Foreach($usr in $pull_users.Name)
     {
         $users_combo.Items.Add($usr)
     }
@@ -957,18 +837,25 @@ Function DomainUser
     $ou_combo.Font = New-Object System.Drawing.Font("Courier",12,[System.Drawing.FontStyle]::Regular)
     $clean_ous = Get-ADOrganizationalUnit -Filter * | Select-Object -ExpandProperty Name
     $distinguished_ous = Get-ADOrganizationalUnit -Filter * | Select-Object -ExpandProperty distinguishedName
+    #$multi_env_users = Get-ADUser -Filter * | Select-Object -ExpandProperty Name
     if($upn_lookup.Count -gt 2)
     {
-        $are_ous_cleaned = 0 
         Foreach($ou in $distinguished_ous)
         {
             $adjusted = Validate-DistinguishedNames -ou $ou -index 0
             $ou_combo.Items.Add($adjusted)       
         }
+        #$users_combo.Items.Clear()
+        #$users_combo.Size = New-Object System.Drawing.Size(500, 150)
+        #Foreach($usr in $multi_env_users)
+        #{
+        #    $adjusted_users = Validate-MultiEnvUserNames -User $usr -Index 0
+        #    $users_combo.Items.Add($adjusted_users)
+        #}
+
     }
     elseif($upn_lookup.Count -le 2)
     {    
-         $are_ous_cleaned = 1
          Foreach($ou in $clean_ous)
         {
             $ou_combo.Items.Add($ou)
@@ -1139,8 +1026,7 @@ Function DomainUser
     $Domain_Form.Add_Shown({$Domain_Form.Activate()})
     [void] $Domain_Form.ShowDialog()
 }
-
-Function LocalUser 
+Function LocalUserWidget 
 {
     [void] [System.Reflection.Assembly]::LoadWithPartialName("System.Drawing")
     [void] [System.Reflection.Assembly]::LoadWithPartialName("System.Windows.Forms")
@@ -1211,12 +1097,10 @@ Function LocalUser
     $Luser_Form.Add_Shown({$Luser_Form.Activate()})
     [void] $Luser_Form.ShowDialog()
 }
-
-Function EditUser 
+Function EditUserWidget 
 {
     Write-Host "Edit User"
 }
-
 Function Main 
 {
     [void] [System.Reflection.Assembly]::LoadWithPartialName("System.Drawing")
@@ -1234,21 +1118,21 @@ Function Main
     $duser_button.Size = New-Object System.Drawing.Size(120, 30)
     $duser_button.Location = New-Object System.Drawing.Size(230, 250)
     $duser_button.Text = "Domain User"
-    $duser_button.Add_Click({DomainUser})
+    $duser_button.Add_Click({DomainUserWidget})
     $UMTK_Form.Controls.Add($duser_button)
 
     $luser_button = New-Object System.Windows.Forms.Button 
     $luser_button.Size = New-Object System.Drawing.Size(120, 30)
     $luser_button.Location = New-Object System.Drawing.Size(230, 280)
     $luser_button.Text = "Local User"
-    $luser_button.Add_Click({LocalUser})
+    $luser_button.Add_Click({LocalUserWidget})
     $UMTK_Form.Controls.Add($luser_button)
 
     $euser_button = New-Object System.Windows.Forms.Button 
     $euser_button.Size = New-Object System.Drawing.Size(120, 30)
     $euser_button.Location = New-Object System.Drawing.Size(230, 310)
     $euser_button.Text = "Edit User"
-    $euser_button.Add_Click({EditUser})
+    $euser_button.Add_Click({EditUserWidget})
     $UMTK_Form.Controls.Add($euser_button)
 
     $exit_button = New-Object System.Windows.Forms.Button 
