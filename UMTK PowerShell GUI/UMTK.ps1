@@ -782,7 +782,8 @@ Function EditUser-SelectField
 {
 
     if($eusers_combo.Text.Length -gt 0 -and $efield_combo.Text.Length -gt 0)
-    {
+    {   
+        $edisable_button.Visible = $false
         switch($efield_combo.Text)
         {
             "Orginizational Unit"
@@ -796,7 +797,41 @@ Function EditUser-SelectField
             }
             "Employee Name"
             {
+                $ecomponent_input.Visible = $true
+                $echange_button.Visible = $true
+                $isDone = 0
                 $emessage_label.Text = "The employees name is " + $eusers_combo.Text
+                $_fullname = $eusers_combo.Text
+                $echange_button.Add_Click({
+                    if($ecomponent_input.Text.Split(' ').Count -le 0)
+                    {
+                        $emessage_label.ForeColor = "Red"
+                        $emessage_label.Text = "The employees name is still " + $eusers_combo.Text + " no changes have been made. You must input the users full name..."
+                    }
+                    elseif($ecomponent_input.Text.Split(' ').Count -eq 2)
+                    {
+                        $_fullname = $ecomponent_input.Text 
+                        $_given, $_surname = $_fullname.Split(' ')
+                        Set-ADUser -Identity ((Get-ADUser -Filter {Name -Like $eusers_combo.Text} -Properties SamAccountName).SamAccountName) -GivenName $_given -Surname $_surname 
+                        $emessage_label.ForeColor = "Green"
+                        $emessage_label.Text = "The users name has been updated to " + $_fullname
+                    }
+                    elseif($ecomponent_input.Text.Split(' ').Count -eq 3)
+                    {
+                        $_fullname = $ecomponent_input.Text
+                        $_given, $_middlename, $_surname = $_fullname.Split(' ')
+                        Set-ADUser -Identity ((Get-ADUser -Filter {Name -Like $eusers_combo.Text} -Properties SamAccountName).SamAccountName) -GivenName $_given -Surname $_surname -MiddleName $_middlename
+                        $emessage_label.ForeColor = "Green"
+                        $emessage_label.Text = "The users name has been updated to " + $_fullname
+                    }
+                    elseif($ecomponent_input.Text.Split(' ').Count -gt 3)
+                    {
+                        $isDone = 0
+                        $ecomponent_input.Text = ""
+                        $emessage_label.ForeColor = "Red"
+                        $emessage_label.Text = "The employees name is still " + $eusers_combo.Text + " no changes have been made. You have done something terribly wrong.."
+                    }
+                })
             }
             "Username"
             {
@@ -1306,7 +1341,7 @@ Function EditUserWidget
     $eclose_button = New-Object Windows.Forms.Button
     $eclose_button.Font = New-Object System.Drawing.Font("Courier",12,[System.Drawing.FontStyle]::Regular)
     $eclose_button.Text = "Close"
-    $eclose_button.size = New-Object System.Drawing.Size(120, 30)
+    $eclose_button.size = New-Object System.Drawing.Size(120, 35)
     $eclose_button.location = New-Object System.Drawing.Size(665, 5) # 415
     $eclose_button.Add_Click({$Euser_Form.Add_FormClosing({$_.Cancel=$false});$Euser_Form.Close()})   
     $Euser_Form.Controls.Add($eclose_button)
@@ -1314,7 +1349,7 @@ Function EditUserWidget
     $eload_button = New-Object Windows.Forms.Button
     $eload_button.Font = New-Object System.Drawing.Font("Courier",12,[System.Drawing.FontStyle]::Regular)
     $eload_button.Text = "Load"
-    $eload_button.size = New-Object System.Drawing.Size(120, 30)
+    $eload_button.size = New-Object System.Drawing.Size(120, 35)
     $eload_button.location = New-Object System.Drawing.Size(5, 5) #415
     $eload_button.Add_Click({EditUser-SelectField})   
     $Euser_Form.Controls.Add($eload_button)
@@ -1332,6 +1367,24 @@ Function EditUserWidget
     $ecomponent_input.Font = New-Object System.Drawing.Font("Courier",12,[System.Drawing.FontStyle]::Regular)
     $ecomponent_input.Visible = $false
     $Euser_Form.Controls.Add($ecomponent_input)
+
+
+    $echange_button = New-Object Windows.Forms.Button
+    $echange_button.Font = New-Object System.Drawing.Font("Courier",12,[System.Drawing.FontStyle]::Regular)
+    $echange_button.Text = "Change"
+    $echange_button.size = New-Object System.Drawing.Size(120, 35)
+    $echange_button.location = New-Object System.Drawing.Size(230, 5) #415
+    $echange_button.Visible = $false
+    $Euser_Form.Controls.Add($echange_button)
+
+    $edisable_button = New-Object Windows.Forms.Button
+    $edisable_button.Font = New-Object System.Drawing.Font("Courier",12,[System.Drawing.FontStyle]::Regular)
+    $edisable_button.Text = "Disable"
+    $edisable_button.size = New-Object System.Drawing.Size(120, 35)
+    $edisable_button.location = New-Object System.Drawing.Size(450, 5) #415
+    $edisable_button.Visible = $true   
+    $Euser_Form.Controls.Add($edisable_button)
+
     # NEW COMPONENTS
 
 
