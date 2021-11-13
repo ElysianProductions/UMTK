@@ -776,6 +776,89 @@ Function Split-FullName
         return $Name 
     }
 }
+
+# Experimental 
+Function EditUser-SelectField
+{
+
+    if($eusers_combo.Text.Length -gt 0 -and $efield_combo.Text.Length -gt 0)
+    {
+        switch($efield_combo.Text)
+        {
+            "Orginizational Unit"
+            {
+                $var = Get-OrginizationalUnit -Identity $eusers_combo.Text
+                $emessage_label.Text = $eusers_combo.Text  + " is in the OU:`n" + (Get-OrginizationalUnit -Identity $eusers_combo.Text)
+            }
+            "Domain\UPN"
+            {
+                $emessage_label.Text = $eusers_combo.Text + " is currently using the following identifier:`n" + (Get-UserIdentifier -Identity $eusers_combo.Text)
+            }
+            "Employee Name"
+            {
+                $emessage_label.Text = "The employees name is " + $eusers_combo.Text
+            }
+            "Username"
+            {
+                $emessage_label.Text = "The users SamAccountName is " + (Get-ADUser -Filter {Name -Like $eusers_combo.Text } -Properties SamAccountName).SamAccountName + 
+                "`nThe users UserPrincipalName is " + (Get-ADUser -Filter {Name -Like $eusers_combo.Text } -Properties UserPrincipalName).UserPrincipalName
+            }
+            "Password"
+            {
+                switch(Get-PasswordPolicyType)
+                {
+                    "Default"
+                    {
+                         $default_security = (Get-ADDefaultDomainPasswordPolicy)
+
+                    }
+                    "Default \ Fine Grained"
+                    {
+                        $policy_group, $policy_name = (Match-UserToFineGrainedPasswordPolicy -Identity $eusers_combo.Text)
+                        if($policy_name.Length -eq 0)
+                        {
+                            $emessage_label.Text = "Password must meet the following requirements:`n" + "Complexity: " + ((Get-ADDefaultDomainPasswordPolicy).ComplexityEnabled) +
+                            "`nMinimum Password Length: " + ((Get-ADDefaultDomainPasswordPolicy).MinPasswordLength)
+                        }
+                        elseif($policy_name.Length -gt 1)
+                        {
+                            $Grained = (Get-ADFineGrainedPasswordPolicy -Filter {Name -like $policy_name})
+                            $emessage_label.Text = "Password must meet the following requirements:`n" + "Complexity: " + ($Grained.ComplexityEnabled) +
+                            "`nMinimum Password Length: " + ($Grained.MinPasswordLength)
+                        }
+                    }
+                    "Arbitrary"
+                    {
+                        $emessage_label.Text = "Password must meet the following requirements:`nComplexity Enabled: True`nMinimum Password Length: 8" 
+                    }
+                }
+            }
+            "Email Address"
+            {
+                $emessage_label.Text = $eusers_combo.Text + "'s email address is " + (Get-ADUser -Filter {Name -Like $eusers_combo.Text } -Properties Mail).Mail
+            }
+            "Primary Proxy"
+            {
+                $var = (Get-ADUser -Filter {Name -like $eusers_combo.Text} -Properties Proxyaddresses).Proxyaddresses
+                $found = $var | Select-String -Pattern "SMTP:" -CaseSensitive -SimpleMatch
+                $emessage_label.Text = $eusers_combo.Text + "'s primary proxy address is " + $found
+            }
+            "Secondary Proxy"
+            {
+                $var = (Get-ADUser -Filter {Name -like $eusers_combo.Text} -Properties Proxyaddresses).Proxyaddresses
+                $found = $var | Select-String -Pattern "smtp:" -CaseSensitive -SimpleMatch
+                $emessage_label.Text = $eusers_combo.Text + "'s secondary proxy address is " + $found
+            }
+            "Display Name"
+            {
+                $emessage_label.Text = $eusers_combo.Text + "'s display name is " + (Get-ADUser -Filter {Name -like $eusers_combo.Text} -Properties displayName).displayName
+            }  
+        }
+    }
+}
+
+# Experimental
+
 Function DomainUserWidget
 {
     [void] [System.Reflection.Assembly]::LoadWithPartialName("System.Drawing")
@@ -1099,7 +1182,161 @@ Function LocalUserWidget
 }
 Function EditUserWidget 
 {
-    Write-Host "Edit User"
+    [void] [System.Reflection.Assembly]::LoadWithPartialName("System.Drawing")
+    [void] [System.Reflection.Assembly]::LoadWithPartialName("System.Windows.Forms")
+
+    $Euser_Form = New-Object System.Windows.Forms.Form
+    $Euser_Form.Text = "UMTK: Domain User Modifcation"
+    $Euser_Form.Size = New-Object System.Drawing.Size(800, 800)
+    $Euser_Form.minimumSize = New-Object System.Drawing.Size(800,800) 
+    $Euser_Form.maximumSize = New-Object System.Drawing.Size(800,800) 
+    $Euser_Form.FormBorderStyle = 'Fixed3D'
+    $Euser_Form.StartPosition = 'CenterScreen'
+
+    $eusers_combo = New-Object Windows.Forms.ComboBox 
+    $eusers_combo.size = New-Object System.Drawing.Size(350, 150)
+    $eusers_combo.location = New-Object System.Drawing.Size(205, 110)
+    $eusers_combo.Font = New-Object System.Drawing.Font("Courier",12,[System.Drawing.FontStyle]::Regular)
+    $pull_users = (Get-ADUser -Filter * | Select-Object Name, GivenNAme, SurName | Sort-Object SurName, GivenName)
+
+    Foreach($usr in $pull_users.Name)
+    {
+        $eusers_combo.Items.Add($usr)
+    }
+    $Euser_Form.Controls.Add($eusers_combo)
+
+    $eusers_label = New-Object Windows.Forms.Label
+    $eusers_label.size = New-Object System.Drawing.Size(200, 35)
+    $eusers_label.location = New-Object System.Drawing.Size(0, 110)
+    $eusers_label.Font = New-Object System.Drawing.Font("Courier",12,[System.Drawing.FontStyle]::Regular)
+    $eusers_label.text = "Select user:"
+    $Euser_Form.Controls.Add($eusers_label)
+
+    $especial_combo = New-Object Windows.Forms.ComboBox 
+    $especial_combo.size = New-Object System.Drawing.Size(350, 150)
+    $especial_combo.location = New-Object System.Drawing.Size(205, 145)
+    $especial_combo.Font = New-Object System.Drawing.Font("Courier",12,[System.Drawing.FontStyle]::Regular)
+    $domain_lookup = Get-ADForest | Select-Object -ExpandProperty Domains
+    $upn_lookup = Get-ADForest | Select-Object -ExpandProperty UPNSuffixes
+    if($upn_lookup.Count -gt 0)
+    {
+        Foreach($upn in $upn_lookup)
+        {
+            $especial_combo.Items.Add($upn)
+        }
+    }
+    else
+    {
+        Foreach($domain in $domain_lookup)
+        {
+            $especial_combo.Items.Add($domain)
+        }
+    }
+    $especial_combo.Visible = $false 
+    $Euser_Form.Controls.Add($especial_combo)
+
+    $eou_combo = New-Object Windows.Forms.ComboBox 
+    $eou_combo.size = New-Object System.Drawing.Size(350, 150)
+    $eou_combo.location = New-Object System.Drawing.Size(205, 75)
+    $eou_combo.Font = New-Object System.Drawing.Font("Courier",12,[System.Drawing.FontStyle]::Regular)
+    $clean_ous = Get-ADOrganizationalUnit -Filter * | Select-Object -ExpandProperty Name
+    $distinguished_ous = Get-ADOrganizationalUnit -Filter * | Select-Object -ExpandProperty distinguishedName
+    #$multi_env_users = Get-ADUser -Filter * | Select-Object -ExpandProperty Name
+    if($upn_lookup.Count -gt 2)
+    {
+        Foreach($ou in $distinguished_ous)
+        {
+            $adjusted = Validate-DistinguishedNames -ou $ou -index 0
+            $eou_combo.Items.Add($adjusted)       
+        }
+        #$users_combo.Items.Clear()
+        #$users_combo.Size = New-Object System.Drawing.Size(500, 150)
+        #Foreach($usr in $multi_env_users)
+        #{
+        #    $adjusted_users = Validate-MultiEnvUserNames -User $usr -Index 0
+        #    $users_combo.Items.Add($adjusted_users)
+        #}
+
+    }
+    elseif($upn_lookup.Count -le 2)
+    {    
+         Foreach($ou in $clean_ous)
+        {
+            $eou_combo.Items.Add($ou)
+        }
+    }
+    $eou_combo.Visible = $false
+    $Euser_Form.Controls.Add($eou_combo)
+
+    $efields = @("Orginizational Unit", "Domain\UPN", "Employee Name", "Username", "Password", "Email Address" ,"Primary Proxy" ,"Secondary Proxy", "Display Name")
+    $efield_combo = New-Object Windows.Forms.ComboBox 
+    $efield_combo.size = New-Object System.Drawing.Size(350, 150)
+    $efield_combo.location = New-Object System.Drawing.Size(205, 45)
+    $efield_combo.Font = New-Object System.Drawing.Font("Courier",12,[System.Drawing.FontStyle]::Regular)
+    Foreach($var in $efields)
+    {
+        $efield_combo.Items.Add($var)
+    }
+    $Euser_Form.Controls.Add($efield_combo)
+
+    $efield_label = New-Object Windows.Forms.Label
+    $efield_label.size = New-Object System.Drawing.Size(220, 35)
+    $efield_label.location = New-Object System.Drawing.Size(0, 45)
+    $efield_label.Font = New-Object System.Drawing.Font("Courier",12,[System.Drawing.FontStyle]::Regular)
+    $efield_label.text = "Select Field:"
+    $efield_label.Visible = $true 
+    $Euser_Form.Controls.Add($efield_label)
+
+    $eou_label = New-Object Windows.Forms.Label
+    $eou_label.size = New-Object System.Drawing.Size(220, 35)
+    $eou_label.location = New-Object System.Drawing.Size(0, 75)
+    $eou_label.Font = New-Object System.Drawing.Font("Courier",12,[System.Drawing.FontStyle]::Regular)
+    $eou_label.text = "Organizational unit:"
+    $eou_label.Visible = $false 
+    $Euser_Form.Controls.Add($eou_label)
+
+    $especial_label = New-Object Windows.Forms.Label
+    $especial_label.size = New-Object System.Drawing.Size(200, 35)
+    $especial_label.location = New-Object System.Drawing.Size(0, 145)
+    $especial_label.Font = New-Object System.Drawing.Font("Courier",12,[System.Drawing.FontStyle]::Regular)
+    $especial_label.text = "Domain or UPN:"
+    $especial_label.Visible = $false
+    $Euser_Form.Controls.Add($especial_label)
+
+    $eclose_button = New-Object Windows.Forms.Button
+    $eclose_button.Font = New-Object System.Drawing.Font("Courier",12,[System.Drawing.FontStyle]::Regular)
+    $eclose_button.Text = "Close"
+    $eclose_button.size = New-Object System.Drawing.Size(120, 30)
+    $eclose_button.location = New-Object System.Drawing.Size(665, 5) # 415
+    $eclose_button.Add_Click({$Euser_Form.Add_FormClosing({$_.Cancel=$false});$Euser_Form.Close()})   
+    $Euser_Form.Controls.Add($eclose_button)
+
+    $eload_button = New-Object Windows.Forms.Button
+    $eload_button.Font = New-Object System.Drawing.Font("Courier",12,[System.Drawing.FontStyle]::Regular)
+    $eload_button.Text = "Load"
+    $eload_button.size = New-Object System.Drawing.Size(120, 30)
+    $eload_button.location = New-Object System.Drawing.Size(5, 5) #415
+    $eload_button.Add_Click({EditUser-SelectField})   
+    $Euser_Form.Controls.Add($eload_button)
+
+    $emessage_label = New-Object Windows.Forms.Label
+    $emessage_label.size = New-Object System.Drawing.Size(700, 300)
+    $emessage_label.location = New-Object System.Drawing.Size(0, 450) # was 410
+    $emessage_label.Font = New-Object System.Drawing.Font("Courier",12,[System.Drawing.FontStyle]::Regular)
+    $Euser_Form.Controls.Add($emessage_label)
+
+    # NEW COMPONENTS
+    $ecomponent_input = New-Object Windows.Forms.TextBox
+    $ecomponent_input.size = New-Object System.Drawing.Size(350, 75)
+    $ecomponent_input.location = New-Object System.Drawing.Size(205, 145)
+    $ecomponent_input.Font = New-Object System.Drawing.Font("Courier",12,[System.Drawing.FontStyle]::Regular)
+    $ecomponent_input.Visible = $false
+    $Euser_Form.Controls.Add($ecomponent_input)
+    # NEW COMPONENTS
+
+
+    $Euser_Form.Add_Shown({$Euser_Form.Activate()})
+    [void] $Euser_Form.ShowDialog()
 }
 Function Main 
 {
