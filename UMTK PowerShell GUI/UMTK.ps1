@@ -812,7 +812,8 @@ Function EditUser-SelectField
                     {
                         $_fullname = $ecomponent_input.Text 
                         $_given, $_surname = $_fullname.Split(' ')
-                        Set-ADUser -Identity ((Get-ADUser -Filter {Name -Like $eusers_combo.Text} -Properties SamAccountName).SamAccountName) -GivenName $_given -Surname $_surname 
+                        Set-ADUser -Identity ((Get-ADUser -Filter {Name -Like $eusers_combo.Text} -Properties SamAccountName).SamAccountName) -GivenName $_given -Surname $_surname -OtherName $_middlename
+                        Rename-ADObject -Identity ((Get-ADUser -Filter {Name -Like $eusers_combo.Text} -Properties DistinguishedName).DistinguishedName) -NewName $_fullname
                         $emessage_label.ForeColor = "Green"
                         $emessage_label.Text = "The users name has been updated to " + $_fullname
                     }
@@ -820,7 +821,8 @@ Function EditUser-SelectField
                     {
                         $_fullname = $ecomponent_input.Text
                         $_given, $_middlename, $_surname = $_fullname.Split(' ')
-                        Set-ADUser -Identity ((Get-ADUser -Filter {Name -Like $eusers_combo.Text} -Properties SamAccountName).SamAccountName) -GivenName $_given -Surname $_surname -MiddleName $_middlename
+                        Set-ADUser -Identity ((Get-ADUser -Filter {Name -Like $eusers_combo.Text} -Properties SamAccountName).SamAccountName) -GivenName $_given -Surname $_surname -OtherName $_middlename
+                        Rename-ADObject -Identity ((Get-ADUser -Filter {Name -Like $eusers_combo.Text} -Properties DistinguishedName).DistinguishedName) -NewName $_fullname
                         $emessage_label.ForeColor = "Green"
                         $emessage_label.Text = "The users name has been updated to " + $_fullname
                     }
