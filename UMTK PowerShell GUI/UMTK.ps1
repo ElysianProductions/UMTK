@@ -331,7 +331,7 @@ Function Validate-PasswordRedux
     {
         1
         {
-            if($Complexity -eq 1 -and $password.Length -ge $Length)
+            if($Complexity -eq 0 -and $password.Length -ge $Length)
             {
                 $pattern = "(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[^A-Za-z0-9])"
                 if($password -cmatch $pattern)
@@ -950,79 +950,78 @@ Function EditUser-SelectField
                                 $emessage_label.Text = "You need to input something, this box cannot be empty."
                             }
                         })
-
                     }
                     "Default \ Fine Grained"
                     {
                         $policy_group, $policy_name = (Match-UserToFineGrainedPasswordPolicy -Identity $eusers_combo.Text)
-                            if($policy_name.Length -eq 0)
-                            {
-                                $emessage_label.Text = "Password must meet the following requirements:`n" + "Complexity: " + ((Get-ADDefaultDomainPasswordPolicy).ComplexityEnabled) +
-                                    "`nMinimum Password Length: " + ((Get-ADDefaultDomainPasswordPolicy).MinPasswordLength)
-                                $default_security = (Get-ADDefaultDomainPasswordPolicy)
-                                $echange_button.Add_Click({
-                                    if($ecomponent_input.Text.Length -gt 1)
+                        if($policy_name.Length -eq 0)
+                        {
+                            $emessage_label.Text = "Password must meet the following requirements:`n" + "Complexity: " + ((Get-ADDefaultDomainPasswordPolicy).ComplexityEnabled) +
+                                "`nMinimum Password Length: " + ((Get-ADDefaultDomainPasswordPolicy).MinPasswordLength)
+                            $default_security = (Get-ADDefaultDomainPasswordPolicy)
+                            $echange_button.Add_Click({
+                                if($ecomponent_input.Text.Length -gt 1)
+                                {
+                                    $good = Validate-PasswordRedux -password $ecomponent_input.Text -Case 1 -Length $default_security.MinPasswordLength -Complexity $default_security.ComplexityEnabled
+                                    if($good -eq 1)
                                     {
-                                        $good = Validate-PasswordRedux -password $ecomponent_input.Text -Case 1 -Length $default_security.MinPasswordLength -Complexity $default_security.ComplexityEnabled
-                                        if($good -eq 1)
-                                        {
-                                            Set-ADAccountPassword -Identity ((Get-ADUser -Filter {Name -Like $eusers_combo.Text} -Properties SamAccountName).SamAccountName) -Reset -NewPassword (ConvertTo-SecureString -AsPlainText $ecomponent_input.Text -Force)
-                                            $emessage_label.ForeColor = "Green"
-                                            $emessage_label.Text = $eusers_combo.Text + "'s password is now`n" + $ecomponent_input.Text
-                                            $echange_button.Visible = $false
-                                            $ecomponent_input.Visible = $false
-                                            $ecomponent_label.Text = ""
-                                            $ecomponent_input.Text = ""
-                                            $erefresh_button.Visible = $true
-                                        }
-                                        elseif($good -eq 0)
-                                        {
-                                            $emessage_label.ForeColor = "Red"
-                                            $emessage_label.Text = "Password did not meet the following requirements:`n" + "Complexity: " + ((Get-ADDefaultDomainPasswordPolicy).ComplexityEnabled) +
-                                                "`nMinimum Password Length: " + ((Get-ADDefaultDomainPasswordPolicy).MinPasswordLength)
-                                        }
+                                        Set-ADAccountPassword -Identity ((Get-ADUser -Filter {Name -Like $eusers_combo.Text} -Properties SamAccountName).SamAccountName) -Reset -NewPassword (ConvertTo-SecureString -AsPlainText $ecomponent_input.Text -Force)
+                                        $emessage_label.ForeColor = "Green"
+                                        $emessage_label.Text = $eusers_combo.Text + "'s password is now`n" + $ecomponent_input.Text
+                                        $echange_button.Visible = $false
+                                        $ecomponent_input.Visible = $false
+                                        $ecomponent_label.Text = ""
+                                        $ecomponent_input.Text = ""
+                                        $erefresh_button.Visible = $true
                                     }
-                                    elseif($ecomponent_input.Text.Length -le 1)
+                                    elseif($good -eq 0)
                                     {
                                         $emessage_label.ForeColor = "Red"
-                                        $emessage_label.Text = "This field cannot be empty. Please input a new password..."
+                                        $emessage_label.Text = "Password did not meet the following requirements:`n" + "Complexity: " + ((Get-ADDefaultDomainPasswordPolicy).ComplexityEnabled) +
+                                            "`nMinimum Password Length: " + ((Get-ADDefaultDomainPasswordPolicy).MinPasswordLength)
                                     }
-                                })
-                            }
-                            elseif($policy_name.Length -ge 1)
-                            {
-                                $Grained = (Get-ADFineGrainedPasswordPolicy -Filter {Name -like $policy_name})
-                                $emessage_label.Text = "Password must meet the following requirements:`n" + "Complexity: " + ($Grained.ComplexityEnabled) +
-                                    "`nMinimum Password Length: " + ($Grained.MinPasswordLength)
-                                $echange_button.Add_Click({
-                                    if($ecomponent_input.Text.Length -gt 1)
+                                }
+                                elseif($ecomponent_input.Text.Length -le 1)
+                                {
+                                    $emessage_label.ForeColor = "Red"
+                                    $emessage_label.Text = "This field cannot be empty. Please input a new password..."
+                                }
+                            })
+                        }
+                        elseif($policy_name.Length -ge 1)
+                        {
+                            $Grained = (Get-ADFineGrainedPasswordPolicy -Filter {Name -like $policy_name})
+                            $emessage_label.Text = "Password must meet the following requirements:`n" + "Complexity: " + ($Grained.ComplexityEnabled) +
+                                "`nMinimum Password Length: " + ($Grained.MinPasswordLength)
+                            $echange_button.Add_Click({
+                                if($ecomponent_input.Text.Length -gt 1)
+                                {
+                                    $good = Validate-PasswordRedux -password ($ecomponent_input.Text) -Case 1 -Length $Grained.MinPasswordLength -Complexity $Grained.ComplexityEnabled   
+                                    if($good -eq 1)
                                     {
-                                        $good = Validate-PasswordRedux -password $ecomponent_input.Text -Case 1 -Length $Grained.MinPasswordLength -Complexity $Grained.ComplexityEnabled   
-                                        if($good -eq 1)
-                                        {
-                                            Set-ADAccountPassword -Identity ((Get-ADUser -Filter {Name -Like $eusers_combo.Text} -Properties SamAccountName).SamAccountName) -Reset -NewPassword (ConvertTo-SecureString -AsPlainText $ecomponent_input.Text -Force)
-                                            $emessage_label.ForeColor = "Green"
-                                            $emessage_label.Text = $eusers_combo.Text + "'s password is now`n" + $ecomponent_input.Text
-                                            $echange_button.Visible = $false
-                                            $ecomponent_input.Visible = $false
-                                            $ecomponent_label.Text = ""
-                                            $ecomponent_input.Text = ""
-                                            $erefresh_button.Visible = $true
-                                        }
-                                        elseif($good -eq 0)
-                                        {
-                                            $ecomponent_label.ForeColor = "Red"
-                                            $emessage_label.Text = "Password did not meet the following requirements:`n" + "Complexity: " + ($Grained.ComplexityEnabled) +
-                                                "`nMinimum Password Length: " + ($Grained.MinPasswordLength)
-                                        }
+                                        Set-ADAccountPassword -Identity ((Get-ADUser -Filter {Name -Like $eusers_combo.Text} -Properties SamAccountName).SamAccountName) -Reset -NewPassword (ConvertTo-SecureString -AsPlainText $ecomponent_input.Text -Force)
+                                        $emessage_label.ForeColor = "Green"
+                                        $emessage_label.Text = $eusers_combo.Text + "'s password is now`n" + $ecomponent_input.Text
+                                        $echange_button.Visible = $false
+                                        $ecomponent_input.Visible = $false
+                                        $ecomponent_label.Text = ""
+                                        $ecomponent_input.Text = ""
+                                        $erefresh_button.Visible = $true
                                     }
-                                    elseif($ecomponent_input.Text.Length -le 1)
+                                    elseif($good -eq 0)
                                     {
                                         $emessage_label.ForeColor = "Red"
-                                        $emessage_label.Text = "You need to input something, this box cannot be empty."
+                                        $emessage_label.Text = "Password did not meet the following requirements:`n" + "Complexity: " + ($Grained.ComplexityEnabled) +
+                                            "`nMinimum Password Length: " + ($Grained.MinPasswordLength)
                                     }
-                                }) 
-                            }
+                                }
+                                elseif($ecomponent_input.Text.Length -le 1)
+                                {
+                                    $emessage_label.ForeColor = "Red"
+                                    $emessage_label.Text = "You need to input something, this box cannot be empty."
+                                }
+                            }) 
+                        }
                     }
                     "Arbitrary"
                     {
