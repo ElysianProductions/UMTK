@@ -777,6 +777,16 @@ Function Split-FullName
     }
 }
 
+Function EditUserWidget-ReloadUserList
+{
+    $pull_users = (Get-ADUser -Filter * | Select-Object Name, GivenNAme, SurName | Sort-Object SurName, GivenName)
+    $eusers_combo.Items.Clear()
+    Foreach($usr in $pull_users.Name)
+    {
+        $eusers_combo.Items.Add($usr)
+    }
+}
+
 # Experimental 
 Function EditUser-SelectField
 {
@@ -799,6 +809,7 @@ Function EditUser-SelectField
             {
                 $ecomponent_input.Visible = $true
                 $echange_button.Visible = $true
+                $ecomponent_label.Text = "Input name"
                 $isDone = 0
                 $emessage_label.Text = "The employees name is " + $eusers_combo.Text
                 $_fullname = $eusers_combo.Text
@@ -815,7 +826,13 @@ Function EditUser-SelectField
                         Set-ADUser -Identity ((Get-ADUser -Filter {Name -Like $eusers_combo.Text} -Properties SamAccountName).SamAccountName) -GivenName $_given -Surname $_surname -OtherName $_middlename
                         Rename-ADObject -Identity ((Get-ADUser -Filter {Name -Like $eusers_combo.Text} -Properties DistinguishedName).DistinguishedName) -NewName $_fullname
                         $emessage_label.ForeColor = "Green"
-                        $emessage_label.Text = "The users name has been updated to " + $_fullname
+                        $emessage_label.Text = "The users name has been updated to " + $_fullname + "`nYou should ensure that you update the SamAccountName and UPN."
+                        $echange_button.Visible = $false
+                        $ecomponent_input.Visible = $false
+                        $ecomponent_label.Text = ""
+                        $ecomponent_input.Text = ""
+                        $erefresh_button.Visible = $true
+
                     }
                     elseif($ecomponent_input.Text.Split(' ').Count -eq 3)
                     {
@@ -824,7 +841,12 @@ Function EditUser-SelectField
                         Set-ADUser -Identity ((Get-ADUser -Filter {Name -Like $eusers_combo.Text} -Properties SamAccountName).SamAccountName) -GivenName $_given -Surname $_surname -OtherName $_middlename
                         Rename-ADObject -Identity ((Get-ADUser -Filter {Name -Like $eusers_combo.Text} -Properties DistinguishedName).DistinguishedName) -NewName $_fullname
                         $emessage_label.ForeColor = "Green"
-                        $emessage_label.Text = "The users name has been updated to " + $_fullname
+                        $emessage_label.Text = "The users name has been updated to " + $_fullname + "`nYou should ensure that you update the SamAccountName and UPN."
+                        $echange_button.Visible = $false
+                        $ecomponent_input.Visible = $false
+                        $ecomponent_label.Text = ""
+                        $ecomponent_input.Text = ""
+                        $erefresh_button.Visible = $true
                     }
                     elseif($ecomponent_input.Text.Split(' ').Count -gt 3)
                     {
@@ -839,34 +861,198 @@ Function EditUser-SelectField
             {
                 $emessage_label.Text = "The users SamAccountName is " + (Get-ADUser -Filter {Name -Like $eusers_combo.Text } -Properties SamAccountName).SamAccountName + 
                 "`nThe users UserPrincipalName is " + (Get-ADUser -Filter {Name -Like $eusers_combo.Text } -Properties UserPrincipalName).UserPrincipalName
+                $ecomponent_label.Text = "Insert username"
+                $ecomponent_input.Visible = $true 
+                $edisable_button.Visible = $false
+                $erefresh_button.Visible = $false
+                $echange_button.Visible = $true
+                $echange_button.Add_Click({
+                    if($ecomponent_input.Text.Length -le 0)
+                    {
+                        # do nothing
+                    }
+                    elseif($ecomponent_input.Text.Length -ge 1)
+                    {
+                        $len = Validate-UserLength -uname $ecomponent_input.Text
+                        if($len -eq 1)
+                        {
+                            $exists = Validate-DomainUser -username $ecomponent_input.Text
+                            if($exists -eq 0)
+                            {
+                                
+                                $upn = (Get-UserIdentifier -Identity $eusers_combo.Text)
+                                $UserPrincipalName = $ecomponent_input.Text + "@" + $upn
+                                Set-ADUser -Identity ((Get-ADUser -Filter {Name -Like $eusers_combo.Text} -Properties SamAccountName).SamAccountName) -SamAccountName $ecomponent_input.Text -UserPrincipalName $UserPrincipalName
+                                $emessage_label.ForeColor = "Green"
+                                $emessage_label.Text = $eusers_combo.Text + "'s SamAccountName is now " + $ecomponent_input.Text + "`n and the UserPrincipalName is " + $UserPrincipalName
+                                $erefresh_button.Visible = $true
+                                $ecomponent_input.Text = ""
+                                $ecomponent_input.Visible = $false 
+                                $ecomponent_label.Visible = $false
+                            }    
+                            elseif($exists -eq 1)
+                            {
+                                $emessage_label.ForeColor = "Red"
+                                $emessage_label.Text = "WARNING: The username " + $ecomponent_input.Text + " already exists. Please use something else."
+                            }
+                        }
+                        elseif($len -eq 0)
+                        {
+                            $emessage_label.ForeColor = "Red"
+                            $emessage_label.Text = "WARNING: The username " + $ecomponent_input.Text + " is to short. Try again."
+                        }
+                    }    
+                })
+
             }
             "Password"
             {
+                $ecomponent_label.Text = "Insert password"
+                $ecomponent_input.Visible = $true 
+                $edisable_button.Visible = $false
+                $erefresh_button.Visible = $false
+                $echange_button.Visible = $true
+                Add-Type -AssemblyName System.Web 
+                $good = 0
+                $_pass = ""
                 switch(Get-PasswordPolicyType)
                 {
                     "Default"
                     {
-                         $default_security = (Get-ADDefaultDomainPasswordPolicy)
+                        $emessage_label.Text = "Password must meet the following requirements:`n" + "Complexity: " + ((Get-ADDefaultDomainPasswordPolicy).ComplexityEnabled) +
+                            "`nMinimum Password Length: " + ((Get-ADDefaultDomainPasswordPolicy).MinPasswordLength)
+                        $echange_button.Add_Click({
+                            if($ecomponent_input.Text.Length -gt 1)
+                            {
+                                $default_security = (Get-ADDefaultDomainPasswordPolicy)
+                                $good = Validate-PasswordRedux -password $ecomponent_input.Text -Case 1 -Length $default_security.MinPasswordLength -Complexity $default_security.ComplexityEnabled
+                                if($good -eq 1)
+                                {
+                                    Set-ADAccountPassword -Identity ((Get-ADUser -Filter {Name -Like $eusers_combo.Text} -Properties SamAccountName).SamAccountName) -Reset -NewPassword (ConvertTo-SecureString -AsPlainText $ecomponent_input.Text -Force)
+                                    $emessage_label.ForeColor = "Green"
+                                    $emessage_label.Text = $eusers_combo.Text + "'s password is now`n" + $ecomponent_input.Text
+                                    $echange_button.Visible = $false
+                                    $ecomponent_input.Visible = $false
+                                    $ecomponent_label.Text = ""
+                                    $ecomponent_input.Text = ""
+                                    $erefresh_button.Visible = $true
+                                }
+                                elseif($good -eq 0)
+                                {
+                                    $emessage_label.ForeColor = "Red"
+                                    $emessage_label.Text = "Password did not meet the following requirements:`n" + "Complexity: " + ((Get-ADDefaultDomainPasswordPolicy).ComplexityEnabled) +
+                                        "`nMinimum Password Length: " + ((Get-ADDefaultDomainPasswordPolicy).MinPasswordLength)
+                                }
+                            }
+                            elseif($ecomponent_input.Text.Length -le 0)
+                            {
+                                $emessage_label.ForeColor = "Red"
+                                $emessage_label.Text = "You need to input something, this box cannot be empty."
+                            }
+                        })
 
                     }
                     "Default \ Fine Grained"
                     {
                         $policy_group, $policy_name = (Match-UserToFineGrainedPasswordPolicy -Identity $eusers_combo.Text)
-                        if($policy_name.Length -eq 0)
-                        {
-                            $emessage_label.Text = "Password must meet the following requirements:`n" + "Complexity: " + ((Get-ADDefaultDomainPasswordPolicy).ComplexityEnabled) +
-                            "`nMinimum Password Length: " + ((Get-ADDefaultDomainPasswordPolicy).MinPasswordLength)
-                        }
-                        elseif($policy_name.Length -gt 1)
-                        {
-                            $Grained = (Get-ADFineGrainedPasswordPolicy -Filter {Name -like $policy_name})
-                            $emessage_label.Text = "Password must meet the following requirements:`n" + "Complexity: " + ($Grained.ComplexityEnabled) +
-                            "`nMinimum Password Length: " + ($Grained.MinPasswordLength)
-                        }
+                            if($policy_name.Length -eq 0)
+                            {
+                                $emessage_label.Text = "Password must meet the following requirements:`n" + "Complexity: " + ((Get-ADDefaultDomainPasswordPolicy).ComplexityEnabled) +
+                                    "`nMinimum Password Length: " + ((Get-ADDefaultDomainPasswordPolicy).MinPasswordLength)
+                                $default_security = (Get-ADDefaultDomainPasswordPolicy)
+                                $echange_button.Add_Click({
+                                    if($ecomponent_input.Text.Length -gt 1)
+                                    {
+                                        $good = Validate-PasswordRedux -password $ecomponent_input.Text -Case 1 -Length $default_security.MinPasswordLength -Complexity $default_security.ComplexityEnabled
+                                        if($good -eq 1)
+                                        {
+                                            Set-ADAccountPassword -Identity ((Get-ADUser -Filter {Name -Like $eusers_combo.Text} -Properties SamAccountName).SamAccountName) -Reset -NewPassword (ConvertTo-SecureString -AsPlainText $ecomponent_input.Text -Force)
+                                            $emessage_label.ForeColor = "Green"
+                                            $emessage_label.Text = $eusers_combo.Text + "'s password is now`n" + $ecomponent_input.Text
+                                            $echange_button.Visible = $false
+                                            $ecomponent_input.Visible = $false
+                                            $ecomponent_label.Text = ""
+                                            $ecomponent_input.Text = ""
+                                            $erefresh_button.Visible = $true
+                                        }
+                                        elseif($good -eq 0)
+                                        {
+                                            $emessage_label.ForeColor = "Red"
+                                            $emessage_label.Text = "Password did not meet the following requirements:`n" + "Complexity: " + ((Get-ADDefaultDomainPasswordPolicy).ComplexityEnabled) +
+                                                "`nMinimum Password Length: " + ((Get-ADDefaultDomainPasswordPolicy).MinPasswordLength)
+                                        }
+                                    }
+                                    elseif($ecomponent_input.Text.Length -le 1)
+                                    {
+                                        $emessage_label.ForeColor = "Red"
+                                        $emessage_label.Text = "This field cannot be empty. Please input a new password..."
+                                    }
+                                })
+                            }
+                            elseif($policy_name.Length -ge 1)
+                            {
+                                $Grained = (Get-ADFineGrainedPasswordPolicy -Filter {Name -like $policy_name})
+                                $emessage_label.Text = "Password must meet the following requirements:`n" + "Complexity: " + ($Grained.ComplexityEnabled) +
+                                    "`nMinimum Password Length: " + ($Grained.MinPasswordLength)
+                                $echange_button.Add_Click({
+                                    if($ecomponent_input.Text.Length -gt 1)
+                                    {
+                                        $good = Validate-PasswordRedux -password $ecomponent_input.Text -Case 1 -Length $Grained.MinPasswordLength -Complexity $Grained.ComplexityEnabled   
+                                        if($good -eq 1)
+                                        {
+                                            Set-ADAccountPassword -Identity ((Get-ADUser -Filter {Name -Like $eusers_combo.Text} -Properties SamAccountName).SamAccountName) -Reset -NewPassword (ConvertTo-SecureString -AsPlainText $ecomponent_input.Text -Force)
+                                            $emessage_label.ForeColor = "Green"
+                                            $emessage_label.Text = $eusers_combo.Text + "'s password is now`n" + $ecomponent_input.Text
+                                            $echange_button.Visible = $false
+                                            $ecomponent_input.Visible = $false
+                                            $ecomponent_label.Text = ""
+                                            $ecomponent_input.Text = ""
+                                            $erefresh_button.Visible = $true
+                                        }
+                                        elseif($good -eq 0)
+                                        {
+                                            $ecomponent_label.ForeColor = "Red"
+                                            $emessage_label.Text = "Password did not meet the following requirements:`n" + "Complexity: " + ($Grained.ComplexityEnabled) +
+                                                "`nMinimum Password Length: " + ($Grained.MinPasswordLength)
+                                        }
+                                    }
+                                    elseif($ecomponent_input.Text.Length -le 1)
+                                    {
+                                        $emessage_label.ForeColor = "Red"
+                                        $emessage_label.Text = "You need to input something, this box cannot be empty."
+                                    }
+                                }) 
+                            }
                     }
                     "Arbitrary"
                     {
-                        $emessage_label.Text = "Password must meet the following requirements:`nComplexity Enabled: True`nMinimum Password Length: 8" 
+                        $emessage_label.Text = "Password must meet the following requirements:`nComplexity Enabled: True`nMinimum Password Length: 8"
+                        $echange_button.Add_Click({
+                            if($ecomponent_input.Text.Length -gt 1)
+                            {
+                                $good = Validate-PasswordRedux -password $_pass -Case 2
+                                if($good -eq 1)
+                                {
+                                    Set-ADAccountPassword -Identity ((Get-ADUser -Filter {Name -Like $eusers_combo.Text} -Properties SamAccountName).SamAccountName) -Reset -NewPassword (ConvertTo-SecureString -AsPlainText $ecomponent_input.Text -Force)
+                                    $emessage_label.ForeColor = "Green"
+                                    $emessage_label.Text = $eusers_combo.Text + "'s password is now`n" + $ecomponent_input.Text
+                                    $echange_button.Visible = $false
+                                    $ecomponent_input.Visible = $false
+                                    $ecomponent_label.Text = ""
+                                    $ecomponent_input.Text = ""
+                                    $erefresh_button.Visible = $true
+                                }
+                                elseif($good -eq 0)
+                                {
+                                    $emessage_label.Text = "Password did not meet the following requirements:`nComplexity Enabled: True`nMinimum Password Length: 8"
+                                }
+                            }
+                            elseif($ecomponent_input.Text.Length -le 1)
+                            {
+                                $emessage_label.ForeColor = "Red"
+                                $emessage_label.Text = "You need to input something, this box cannot be empty."
+                            }
+                        })
                     }
                 }
             }
@@ -1232,7 +1418,7 @@ Function EditUserWidget
 
     $eusers_combo = New-Object Windows.Forms.ComboBox 
     $eusers_combo.size = New-Object System.Drawing.Size(350, 150)
-    $eusers_combo.location = New-Object System.Drawing.Size(205, 110)
+    $eusers_combo.location = New-Object System.Drawing.Size(205, 145)
     $eusers_combo.Font = New-Object System.Drawing.Font("Courier",12,[System.Drawing.FontStyle]::Regular)
     $pull_users = (Get-ADUser -Filter * | Select-Object Name, GivenNAme, SurName | Sort-Object SurName, GivenName)
 
@@ -1244,71 +1430,15 @@ Function EditUserWidget
 
     $eusers_label = New-Object Windows.Forms.Label
     $eusers_label.size = New-Object System.Drawing.Size(200, 35)
-    $eusers_label.location = New-Object System.Drawing.Size(0, 110)
+    $eusers_label.location = New-Object System.Drawing.Size(0, 145)
     $eusers_label.Font = New-Object System.Drawing.Font("Courier",12,[System.Drawing.FontStyle]::Regular)
     $eusers_label.text = "Select user:"
     $Euser_Form.Controls.Add($eusers_label)
 
-    $especial_combo = New-Object Windows.Forms.ComboBox 
-    $especial_combo.size = New-Object System.Drawing.Size(350, 150)
-    $especial_combo.location = New-Object System.Drawing.Size(205, 145)
-    $especial_combo.Font = New-Object System.Drawing.Font("Courier",12,[System.Drawing.FontStyle]::Regular)
-    $domain_lookup = Get-ADForest | Select-Object -ExpandProperty Domains
-    $upn_lookup = Get-ADForest | Select-Object -ExpandProperty UPNSuffixes
-    if($upn_lookup.Count -gt 0)
-    {
-        Foreach($upn in $upn_lookup)
-        {
-            $especial_combo.Items.Add($upn)
-        }
-    }
-    else
-    {
-        Foreach($domain in $domain_lookup)
-        {
-            $especial_combo.Items.Add($domain)
-        }
-    }
-    $especial_combo.Visible = $false 
-    $Euser_Form.Controls.Add($especial_combo)
-
-    $eou_combo = New-Object Windows.Forms.ComboBox 
-    $eou_combo.size = New-Object System.Drawing.Size(350, 150)
-    $eou_combo.location = New-Object System.Drawing.Size(205, 75)
-    $eou_combo.Font = New-Object System.Drawing.Font("Courier",12,[System.Drawing.FontStyle]::Regular)
-    $clean_ous = Get-ADOrganizationalUnit -Filter * | Select-Object -ExpandProperty Name
-    $distinguished_ous = Get-ADOrganizationalUnit -Filter * | Select-Object -ExpandProperty distinguishedName
-    #$multi_env_users = Get-ADUser -Filter * | Select-Object -ExpandProperty Name
-    if($upn_lookup.Count -gt 2)
-    {
-        Foreach($ou in $distinguished_ous)
-        {
-            $adjusted = Validate-DistinguishedNames -ou $ou -index 0
-            $eou_combo.Items.Add($adjusted)       
-        }
-        #$users_combo.Items.Clear()
-        #$users_combo.Size = New-Object System.Drawing.Size(500, 150)
-        #Foreach($usr in $multi_env_users)
-        #{
-        #    $adjusted_users = Validate-MultiEnvUserNames -User $usr -Index 0
-        #    $users_combo.Items.Add($adjusted_users)
-        #}
-
-    }
-    elseif($upn_lookup.Count -le 2)
-    {    
-         Foreach($ou in $clean_ous)
-        {
-            $eou_combo.Items.Add($ou)
-        }
-    }
-    $eou_combo.Visible = $false
-    $Euser_Form.Controls.Add($eou_combo)
-
     $efields = @("Orginizational Unit", "Domain\UPN", "Employee Name", "Username", "Password", "Email Address" ,"Primary Proxy" ,"Secondary Proxy", "Display Name")
     $efield_combo = New-Object Windows.Forms.ComboBox 
     $efield_combo.size = New-Object System.Drawing.Size(350, 150)
-    $efield_combo.location = New-Object System.Drawing.Size(205, 45)
+    $efield_combo.location = New-Object System.Drawing.Size(205, 90)
     $efield_combo.Font = New-Object System.Drawing.Font("Courier",12,[System.Drawing.FontStyle]::Regular)
     Foreach($var in $efields)
     {
@@ -1318,27 +1448,11 @@ Function EditUserWidget
 
     $efield_label = New-Object Windows.Forms.Label
     $efield_label.size = New-Object System.Drawing.Size(220, 35)
-    $efield_label.location = New-Object System.Drawing.Size(0, 45)
+    $efield_label.location = New-Object System.Drawing.Size(0, 90)
     $efield_label.Font = New-Object System.Drawing.Font("Courier",12,[System.Drawing.FontStyle]::Regular)
     $efield_label.text = "Select Field:"
     $efield_label.Visible = $true 
     $Euser_Form.Controls.Add($efield_label)
-
-    $eou_label = New-Object Windows.Forms.Label
-    $eou_label.size = New-Object System.Drawing.Size(220, 35)
-    $eou_label.location = New-Object System.Drawing.Size(0, 75)
-    $eou_label.Font = New-Object System.Drawing.Font("Courier",12,[System.Drawing.FontStyle]::Regular)
-    $eou_label.text = "Organizational unit:"
-    $eou_label.Visible = $false 
-    $Euser_Form.Controls.Add($eou_label)
-
-    $especial_label = New-Object Windows.Forms.Label
-    $especial_label.size = New-Object System.Drawing.Size(200, 35)
-    $especial_label.location = New-Object System.Drawing.Size(0, 145)
-    $especial_label.Font = New-Object System.Drawing.Font("Courier",12,[System.Drawing.FontStyle]::Regular)
-    $especial_label.text = "Domain or UPN:"
-    $especial_label.Visible = $false
-    $Euser_Form.Controls.Add($especial_label)
 
     $eclose_button = New-Object Windows.Forms.Button
     $eclose_button.Font = New-Object System.Drawing.Font("Courier",12,[System.Drawing.FontStyle]::Regular)
@@ -1365,25 +1479,39 @@ Function EditUserWidget
     # NEW COMPONENTS
     $ecomponent_input = New-Object Windows.Forms.TextBox
     $ecomponent_input.size = New-Object System.Drawing.Size(350, 75)
-    $ecomponent_input.location = New-Object System.Drawing.Size(205, 145)
+    $ecomponent_input.location = New-Object System.Drawing.Size(205, 190)
     $ecomponent_input.Font = New-Object System.Drawing.Font("Courier",12,[System.Drawing.FontStyle]::Regular)
     $ecomponent_input.Visible = $false
     $Euser_Form.Controls.Add($ecomponent_input)
-
+     
+    $ecomponent_label = New-Object Windows.Forms.Label
+    $ecomponent_label.size = New-Object System.Drawing.Size(700, 300)
+    $ecomponent_label.location = New-Object System.Drawing.Size(0, 190) # was 410
+    $ecomponent_label.Font = New-Object System.Drawing.Font("Courier",12,[System.Drawing.FontStyle]::Regular)
+    $Euser_Form.Controls.Add($ecomponent_label)
 
     $echange_button = New-Object Windows.Forms.Button
     $echange_button.Font = New-Object System.Drawing.Font("Courier",12,[System.Drawing.FontStyle]::Regular)
     $echange_button.Text = "Change"
     $echange_button.size = New-Object System.Drawing.Size(120, 35)
-    $echange_button.location = New-Object System.Drawing.Size(230, 5) #415
+    $echange_button.location = New-Object System.Drawing.Size(130, 5) #415
     $echange_button.Visible = $false
     $Euser_Form.Controls.Add($echange_button)
+
+    $erefresh_button = New-Object Windows.Forms.Button
+    $erefresh_button.Font = New-Object System.Drawing.Font("Courier",12,[System.Drawing.FontStyle]::Regular)
+    $erefresh_button.Text = "Refresh AD"
+    $erefresh_button.size = New-Object System.Drawing.Size(150, 35)
+    $erefresh_button.location = New-Object System.Drawing.Size(255, 5) #415
+    $erefresh_button.Visible = $false
+    $erefresh_button.Add_Click({EditUserWidget-ReloadUserList})
+    $Euser_Form.Controls.Add($erefresh_button)
 
     $edisable_button = New-Object Windows.Forms.Button
     $edisable_button.Font = New-Object System.Drawing.Font("Courier",12,[System.Drawing.FontStyle]::Regular)
     $edisable_button.Text = "Disable"
     $edisable_button.size = New-Object System.Drawing.Size(120, 35)
-    $edisable_button.location = New-Object System.Drawing.Size(450, 5) #415
+    $edisable_button.location = New-Object System.Drawing.Size(540, 5) #415
     $edisable_button.Visible = $true   
     $Euser_Form.Controls.Add($edisable_button)
 
