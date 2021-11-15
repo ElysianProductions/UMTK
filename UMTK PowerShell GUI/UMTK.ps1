@@ -1081,7 +1081,7 @@ Function EditUser-SelectField
                 $echange_button.Add_Click({
                     if($ecomponent_input.Text.Length -gt 1)
                     {
-                        Set-ADUser -Identity ((Get-ADUser -Filter {Name -Like $eusers_combo.Text} -Properties SamAccountName).SamAccountName) -displayName ($ecomponent_input.Text)
+                        Set-ADUser -Identity ((Get-ADUser -Filter {Name -Like $eusers_combo.Text} -Properties SamAccountName).SamAccountName) -displayName $ecomponent_input.Text
                         $emessage_label.ForeColor = "Green"
                         $emessage_label = "The Display name of " + $eusers_combo.Text + " is now " + $ecomponent_input.Text
                         $echange_button.Visible = $false
