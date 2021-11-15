@@ -1074,6 +1074,28 @@ Function EditUser-SelectField
             "Display Name"
             {
                 $emessage_label.Text = $eusers_combo.Text + "'s display name is " + (Get-ADUser -Filter {Name -like $eusers_combo.Text} -Properties displayName).displayName
+                $ecomponent_input.Visible = $true
+                $echange_button.Visible = $true
+                $edisable_button.Visible = $false
+                $ecomponent_label.Text = "Input display name"
+                $echange_button.Add_Click({
+                    if($ecomponent_input.Text.Length -gt 1)
+                    {
+                        Set-ADUser -Identity ((Get-ADUser -Filter {Name -Like $eusers_combo.Text} -Properties SamAccountName).SamAccountName) -displayName ($ecomponent_input.Text)
+                        $emessage_label.ForeColor = "Green"
+                        $emessage_label = "The Display name of " + $eusers_combo.Text + " is now " + $ecomponent_input.Text
+                        $echange_button.Visible = $false
+                        $ecomponent_input.Visible = $false
+                        $ecomponent_label.Text = ""
+                        $ecomponent_input.Text = ""
+                        $erefresh_button.Visible = $true
+                    }
+                    elseif($ecomponent_input.Text.Length -le 1)
+                    {
+                        $emessage_label.ForeColor = "Red"
+                        $emessage_label.Text = "WARNING: You must enter a longer string for the display name..."
+                    }
+                })
             }  
         }
     }
