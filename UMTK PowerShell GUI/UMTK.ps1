@@ -801,9 +801,52 @@ Function EditUser-SelectField
                 $var = Get-OrginizationalUnit -Identity $eusers_combo.Text
                 $emessage_label.Text = $eusers_combo.Text  + " is in the OU:`n" + (Get-OrginizationalUnit -Identity $eusers_combo.Text)
             }
-            "Domain\UPN"
+            "UPN"
             {
                 $emessage_label.Text = $eusers_combo.Text + " is currently using the following identifier:`n" + (Get-UserIdentifier -Identity $eusers_combo.Text)
+                $tmp = $eusers_combo.Text
+                $echange_button.Visible = $true
+                $ecomponent_label.Visible = $true
+                $ecomponent_input.Visible = $false
+                $edisable_button.Visible = $false
+                $erefresh_button.Visible = $false
+                $eusers_combo.Items.Clear()
+                $edomain_lookup = (Get-ADForest | Select-Object -ExpandProperty Domains)
+                $eupn_lookup = (Get-ADForest | Select-Object -ExpandProperty UPNSuffixes)
+                if($upn_lookup.Count -gt 0)
+                {
+                    Foreach($upn in $eupn_lookup)
+                    {
+                        $eusers_combo.Items.Add($upn)
+                    }
+                }
+                else
+                {
+                    Foreach($domain in $edomain_lookup)
+                    {
+                        $eusers_combo.Items.Add($domain)
+                    }
+                }
+                $eusers_label.Text = "Select UPN: "
+                
+                $echange_button.Add_Click({
+                    if($eusers_combo.Text.Length -gt 1)
+                    {
+                        $usr = (Get-ADUser -Filter {Name -Like $tmp} -Properties SamAccountName).SamAccountName
+                        $new_upn = $usr + "@" + $eusers_combo.Text
+                        Set-ADUser -Identity $usr -UserPrincipalName $new_upn
+                        $emessage_label.ForeColor = "Green"
+                        $emessage_label.Text = $tmp + " 's UserPrincipalName is now " + $new_upn
+                        $echange_button.Visible = $false
+                        EditUserWidget-ReloadUserList
+                    }
+                    elseif($eusers_combo.Text.Length -le 0)
+                    {
+                        $emessage_label.ForeColor = "Red"
+                        $message_label.Text = "WARNING: You must select a value before trying to change it..."
+                    }
+                })
+
             }
             "Employee Name"
             {
@@ -832,6 +875,7 @@ Function EditUser-SelectField
                         $ecomponent_label.Text = ""
                         $ecomponent_input.Text = ""
                         $erefresh_button.Visible = $true
+                        EditUserWidget-ReloadUserList
 
                     }
                     elseif($ecomponent_input.Text.Split(' ').Count -eq 3)
@@ -847,6 +891,7 @@ Function EditUser-SelectField
                         $ecomponent_label.Text = ""
                         $ecomponent_input.Text = ""
                         $erefresh_button.Visible = $true
+                        EditUserWidget-ReloadUserList
                     }
                     elseif($ecomponent_input.Text.Split(' ').Count -gt 3)
                     {
@@ -889,6 +934,7 @@ Function EditUser-SelectField
                                 $ecomponent_input.Text = ""
                                 $ecomponent_input.Visible = $false 
                                 $ecomponent_label.Visible = $false
+                                EditUserWidget-ReloadUserList
                             }    
                             elseif($exists -eq 1)
                             {
@@ -1058,6 +1104,37 @@ Function EditUser-SelectField
             "Email Address"
             {
                 $emessage_label.Text = $eusers_combo.Text + "'s email address is " + (Get-ADUser -Filter {Name -Like $eusers_combo.Text } -Properties Mail).Mail
+                $ecomponent_input.Visible = $true
+                $echange_button.Visible = $true
+                $edisable_button.Visible = $false
+                $erefresh_button.Visible = $false
+                $ecomponent_label.Text = "Input email"
+                $echange_button.Add_Click({
+                    if($ecomponent_input.Text.Length -gt 1)
+                    {
+                        if( (Validate-Email -emailaddress $ecomponent_input.Text) -eq 1 )
+                        {
+                            Set-ADUser -Identity ((Get-ADUser -Filter {Name -Like $eusers_combo.Text} -Properties SamAccountName).SamAccountName) -EmailAddress $ecomponent_input.Text
+                            $emessage_label.ForeColor = "Green"
+                            $emessage_label.Text = $eusers_combo.Text + " 's email address is now " + (Get-ADUser -Filter {Name -like $eusers_combo.Text} -Properties Mail).Mail
+                            $echange_button.Visible = $false
+                            $ecomponent_input.Visible = $false
+                            $ecomponent_label.Text = ""
+                            $ecomponent_input.Text = ""
+                            $erefresh_button.Visible = $true
+                        }
+                        elseif( (Validate-Email -emailaddress $ecomponent_input.Text) -eq 0 )
+                        {
+                            $emessage_label.ForeColor = "Red"
+                            $emessage_label.Text = "WARNING: This is not a valid email address, try again..."
+                        }
+                    }
+                    elseif($ecomponent_input.Text.Length -le 1)
+                    {
+                        $emessage_label.ForeColor = "Red"
+                        $emessage_label.Text = "WARNING: You must enter a longer string for the email..."
+                    }
+                })
             }
             "Primary Proxy"
             {
@@ -1077,13 +1154,14 @@ Function EditUser-SelectField
                 $ecomponent_input.Visible = $true
                 $echange_button.Visible = $true
                 $edisable_button.Visible = $false
+                $erefresh_button.Visible = $false
                 $ecomponent_label.Text = "Input display name"
                 $echange_button.Add_Click({
                     if($ecomponent_input.Text.Length -gt 1)
                     {
                         Set-ADUser -Identity ((Get-ADUser -Filter {Name -Like $eusers_combo.Text} -Properties SamAccountName).SamAccountName) -displayName $ecomponent_input.Text
                         $emessage_label.ForeColor = "Green"
-                        $emessage_label = "The Display name of " + $eusers_combo.Text + " is now " + $ecomponent_input.Text
+                        $emessage_label.Text = "The Display name of " + $eusers_combo.Text + " is now " + (Get-ADUser -Filter {Name -like $eusers_combo.Text} -Properties displayName).displayName
                         $echange_button.Visible = $false
                         $ecomponent_input.Visible = $false
                         $ecomponent_label.Text = ""
@@ -1456,7 +1534,7 @@ Function EditUserWidget
     $eusers_label.text = "Select user:"
     $Euser_Form.Controls.Add($eusers_label)
 
-    $efields = @("Orginizational Unit", "Domain\UPN", "Employee Name", "Username", "Password", "Email Address" ,"Primary Proxy" ,"Secondary Proxy", "Display Name")
+    $efields = @("Orginizational Unit", "UPN", "Employee Name", "Username", "Password", "Email Address" ,"Primary Proxy" ,"Secondary Proxy", "Display Name")
     $efield_combo = New-Object Windows.Forms.ComboBox 
     $efield_combo.size = New-Object System.Drawing.Size(350, 150)
     $efield_combo.location = New-Object System.Drawing.Size(205, 90)
@@ -1535,6 +1613,29 @@ Function EditUserWidget
     $edisable_button.location = New-Object System.Drawing.Size(540, 5) #415
     $edisable_button.Visible = $true   
     $Euser_Form.Controls.Add($edisable_button)
+
+    $einput_combo = New-Object Windows.Forms.ComboBox   
+    $einput_combo.size = New-Object System.Drawing.Size(350, 150)
+    $einput_combo.location = New-Object System.Drawing.Size(205, 190)
+    $einput_combo.Font = New-Object System.Drawing.Font("Courier",12,[System.Drawing.FontStyle]::Regular)
+    $domain_lookup = (Get-ADForest | Select-Object -ExpandProperty Domains)
+    $upn_lookup = (Get-ADForest | Select-Object -ExpandProperty UPNSuffixes)
+    if($upn_lookup.Count -gt 0)
+    {
+        Foreach($upn in $upn_lookup)
+        {
+            $einput_combo.Items.Add($upn)
+        }
+    }
+    else
+    {
+        Foreach($domain in $domain_lookup)
+        {
+            $einput_combo.Items.Add($domain)
+        }
+    }
+    $Euser_Form.Controls.Add($einput_combo)
+    
 
     # NEW COMPONENTS
 
