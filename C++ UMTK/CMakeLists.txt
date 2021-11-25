@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.5)
+cmake_minimum_required(VERSION 3.0)
 
 project(UMTK LANGUAGES CXX)
 
@@ -27,6 +27,8 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 find_package(QT NAMES Qt6 Qt5 COMPONENTS Widgets REQUIRED)
 find_package(Qt${QT_VERSION_MAJOR} COMPONENTS Widgets REQUIRED)
 
+include_directories(${PROJECT_SOURCE_DIR}/Scripts)
+
 set(PROJECT_SOURCES
         main.cpp
         mainwindow.cpp
@@ -40,6 +42,10 @@ set(PROJECT_SOURCES
         localwidget.h
         editwidget.cpp
         editwidget.h
+        templateuser.cpp
+        templateuser.h
+        newuser.cpp
+        newuser.h
 
 )
 

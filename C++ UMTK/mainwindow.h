@@ -14,7 +14,7 @@
 #include "domainwidget.h"
 #include "localwidget.h"
 #include "editwidget.h"
-
+#include "templateuser.h"
 
 
 #ifdef __linux__
@@ -84,6 +84,12 @@ public:
     QAction *helpMeAction;
     QMessageBox *warning_banner;
 
+    // EXPERIMENTAL
+    void fill_forms(QString template_user, QString employee_name);
+
+    // EXPERIMENTAL
+
+
 private:
     Ui::MainWindow *ui;
     MainWidget mainwidget;
@@ -112,7 +118,7 @@ private:
 
     struct Domain_User
     {
-        QString employe_name; // Fulle employee name
+        QString employe_name; // Full employee name
         QString given_name; //Employee first name (GivenName)
         QString surname; // Employee last name (SurName)
         QString userpname; // Employee user princilple name (UserPrincepleName)
@@ -138,7 +144,29 @@ private:
 
     };
 
+    struct ADUser
+    {
+        QString DistinguishedName;  // : CN=Maria Franz,OU=IT Staff,OU=Elysium,DC=Elysium,DC=local
+        QString Enabled;            // : True
+        QString GivenName;          // : Maria
+        QString Name;               // : Maria Franz
+        QString ObjectClass;        // : user
+        QString ObjectGUID;         // : 12657ca8-8bce-4815-83d1-26496d6662a4
+        QString SamAccountName;     // : Mfranz
+        QString SID;                // : S-1-5-21-1585572130-2828728486-3327902743-1219
+        QString Surname;            // : Franz
+        QString UserPrincipalName;  // : Mfranz@Elysium.local
+        QString MiddleName;         // : Set-ADUser ((Get-ADUser -Filter {Name -Like "the name"} -Properties SamAccountName).SameAccountName) -Replace OtherName $middleName
+        QString Initials;           // : A. J
+        QString Mail;               // : example@example.com
+        QStringList ProxyAddresses; // : (Get-ADUser -Filter {Name -like "Maria Franz"} -Properties Proxyaddresses).Proxyaddresses
+    };
+
+
     void clear_ui();
-    void write_debug_logs(QString data); // remove
+
+    // EXPERIMENTAL
+    void Automate();
+    // EXPERIMENTAL
 };
 #endif // MAINWINDOW_H

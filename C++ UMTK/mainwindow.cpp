@@ -45,9 +45,12 @@ void MainWindow::initialize_connections()
       connect(mainwidget.server_button, &QPushButton::clicked, this, &MainWindow::launch_server_widget);
       connect(domainwidget.create_button, &QPushButton::clicked, this, &MainWindow::create_domain_user);
       connect(domainwidget.cancel_button, &QPushButton::clicked, this, &MainWindow::close_server_widget);
+
       connect(mainwidget.local_button, &QPushButton::clicked, this, &MainWindow::launch_local_widget);
       connect(localwidget.cancel_button, &QPushButton::clicked, this, &MainWindow::close_local_widget);
       connect(localwidget.create_button, &QPushButton::clicked, this, &MainWindow::create_local_user);
+
+      connect(domainwidget.generate_button, &QPushButton::clicked, this, &MainWindow::Automate);
 
 }
 
@@ -254,7 +257,7 @@ void MainWindow::initialize_connections()
         duser.ou_clean = domainwidget.ou_combo->currentText();
 
 
-        duser.ou_actual = "\"" + domainwidget.ou_distinguished_names.at(domainwidget.ou_combo->currentIndex()) + "\"";
+        duser.ou_actual = "\"" + domainwidget.OU_DN_Names.at(domainwidget.ou_combo->currentIndex()) + "\"";
 
         bool bad_chars = true;
         while(bad_chars)
@@ -463,7 +466,7 @@ void MainWindow::initialize_connections()
             }
             else if(domainwidget.secondary_proxy_edit->text().length() <= 0 && domainwidget.primary_proxy_edit->text().length() <= 0)
             {
-                write_debug_logs("Set-ADUser -Identity \"" + duser.sam_name + "\" -Add @{Proxyaddresses = " + "\"SMTP:" + duser.email_address +"\"}");
+
                 elevate_and_execute("Set-ADUser -Identity \"" + duser.sam_name + "\" -Add @{Proxyaddresses = " + "\"SMTP:" + duser.email_address +"\"}");
             }
 
@@ -490,22 +493,11 @@ void MainWindow::initialize_connections()
      domainwidget.secondary_proxy_edit->setText("");
  }
 
- void MainWindow::write_debug_logs(QString datastring) // remove
- {
-     QFile data("C:\\Users\\Ajohnson\\Desktop\\output.txt");
-     if (data.open(QFile::WriteOnly)) {
-         QTextStream out(&data);
-         out << datastring;
-
-     }
- }
-
  void MainWindow::elevate_and_execute(QString param)
  {
      QProcess *process = new QProcess(this); // maybe remove this
      QStringList params = QStringList();
      QByteArray output; // remove
-
      params = QStringList({"-Command", QString("Start-Process -NoNewWindow -Verb runAs powershell; "), param});
      process->start("powershell", params);
      process->waitForFinished();
@@ -520,3 +512,51 @@ void MainWindow::shift_ou(QString command, QString OU)
 {
     elevate_and_execute(command + "Move-ADObject -Identity $user -TargetPath " + OU);
 }
+
+// EXPERIMENTAL
+void MainWindow::Automate()
+{
+    if(domainwidget.employee_name_edit->text().length() > 0)
+    {
+        ADUser user;
+        //user.employe_name = domainwidget.employee_name_edit->text();
+       //duser.display_name = domainwidget.employee_name_edit->text();
+        //QStringList name = duser.employe_name.split(" ");
+        //duser.given_name = name.first();
+        //duser.surname = name.last();
+        user.Name = domainwidget.employee_name_edit->text();
+        user.Name = domainwidget.employee_name_edit->text();
+        QStringList names = user.Name.split(" ");
+        user.GivenName = names.first();
+        user.Surname = names.last();
+        if(names.count() > 2)
+        {
+            //user.MiddleName = names[2];
+            qDebug() << names.count() << names[1] << names[2] << names[3];
+        }
+        user.SamAccountName = names.first().at(0).toUpper() + names.last().toLower();
+        TemplateUser tu;
+        tu.set_name(domainwidget.template_user_combo->currentText());
+
+        tu.set_template_user_dn(tu.get_name());
+        tu.set_samaccount_name(tu.get_name());
+        tu.set_userprincipal_name(tu.get_name());
+        tu.set_mail(tu.get_name());
+        tu.set_groups(tu.get_samaccount_name());
+        tu.detect_password_policy(tu.get_name());
+        qDebug() << tu.get_ActiveSP_length() << tu.get_ActiveSP_Complexity();
+        // test
+        domainwidget.ou_combo->show();
+        domainwidget.ou_combo->clear();
+        domainwidget.ou_combo->addItems(tu.get_groups());
+
+        // test
+
+    }
+    else if(domainwidget.employee_name_edit->text().length() <= 0)
+    {
+        // throw error
+
+    }
+}
+// EXPERIMENTAL
