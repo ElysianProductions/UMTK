@@ -15,7 +15,7 @@
 #include "localwidget.h"
 #include "editwidget.h"
 #include "templateuser.h"
-
+#include "newuser.h"
 
 #ifdef __linux__
     // Linux shit

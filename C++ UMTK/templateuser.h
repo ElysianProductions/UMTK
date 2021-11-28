@@ -22,15 +22,16 @@ public:
     QStringList get_GroupDNs();          // Return all group distinguished names
     QString get_ActiveSP_length();      // Return the active security policy minimum password length
     QString get_ActiveSP_Complexity(); // Return the active security policy complexity
+    QString get_OrganizationalUnitDN();
 
     void set_template_user_dn(QString str);
     void set_name(QString str);
     void set_samaccount_name(QString str);
-    void set_userprincipal_name(QString str);
+    void set_userprincipal_name(QStringList UPNs, QStringList Domains);
     void set_mail(QString str);
     void set_groups(QString str);
     void detect_password_policy(QString name);
-
+    void set_OrganizationalUnitDN(QString name);
 private:
 
     QStringList execute_command(QString param);

@@ -46,6 +46,11 @@ QStringList TemplateUser::get_GroupDNs()
     return GroupsDistinguished;
 }
 
+QString TemplateUser::get_OrganizationalUnitDN()
+{
+    return OU_distinguished_name;
+}
+
 void TemplateUser::set_template_user_dn(QString str)
 {
     user_distinguished_name = clean_string(execute("(Get-ADUser -Filter {Name -Like " + QString("\"") + str + QString("\"") + "} -Properties DistinguishedName).DistinguishedName"));
@@ -62,9 +67,27 @@ void TemplateUser::set_samaccount_name(QString str)
     SamAccountName = clean_string(execute("(Get-ADUser -Filter {Name -Like " + QString("\"") + str + QString("\"") + "} -Properties SamAccountName).SamAccountName"));
 }
 
-void TemplateUser::set_userprincipal_name(QString str)
+void TemplateUser::set_userprincipal_name(QStringList UPNs, QStringList Domains)
 {
-    UserPrincipalName = clean_string(execute("(Get-ADUser -Filter {Name -Like " + QString("\"") + str + QString("\"") + "} -Properties UserPrincipalName).UserPrincipalName"));
+    QStringList cleaned_upns;
+    QStringList cleaned_domains;
+    for(auto &i : UPNs)
+    {
+        cleaned_upns << clean_string(i);
+    }
+    for(auto &i : Domains)
+    {
+        cleaned_domains << clean_string(i);
+    }
+
+    if(cleaned_upns.count() > 0)
+    {
+        UserPrincipalName = clean_string(execute("$temp = (Get-ADForest | Select-Object -ExpandProperty Domains); $garbage, $upn = $temp.Split('@'); return $upn"));
+    }
+    else if(cleaned_upns.count() == 0)
+    {
+        UserPrincipalName = "@" + cleaned_domains.first(); // Needs to be fixed to work in multi-domain environments.
+    }
 }
 
 void TemplateUser::set_mail(QString str)
@@ -84,6 +107,11 @@ void TemplateUser::set_groups(QString str)
     {
         GroupsDistinguished << clean_string(j);
     }
+}
+
+void TemplateUser::set_OrganizationalUnitDN(QString name)
+{
+    OU_distinguished_name = clean_string(execute("$temp = (Get-ADUser -Filter { " + QString("\"") + name + QString("\"") + "}); $t = $temp.DistinguishedName; $garbage, $OU = $t.split(',', 2)"));
 }
 
 QStringList TemplateUser::execute_command(QString param)
@@ -210,7 +238,6 @@ void TemplateUser::detect_password_policy(QString name)
              }
              else if(isGrained == 0)
              {
-                qDebug() << "Made it... 1";
                 DDPP_ComplexityEnabled = clean_string(execute("Get-ADDefaultDomainPasswordPolicy | Select-Object -ExpandProperty ComplexityEnabled"));
                 DDPP_MinPasswordLength = clean_string(execute("Get-ADDefaultDomainPasswordPolicy | Select-Object -ExpandProperty MinPasswordLength"));
                 set_DDPP_active(DDPP_MinPasswordLength, DDPP_ComplexityEnabled);
@@ -218,7 +245,6 @@ void TemplateUser::detect_password_policy(QString name)
         }
         else
         {
-            qDebug() << "Made it... 2";
             DDPP_ComplexityEnabled = clean_string(execute("Get-ADDefaultDomainPasswordPolicy | Select-Object -ExpandProperty ComplexityEnabled"));
             DDPP_MinPasswordLength = clean_string(execute("Get-ADDefaultDomainPasswordPolicy | Select-Object -ExpandProperty MinPasswordLength"));
             set_DDPP_active(DDPP_MinPasswordLength, DDPP_ComplexityEnabled);

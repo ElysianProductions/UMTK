@@ -518,38 +518,48 @@ void MainWindow::Automate()
 {
     if(domainwidget.employee_name_edit->text().length() > 0)
     {
-        ADUser user;
-        //user.employe_name = domainwidget.employee_name_edit->text();
-       //duser.display_name = domainwidget.employee_name_edit->text();
-        //QStringList name = duser.employe_name.split(" ");
-        //duser.given_name = name.first();
-        //duser.surname = name.last();
-        user.Name = domainwidget.employee_name_edit->text();
-        user.Name = domainwidget.employee_name_edit->text();
-        QStringList names = user.Name.split(" ");
-        user.GivenName = names.first();
-        user.Surname = names.last();
-        if(names.count() > 2)
+        NewUser user;
+        user.set_Name(domainwidget.employee_name_edit->text());
+        QStringList Names = domainwidget.employee_name_edit->text().split(" ");
+        user.set_GivenName(Names.first());
+        user.set_SurName(Names.last());
+        user.set_DisplayName(user.get_Name());
+        if(Names.count() > 2)
         {
-            //user.MiddleName = names[2];
-            qDebug() << names.count() << names[1] << names[2] << names[3];
+            user.set_OtherName(Names[2]);
+            qDebug() << user.get_OtherName();
         }
-        user.SamAccountName = names.first().at(0).toUpper() + names.last().toLower();
+        user.set_SamAccountName(Names.first().at(0).toUpper() + Names.last().toLower());
+
         TemplateUser tu;
         tu.set_name(domainwidget.template_user_combo->currentText());
 
         tu.set_template_user_dn(tu.get_name());
         tu.set_samaccount_name(tu.get_name());
-        tu.set_userprincipal_name(tu.get_name());
+        tu.set_userprincipal_name(domainwidget.get_UPNs(), domainwidget.get_domain_name());
         tu.set_mail(tu.get_name());
         tu.set_groups(tu.get_samaccount_name());
         tu.detect_password_policy(tu.get_name());
-        qDebug() << tu.get_ActiveSP_length() << tu.get_ActiveSP_Complexity();
-        // test
-        domainwidget.ou_combo->show();
-        domainwidget.ou_combo->clear();
-        domainwidget.ou_combo->addItems(tu.get_groups());
+        tu.set_OrganizationalUnitDN(tu.get_name());
 
+
+        user.set_UPN(user.get_SamAccountName() + tu.get_userprincipal_name());
+        user.set_Mail(user.get_UPN());
+        user.set_Groups(tu.get_groups());
+        user.set_GroupDNs(tu.get_GroupDNs());
+        user.set_OU_DN(tu.get_OrganizationalUnitDN());
+
+
+        domainwidget.ou_combo->show();
+        domainwidget.upn_combo->show();
+        domainwidget.upn_combo->setCurrentText(tu.get_userprincipal_name());
+        domainwidget.employee_name_edit->show();
+        domainwidget.employee_name_edit->setText(user.get_Name());
+        domainwidget.user_edit->show();
+        domainwidget.user_edit->setText(user.get_SamAccountName());
+        domainwidget.password_edit->show();
+        domainwidget.email_edit->show();
+        domainwidget.email_edit->setText(user.get_Mail());
         // test
 
     }

@@ -132,3 +132,13 @@ void DomainWidget::load_domain_information()
     OU_DN_Names = execute_command("Get-ADOrganizationalUnit -Filter * | Select -ExpandProperty DistinguishedName");
     AD_Users = execute_command("Get-ADUser -Filter * | Select-Object -ExpandProperty Name");
 }
+
+QStringList DomainWidget::get_UPNs()
+{
+    return Domain_UPNS;
+}
+
+QStringList DomainWidget::get_domain_name()
+{
+    return Domain_Name;
+}
