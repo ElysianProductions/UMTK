@@ -67,7 +67,7 @@ void TemplateUser::set_samaccount_name(QString str)
     SamAccountName = clean_string(execute("(Get-ADUser -Filter {Name -Like " + QString("\"") + str + QString("\"") + "} -Properties SamAccountName).SamAccountName"));
 }
 
-void TemplateUser::set_userprincipal_name(QStringList UPNs, QStringList Domains)
+void TemplateUser::set_userprincipal_name(QStringList UPNs, QStringList Domains, QString name)
 {
     QStringList cleaned_upns;
     QStringList cleaned_domains;
@@ -82,7 +82,7 @@ void TemplateUser::set_userprincipal_name(QStringList UPNs, QStringList Domains)
 
     if(cleaned_upns.count() > 0)
     {
-        UserPrincipalName = clean_string(execute("$temp = (Get-ADForest | Select-Object -ExpandProperty Domains); $garbage, $upn = $temp.Split('@'); return $upn"));
+        UserPrincipalName = "@" + clean_string(execute("$temp = (Get-ADUser -Filter {Name -like " + QString("\"") + name + QString("\"") + " } -Properties UserPrincipalName).UserPrincipalName; $garbage, $upn = $temp.Split('@'); return $upn "));
     }
     else if(cleaned_upns.count() == 0)
     {
@@ -111,7 +111,7 @@ void TemplateUser::set_groups(QString str)
 
 void TemplateUser::set_OrganizationalUnitDN(QString name)
 {
-    OU_distinguished_name = clean_string(execute("$temp = (Get-ADUser -Filter { " + QString("\"") + name + QString("\"") + "}); $t = $temp.DistinguishedName; $garbage, $OU = $t.split(',', 2)"));
+    OU_distinguished_name = clean_string(execute("$temp = (Get-ADUser -Filter {Name -Like " + QString("\"") + name + QString("\"") + "}); $t = $temp.DistinguishedName; $garbage, $OU = $t.split(',', 2); return $OU"));
 }
 
 QStringList TemplateUser::execute_command(QString param)

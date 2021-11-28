@@ -111,6 +111,11 @@ QString NewUser::get_Mail()
     return Mail;
 }
 
+QString NewUser::get_Identifier()
+{
+    return Identifier;
+}
+
 QStringList NewUser::get_Groups()
 {
     return Groups;
@@ -179,6 +184,11 @@ void NewUser::set_OU_CleanName(QString oucleanname)
 void NewUser::set_Mail(QString mail)
 {
     Mail = mail;
+}
+
+void NewUser::set_Identifier(QString identifier)
+{
+    Identifier = identifier;
 }
 
 void NewUser::set_Groups(QStringList groups)

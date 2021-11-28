@@ -24,6 +24,7 @@ public:
     QString get_Mail();
     QStringList get_Groups();
     QStringList get_GroupDNs();
+    QString get_Identifier();
 
     void set_password(QString password);
     void set_UPN(QString UPN);
@@ -39,6 +40,7 @@ public:
     void set_Mail(QString mail);
     void set_Groups(QStringList groups);
     void set_GroupDNs(QStringList groupsdistinguished);
+    void set_Identifier(QString identifier);
 
     void set_attrib_upn(QString UPN);
     void set_attrib_name(QString name);
@@ -66,6 +68,7 @@ private:
     QString OU_distinguished_name;
     QString OU_Clean_Name;
     QString Mail;
+    QString Identifier;
     QStringList Groups;
     QStringList GroupsDistinguished;
 

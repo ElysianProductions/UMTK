@@ -536,23 +536,34 @@ void MainWindow::Automate()
 
         tu.set_template_user_dn(tu.get_name());
         tu.set_samaccount_name(tu.get_name());
-        tu.set_userprincipal_name(domainwidget.get_UPNs(), domainwidget.get_domain_name());
-        tu.set_mail(tu.get_name());
+        tu.set_userprincipal_name(domainwidget.get_UPNs(), domainwidget.get_domain_name(), tu.get_name());
         tu.set_groups(tu.get_samaccount_name());
         tu.detect_password_policy(tu.get_name());
         tu.set_OrganizationalUnitDN(tu.get_name());
 
-
-        user.set_UPN(user.get_SamAccountName() + tu.get_userprincipal_name());
+        user.set_Identifier(tu.get_userprincipal_name());
+        user.set_UPN(user.get_SamAccountName() + user.get_Identifier());
         user.set_Mail(user.get_UPN());
         user.set_Groups(tu.get_groups());
         user.set_GroupDNs(tu.get_GroupDNs());
         user.set_OU_DN(tu.get_OrganizationalUnitDN());
 
+        qDebug() << user.get_Identifier() << user.get_UPN() << user.get_Mail() << user.get_Groups() <<
+                    user.get_GroupDNs() << user.get_OU_DN() << user.get_Name() << user.get_GivenName() <<
+                    user.get_SurName() << user.get_DisplayName();
 
         domainwidget.ou_combo->show();
         domainwidget.upn_combo->show();
-        domainwidget.upn_combo->setCurrentText(tu.get_userprincipal_name());
+
+        QStringList tmpupns = domainwidget.get_UPNs();
+        for(int i = 0; i < tmpupns.length(); ++i)
+        {
+            if(tmpupns.at(i) == user.get_Identifier().remove(0, 1))
+            {
+                domainwidget.upn_combo->setCurrentIndex(i);
+            }
+        }
+
         domainwidget.employee_name_edit->show();
         domainwidget.employee_name_edit->setText(user.get_Name());
         domainwidget.user_edit->show();
