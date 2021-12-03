@@ -1,4 +1,5 @@
 #include "domainwidget.h"
+
 DomainWidget::DomainWidget()
 {
     upn_combo = new QComboBox();
@@ -96,7 +97,8 @@ QWidget* DomainWidget::initalize_widget(QComboBox *upn_combo, QComboBox *ou_comb
         return primary_display;
 }
 
-QStringList DomainWidget::execute_command(QString param)
+/*
+QStringList DomainWidget::execute_command(QString param) // Migrated to PSIntegration class.
 {
       QProcess *process = new QProcess();
       QByteArray term_output;
@@ -110,7 +112,7 @@ QStringList DomainWidget::execute_command(QString param)
       return return_list;
 }
 
-QString DomainWidget::execute(QString param)
+QString DomainWidget::execute(QString param) // Migrated to PSIntegration class.
 {
     QProcess *process = new QProcess();
     QByteArray term_output;
@@ -122,17 +124,22 @@ QString DomainWidget::execute(QString param)
     process->terminate();
     QString data = QString(term_output);
     return data;
-}
+}*/
 
 void DomainWidget::load_domain_information()
 {
-    Domain_Name = execute_command("Get-ADForest | Select -ExpandProperty Domains");
-    Domain_UPNS = execute_command("Get-ADForest | Select -ExpandProperty UPNSuffixes");
-    OU_Names = execute_command("Get-ADOrganizationalUnit -Filter * | Select -ExpandProperty Name");
-    OU_DN_Names = execute_command("Get-ADOrganizationalUnit -Filter * | Select -ExpandProperty DistinguishedName");
-    AD_Users = execute_command("Get-ADUser -Filter * | Select-Object -ExpandProperty Name");
+    Domain_Name = List_All_Forests();
+
+    Domain_UPNS = List_All_UPNs();
+
+    OU_Names = List_All_OU_CNs();
+
+    OU_DN_Names = List_All_OU_DNs();
+
+    AD_Users = List_All_Domain_Users();
 }
 
+/*
 QStringList DomainWidget::get_UPNs()
 {
     return Domain_UPNS;
@@ -142,3 +149,29 @@ QStringList DomainWidget::get_domain_name()
 {
     return Domain_Name;
 }
+
+QStringList DomainWidget::get_OU_CNs()
+{
+    return OU_Names;
+}
+
+QString DomainWidget::clean_string(QString str) // Migrated to PSIntegration class.
+{
+    bool bad_chars = true;
+    while(bad_chars)
+    {
+        if(str.contains("\r"))
+        {
+            str = str.remove(QChar('\r'));
+        }
+        if(str.contains("\n"))
+        {
+            str = str.remove(QChar('\n'));
+        }
+        if(!str.contains("\r") && !str.contains("\n"))
+        {
+            bad_chars = false;
+        }
+    }
+    return str;
+}*/

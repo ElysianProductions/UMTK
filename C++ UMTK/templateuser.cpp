@@ -51,23 +51,28 @@ QString TemplateUser::get_OrganizationalUnitDN()
     return OU_distinguished_name;
 }
 
-void TemplateUser::set_template_user_dn(QString str)
+QString TemplateUser::get_OrganizationalUnitCN()
+{
+    return OU_Clean_Name;
+}
+
+void TemplateUser::set_template_user_dn(QString str) // Migrated to PSIntegration class
 {
     user_distinguished_name = clean_string(execute("(Get-ADUser -Filter {Name -Like " + QString("\"") + str + QString("\"") + "} -Properties DistinguishedName).DistinguishedName"));
 }
 
-void TemplateUser::set_name(QString str)
+void TemplateUser::set_name(QString str) // Migrated to PSIntegration class.
 {
      Name = clean_string(str);
     //Name = execute_command("(Get-ADUser -Filter {Name -Like " + QString("\"") + str + QString("\"") + "} -Properties Name).Name");
 }
 
-void TemplateUser::set_samaccount_name(QString str)
+void TemplateUser::set_samaccount_name(QString str) // Migrated to PSIntegration class
 {
     SamAccountName = clean_string(execute("(Get-ADUser -Filter {Name -Like " + QString("\"") + str + QString("\"") + "} -Properties SamAccountName).SamAccountName"));
 }
 
-void TemplateUser::set_userprincipal_name(QStringList UPNs, QStringList Domains, QString name)
+void TemplateUser::set_userprincipal_name(QStringList UPNs, QStringList Domains, QString name) // Migrated to PSIntegration
 {
     QStringList cleaned_upns;
     QStringList cleaned_domains;
@@ -90,12 +95,12 @@ void TemplateUser::set_userprincipal_name(QStringList UPNs, QStringList Domains,
     }
 }
 
-void TemplateUser::set_mail(QString str)
+void TemplateUser::set_mail(QString str) // Migrated to PSIntegration class.
 {
     Mail = clean_string(execute("(Get-ADUser -Filter {Name -Like " + QString("\"") + str + QString("\"") + "} -Properties Mail).Mail"));
 }
 
-void TemplateUser::set_groups(QString str)
+void TemplateUser::set_groups(QString str) // Migrated to PSIntegration class.
 {
     QStringList tmp = execute_command("Get-ADPrincipalGroupMembership -Identity " +  str + " | Select-Object -ExpandProperty Name");
     QStringList tmp_two = execute_command("Get-ADPrincipalGroupMembership -Identity " +  str + " | Select-Object -ExpandProperty DistinguishedName");
@@ -109,12 +114,18 @@ void TemplateUser::set_groups(QString str)
     }
 }
 
-void TemplateUser::set_OrganizationalUnitDN(QString name)
+void TemplateUser::set_OrganizationalUnitDN(QString name) // Migrated to PSIntegration class
 {
     OU_distinguished_name = clean_string(execute("$temp = (Get-ADUser -Filter {Name -Like " + QString("\"") + name + QString("\"") + "}); $t = $temp.DistinguishedName; $garbage, $OU = $t.split(',', 2); return $OU"));
+    set_OrganizationalUnitCN(name);
 }
 
-QStringList TemplateUser::execute_command(QString param)
+void TemplateUser::set_OrganizationalUnitCN(QString name) // Migrated to PSIntegration class
+{
+   OU_Clean_Name = clean_string(execute("$temp = (Get-ADUser -Filter {Name -Like " + QString("\"") + name + QString("\"") + "}); $t = $temp.DistinguishedName; $garbage, $OU = $t.split(',', 2); $clean, $junk = $OU.split(','); return $clean")).remove(0, 3);
+}
+
+QStringList TemplateUser::execute_command(QString param) // Migrated to PSIntegration class
 {
     QProcess *process = new QProcess();
     QByteArray term_output;
@@ -128,7 +139,7 @@ QStringList TemplateUser::execute_command(QString param)
     return return_list;
 }
 
-QString TemplateUser::execute(QString param)
+QString TemplateUser::execute(QString param) // Migrated to PSIntegration class
 {
     QProcess *process = new QProcess();
     QByteArray term_output;
@@ -170,7 +181,7 @@ void TemplateUser::set_APP_active(QString MinLength, QString Complexity)
     active_SP_Complexity = Complexity;
 }
 
-void TemplateUser::detect_password_policy(QString name)
+void TemplateUser::detect_password_policy(QString name) // Migrated to PSIntegration class.
 {
     QString probe = clean_string(execute("$var = (Get-Module -ListAvailable -Name " + QString("\"") + "ActiveDirectory" + QString("\"") + "); if($var -ne $null){return " + QString("\"") + "Domain" + QString("\"") +"}; $var"));
     if(probe == "Domain")
@@ -256,7 +267,7 @@ void TemplateUser::detect_password_policy(QString name)
     }
 }
 
-QString TemplateUser::clean_string(QString str)
+QString TemplateUser::clean_string(QString str) // Migrated to PSIntegration class
 {
     bool bad_chars = true;
     while(bad_chars)

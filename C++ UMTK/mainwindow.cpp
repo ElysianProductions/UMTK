@@ -208,7 +208,7 @@ void MainWindow::initialize_connections()
 
  void MainWindow::create_domain_user()
  {
-    Domain_User duser;
+    /*Domain_User duser;
     if(domainwidget.employee_name_edit->text().length() <= 0)
     {
         domainwidget.employee_name_edit->setStyleSheet("color: black; background-color: red");
@@ -478,7 +478,7 @@ void MainWindow::initialize_connections()
         }
 
 
-    }
+    }*/
  }
 
 
@@ -495,14 +495,13 @@ void MainWindow::initialize_connections()
 
  void MainWindow::elevate_and_execute(QString param)
  {
-     QProcess *process = new QProcess(this); // maybe remove this
+     QProcess *process = new QProcess(this);
      QStringList params = QStringList();
-     QByteArray output; // remove
+     QByteArray output;
      params = QStringList({"-Command", QString("Start-Process -NoNewWindow -Verb runAs powershell; "), param});
      process->start("powershell", params);
      process->waitForFinished();
-     output = process->readAllStandardError(); // remove
-     qDebug() << output; // remove
+     output = process->readAllStandardError();
      process->terminate();
 
  }
@@ -520,6 +519,7 @@ void MainWindow::Automate()
     {
         NewUser user;
         user.set_Name(domainwidget.employee_name_edit->text());
+
         QStringList Names = domainwidget.employee_name_edit->text().split(" ");
         user.set_GivenName(Names.first());
         user.set_SurName(Names.last());
@@ -530,37 +530,62 @@ void MainWindow::Automate()
             qDebug() << user.get_OtherName();
         }
         user.set_SamAccountName(Names.first().at(0).toUpper() + Names.last().toLower());
-
         TemplateUser tu;
-        tu.set_name(domainwidget.template_user_combo->currentText());
+        //tu.set_name(domainwidget.template_user_combo->currentText());
 
-        tu.set_template_user_dn(tu.get_name());
-        tu.set_samaccount_name(tu.get_name());
-        tu.set_userprincipal_name(domainwidget.get_UPNs(), domainwidget.get_domain_name(), tu.get_name());
-        tu.set_groups(tu.get_samaccount_name());
-        tu.detect_password_policy(tu.get_name());
-        tu.set_OrganizationalUnitDN(tu.get_name());
 
-        user.set_Identifier(tu.get_userprincipal_name());
+        //tu.set_template_user_dn(tu.get_name());
+
+        //tu.set_samaccount_name(tu.get_name());
+
+
+        //tu.set_userprincipal_name(tu.Get_All_UPNs(), tu.Get_All_Forests(), tu.get_name());
+
+
+
+        //tu.set_groups(tu.get_samaccount_name());
+
+
+        //tu.detect_password_policy(tu.get_name());
+
+
+        //tu.set_OrganizationalUnitDN(tu.get_name());
+
+        /*user.set_Identifier(tu.get_userprincipal_name());
         user.set_UPN(user.get_SamAccountName() + user.get_Identifier());
         user.set_Mail(user.get_UPN());
         user.set_Groups(tu.get_groups());
         user.set_GroupDNs(tu.get_GroupDNs());
         user.set_OU_DN(tu.get_OrganizationalUnitDN());
+        user.set_OU_CN(tu.get_OrganizationalUnitCN());*/
 
-        qDebug() << user.get_Identifier() << user.get_UPN() << user.get_Mail() << user.get_Groups() <<
-                    user.get_GroupDNs() << user.get_OU_DN() << user.get_Name() << user.get_GivenName() <<
-                    user.get_SurName() << user.get_DisplayName();
+        user.set_Identifier(user.List_User_Identifier(user.List_Name(domainwidget.template_user_combo->currentText())));
+        user.set_UPN(user.List_SamAccountName(user.get_Name()) + user.get_Identifier());
+        user.set_Mail(user.get_UPN());
+        user.set_Groups(user.List_User_Group_CNs(user.List_SamAccountName(domainwidget.template_user_combo->currentText())));
+        user.set_GroupDNs(user.List_User_Group_DNs(user.List_SamAccountName(domainwidget.template_user_combo->currentText())));
+        user.set_OU_DN(user.List_User_OU_DN(domainwidget.template_user_combo->currentText()));
+        user.set_OU_CN(user.List_User_OU_CN(domainwidget.template_user_combo->currentText()));
 
         domainwidget.ou_combo->show();
         domainwidget.upn_combo->show();
+        QStringList tmp_upn = user.List_All_UPNs();
 
-        QStringList tmpupns = domainwidget.get_UPNs();
-        for(int i = 0; i < tmpupns.length(); ++i)
+        for(int i = 0; i < domainwidget.upn_combo->count(); ++i)
         {
-            if(tmpupns.at(i) == user.get_Identifier().remove(0, 1))
+            if(user.List_User_Identifier(user.get_Name()) == tmp_upn.at(i))
             {
                 domainwidget.upn_combo->setCurrentIndex(i);
+            }
+        }
+
+        QStringList tmp_ou_cn = user.List_All_OU_CNs();
+
+        for(int i = 0; i < domainwidget.ou_combo->count(); ++i)
+        {
+            if(user.List_User_OU_CN(tu.get_name()) == tmp_ou_cn.at(i))
+            {
+                domainwidget.ou_combo->setCurrentIndex(i);
             }
         }
 
@@ -571,7 +596,68 @@ void MainWindow::Automate()
         domainwidget.password_edit->show();
         domainwidget.email_edit->show();
         domainwidget.email_edit->setText(user.get_Mail());
-        // test
+        domainwidget.create_button->show();
+
+
+        qDebug() << "\nEmploye Name: " + user.get_Name() <<
+                    "\nUsername: " + user.get_SamAccountName() <<
+                    "\nEmail address: " + user.get_Mail() <<
+                    "\nDisplay name: " + user.get_DisplayName() <<
+                    "\nGiven name: " + user.get_GivenName() <<
+                    "\nSurname: " + user.get_SurName() <<
+                    "\nUser Group CNs: " << user.get_Groups() <<
+                    "\nGroup DNs: " << user.get_GroupDNs() <<
+                    "\nUser OU CN: " << user.get_OU_CN() <<
+                    "\nUser OU DN: " << user.get_OU_DN() <<
+                    "\nUser identifier: " + user.get_Identifier() <<
+                    "\nUser upn: " + user.get_UPN() <<
+                    "\nMinimum password length: " + tu.get_ActiveSP_length() <<
+                    "\nPassword policy complexity enabled: " + tu.get_ActiveSP_Complexity();
+
+        /*
+        warning_banner = new QMessageBox();
+        QPushButton *okay_button = warning_banner->addButton(tr("Okay"), QMessageBox::ActionRole);
+        QPushButton *cancel_button = warning_banner->addButton(tr("Cancel"), QMessageBox::ActionRole);
+
+
+
+        if(domainwidget.upn_combo->currentText().length() > 0 && domainwidget.ou_combo->currentText() > 0 &&
+           domainwidget.template_user_combo->currentText().length() > 0 && domainwidget.employee_name_edit->text() > 0 &&
+           domainwidget.user_edit->text() > 0 && domainwidget.password_edit->text().length() > 0 && domainwidget.email_edit->text().length() > 0)
+        {
+            warning_banner->setText("Confirm the following by clicking 'Okay'\nTo cancel and redo, click 'Cancel'");
+            warning_banner->setInformativeText("");
+            warning_banner->exec();
+            if(warning_banner->clickedButton() == okay_button)
+            {
+                create_domain_user();
+            }
+            else if(warning_banner->clickedButton() == cancel_button)
+            {
+                // do nothing but close the dialog
+            }
+        }
+        else if(domainwidget.upn_combo->currentText().length() <= 0 || domainwidget.ou_combo->currentText() > 0 ||
+                domainwidget.template_user_combo->currentText().length() <= 0 || domainwidget.employee_name_edit->text() <= 0 ||
+                domainwidget.user_edit->text() <= 0 || domainwidget.password_edit->text().length() <= 0 || domainwidget.email_edit->text().length() <= 0)
+        {
+            warning_banner->setText("Confirm the following by clicking 'Okay'\nTo cancel and redo, click 'Cancel'");
+            warning_banner->setInformativeText("One of the values inserted is wrong:\n Minimum Passsword length - " + tu.get_ActiveSP_length() +
+                                               "\nComplexity enabled - " + tu.get_ActiveSP_Complexity() +
+                                               "\n Does this user " + user.get_SamAccountName() + " name already exist? - " + user.does_user_exist(user.get_SamAccountName()) +
+                                               "\nIs this a valid email: " + user.get_Mail() + "\nDid you select a UPN?: " + user.get_Identifier() +
+                                               "\nDid you inpout a template user?: " + domainwidget.template_user_combo->currentText() +
+                                               "\nDid you select the OU?: " + user.get_OU_CN());
+            warning_banner->exec();
+            if(warning_banner->clickedButton() == okay_button)
+            {
+                //
+            }
+            else if(warning_banner->clickedButton() == cancel_button)
+            {
+                // do nothing but close the dialog
+            }
+        }*/
 
     }
     else if(domainwidget.employee_name_edit->text().length() <= 0)

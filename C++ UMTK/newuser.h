@@ -3,8 +3,11 @@
 #include <QString>
 #include <QRandomGenerator>
 #include <QRegularExpression>
+#include <QProcess>
 
-class NewUser
+#include "psintegration.h"
+
+class NewUser : public PSIntegration
 {
 public:
     NewUser();
@@ -20,8 +23,11 @@ public:
     QString get_DisplayName();
     QString get_SamAccountName();
     QString get_OU_DN();
-    QString get_OU_CleanName();
+    QString get_OU_CN();
     QString get_Mail();
+    QString does_user_exist(QString samname);
+    QString clean_string(QString str);
+    QString execute(QString param);
     QStringList get_Groups();
     QStringList get_GroupDNs();
     QString get_Identifier();
@@ -36,7 +42,7 @@ public:
     void set_DisplayName(QString displayname);
     void set_SamAccountName(QString samaccountname);
     void set_OU_DN(QString oudistinguishedname);
-    void set_OU_CleanName(QString oucleanname);
+    void set_OU_CN(QString oucleanname);
     void set_Mail(QString mail);
     void set_Groups(QStringList groups);
     void set_GroupDNs(QStringList groupsdistinguished);

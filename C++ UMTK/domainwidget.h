@@ -11,7 +11,9 @@
 #include <QStringList>
 #include <QProcess>
 
-class DomainWidget : public QObject
+#include "psintegration.h"
+
+class DomainWidget : public QObject, PSIntegration
 {
     Q_OBJECT
 
@@ -40,8 +42,9 @@ public:
 
 
     void load_domain_information();
-    QStringList get_UPNs();
-    QStringList get_domain_name();
+    //QStringList get_UPNs();
+    //QStringList get_domain_name();
+    //QStringList get_OU_CNs();
 
     QStringList AD_Users;
     QStringList Domain_UPNS;
@@ -50,8 +53,9 @@ public:
     QStringList Domain_Name;
 
 private:
-    QStringList execute_command(QString param);
-    QString execute(QString param);
+    //QStringList execute_command(QString param);
+    //QString execute(QString param);
+    //QString clean_string(QString str);
 
     QWidget* initalize_widget(QComboBox *upn_combo, QComboBox *ou_combo, QComboBox *template_user_combo,
                               QComboBox *domain_name_combo, QLineEdit *employee_name_edit, QLineEdit *user_edit,
@@ -61,7 +65,7 @@ private:
 
 
 
-    void load_template_user(QString user);
+    //void load_template_user(QString user);
 };
 
 #endif // DOMAINWIDGET_H

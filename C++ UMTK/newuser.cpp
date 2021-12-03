@@ -101,7 +101,7 @@ QString NewUser::get_OU_DN()
     return OU_distinguished_name;
 }
 
-QString NewUser::get_OU_CleanName()
+QString NewUser::get_OU_CN()
 {
     return OU_Clean_Name;
 }
@@ -114,6 +114,54 @@ QString NewUser::get_Mail()
 QString NewUser::get_Identifier()
 {
     return Identifier;
+}
+
+QString NewUser::does_user_exist(QString samname)
+{
+  QString var = clean_string(execute("$test = (Get-ADUser -Filter {SamAccountName -like " + QString("\"") + samname + QString("\"") + "}); if($null -ne $test) {return 'Yes'} elseif($null -eq $test) {return 'No'}"));
+  if(var == "Yes")
+  {
+      return QString("Yes");
+  }
+  else if(var == "No")
+  {
+      return QString("No");
+  }
+}
+
+QString NewUser::clean_string(QString str)
+{
+    bool bad_chars = true;
+    while(bad_chars)
+    {
+        if(str.contains("\r"))
+        {
+            str = str.remove(QChar('\r'));
+        }
+        if(str.contains("\n"))
+        {
+            str = str.remove(QChar('\n'));
+        }
+        if(!str.contains("\r") && !str.contains("\n"))
+        {
+            bad_chars = false;
+        }
+    }
+    return str;
+}
+
+QString NewUser::execute(QString param)
+{
+    QProcess *process = new QProcess();
+    QByteArray term_output;
+    QStringList params;
+    params = QStringList({"-Command", QString("Start-Process -NoNewWindow -Verb runAs powershell; "), param});
+    process->start("powershell", params);
+    process->waitForFinished();
+    term_output.append(process->readAllStandardOutput());
+    process->terminate();
+    QString data = QString(term_output);
+    return data;
 }
 
 QStringList NewUser::get_Groups()
@@ -176,7 +224,7 @@ void NewUser::set_OU_DN(QString oudistinguishedname)
     OU_distinguished_name = oudistinguishedname;
 }
 
-void NewUser::set_OU_CleanName(QString oucleanname)
+void NewUser::set_OU_CN(QString oucleanname)
 {
     OU_Clean_Name = oucleanname;
 }

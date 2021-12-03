@@ -46,6 +46,8 @@ set(PROJECT_SOURCES
         templateuser.h
         newuser.cpp
         newuser.h
+        psintegration.cpp
+        psintegration.h
 
 )
 

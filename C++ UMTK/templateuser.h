@@ -6,7 +6,9 @@
 #include <QDebug>
 #include <QRegularExpression>
 
-class TemplateUser
+#include "psintegration.h"
+
+class TemplateUser : public PSIntegration
 {
 public:
     TemplateUser();
@@ -23,6 +25,7 @@ public:
     QString get_ActiveSP_length();      // Return the active security policy minimum password length
     QString get_ActiveSP_Complexity(); // Return the active security policy complexity
     QString get_OrganizationalUnitDN();
+    QString get_OrganizationalUnitCN();
 
     void set_template_user_dn(QString str);
     void set_name(QString str);
@@ -32,6 +35,7 @@ public:
     void set_groups(QString str);
     void detect_password_policy(QString name);
     void set_OrganizationalUnitDN(QString name);
+    void set_OrganizationalUnitCN(QString name);
 private:
 
     QStringList execute_command(QString param);
