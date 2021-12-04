@@ -96,7 +96,7 @@ private:
     DomainWidget domainwidget;
     LocalWidget localwidget;
     EditWidget editwidget;
-
+    NewUser user;
 
     struct Local_User
     {

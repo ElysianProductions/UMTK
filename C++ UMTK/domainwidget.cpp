@@ -16,6 +16,7 @@ DomainWidget::DomainWidget()
     create_button = new QPushButton();
     cancel_button = new QPushButton();
     generate_button = new QPushButton();
+    informational = new QTextBrowser();
 }
 
 QWidget* DomainWidget::get_widget()
@@ -23,10 +24,10 @@ QWidget* DomainWidget::get_widget()
     return initalize_widget(upn_combo, ou_combo, template_user_combo, domain_name_combo,
                             employee_name_edit, user_edit, password_edit, email_edit,
                             display_name_edit, primary_proxy_edit, secondary_proxy_edit,
-                            create_button, cancel_button, generate_button);
+                            create_button, cancel_button, generate_button, informational);
 }
 
-QWidget* DomainWidget::initalize_widget(QComboBox *upn_combo, QComboBox *ou_combo, QComboBox *template_user_combo, QComboBox *domain_name_combo, QLineEdit *employee_name_edit, QLineEdit *user_edit, QLineEdit *password_edit, QLineEdit *email_edit, QLineEdit *display_name_edit, QLineEdit *primary_proxy_edit, QLineEdit *secondary_proxy_edit, QPushButton *create_button, QPushButton *cancel_button, QPushButton *generate_button)
+QWidget* DomainWidget::initalize_widget(QComboBox *upn_combo, QComboBox *ou_combo, QComboBox *template_user_combo, QComboBox *domain_name_combo, QLineEdit *employee_name_edit, QLineEdit *user_edit, QLineEdit *password_edit, QLineEdit *email_edit, QLineEdit *display_name_edit, QLineEdit *primary_proxy_edit, QLineEdit *secondary_proxy_edit, QPushButton *create_button, QPushButton *cancel_button, QPushButton *generate_button, QTextBrowser *informational)
 {
         QVBoxLayout *main_layout = new QVBoxLayout();
         QWidget *primary_display = new QWidget();
@@ -77,6 +78,8 @@ QWidget* DomainWidget::initalize_widget(QComboBox *upn_combo, QComboBox *ou_comb
 
         cancel_button->setText("Cancel");
 
+
+
         main_layout->addWidget(upn_combo);
         main_layout->addWidget(ou_combo);
         main_layout->addWidget(template_user_combo);
@@ -91,6 +94,7 @@ QWidget* DomainWidget::initalize_widget(QComboBox *upn_combo, QComboBox *ou_comb
         main_layout->addWidget(create_button);
         main_layout->addWidget(generate_button);
         main_layout->addWidget(cancel_button);
+        main_layout->addWidget(informational);
         primary_display->setLayout(main_layout);
         main_layout->setAlignment(Qt::AlignHCenter);
 

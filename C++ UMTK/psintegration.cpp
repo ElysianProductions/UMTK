@@ -54,7 +54,7 @@ QStringList PSIntegration::List_All_Group_CNs(QString SamName)
     QStringList cleaned_groups;
     for(auto &i : dirty_groups)
     {
-        dirty_groups << Clean_String(i);
+       cleaned_groups << Clean_String(i);
     }
     return cleaned_groups;
 }
@@ -87,7 +87,7 @@ QStringList PSIntegration::List_User_Group_CNs(QString SamName)
     QStringList cleaned_groups;
     for(auto &i : dirty_groups)
     {
-        dirty_groups << Clean_String(i);
+        cleaned_groups << Clean_String(i);
     }
     return cleaned_groups;
 }
@@ -299,6 +299,48 @@ QString PSIntegration::List_ActiveSP_Complexity()
     return active_SP_Complexity;
 }
 
+bool PSIntegration::Validate_Password(QString pword, QString MinPasswordLength, QString ComplexityEnabled)
+{
+    if(pword.length() >= MinPasswordLength.toInt())
+    {
+        if(ComplexityEnabled == "True")
+        {
+            QRegularExpression re;
+            QRegularExpressionMatch match;
+            re.setPattern("(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[^A-Za-z0-9])");
+            match = re.match(pword);
+            bool matching = match.hasMatch();
+            if(matching == true)
+            {
+                return true;
+            }
+            else if(matching == false)
+            {
+                return false;
+            }
+        }
+        else if(ComplexityEnabled == "False")
+        {
+            QRegularExpression re;
+            QRegularExpressionMatch match;
+            re.setPattern("(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[^A-Za-z0-9])");
+            match = re.match(pword);
+            bool matching = match.hasMatch();
+            if(matching == true)
+            {
+                return true;
+            }
+            else if(matching == false)
+            {
+                return false;
+            }
+        }
+    }
+    if(pword.length() < MinPasswordLength.toInt())
+    {
+        return false;
+    }
+}
 
 
 

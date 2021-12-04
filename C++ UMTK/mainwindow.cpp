@@ -479,6 +479,40 @@ void MainWindow::initialize_connections()
 
 
     }*/
+
+
+     if(user.User_Exists(user.get_SamAccountName()) == "Yes")
+     {
+         domainwidget.informational->setTextColor("Yellow");
+         domainwidget.informational->setText("WARNING: The username " + user.get_SamAccountName() + " already exists. Please select a new one.");
+         domainwidget.create_button->hide();
+         domainwidget.user_edit->setText("");
+     }
+     if(domainwidget.password_edit->text().length() <= 0 || domainwidget.password_edit->text().length() < user.List_ActiveSP_length().toInt())
+     {
+         domainwidget.informational->setTextColor("Yellow");
+         domainwidget.informational->setText("WARNING: The password " + domainwidget.password_edit->text() + " does not meet the minimum length requirements.\n Your password must be at least " + user.List_ActiveSP_length() + " characters long.");
+         domainwidget.create_button->hide();
+         domainwidget.password_edit->setText("");
+     }
+     if(user.List_ActiveSP_Complexity() == "True" && user.Validate_Password(domainwidget.password_edit->text(), user.List_ActiveSP_length(), user.List_ActiveSP_Complexity()) == false)
+     {
+         domainwidget.informational->setTextColor("Yellow");
+         domainwidget.informational->setText("WARNING: The password " + domainwidget.password_edit->text() + " does not meet the complexity requirements.\n Your password must have at least one of the following: \nOne upper case letter"
+                                                                                                             "\n One lower case letter. \nOne number\nOne Special character");
+         domainwidget.create_button->hide();
+         domainwidget.password_edit->setText("");
+     }
+     // Insert check for duplicate full names
+     // insert check for duplicate email address
+     // insert check for duplicate upn
+     if(user.get_UPN().length() <= 0)
+     {
+         // your upn must be longer
+     }
+     // insert check for disabled user.
+
+     // insert if all operations pass validation then create the user account
  }
 
 
@@ -517,7 +551,7 @@ void MainWindow::Automate()
 {
     if(domainwidget.employee_name_edit->text().length() > 0)
     {
-        NewUser user;
+
         user.set_Name(domainwidget.employee_name_edit->text());
 
         QStringList Names = domainwidget.employee_name_edit->text().split(" ");
@@ -531,41 +565,16 @@ void MainWindow::Automate()
         }
         user.set_SamAccountName(Names.first().at(0).toUpper() + Names.last().toLower());
         TemplateUser tu;
-        //tu.set_name(domainwidget.template_user_combo->currentText());
 
-
-        //tu.set_template_user_dn(tu.get_name());
-
-        //tu.set_samaccount_name(tu.get_name());
-
-
-        //tu.set_userprincipal_name(tu.Get_All_UPNs(), tu.Get_All_Forests(), tu.get_name());
-
-
-
-        //tu.set_groups(tu.get_samaccount_name());
-
-
-        //tu.detect_password_policy(tu.get_name());
-
-
-        //tu.set_OrganizationalUnitDN(tu.get_name());
-
-        /*user.set_Identifier(tu.get_userprincipal_name());
-        user.set_UPN(user.get_SamAccountName() + user.get_Identifier());
-        user.set_Mail(user.get_UPN());
-        user.set_Groups(tu.get_groups());
-        user.set_GroupDNs(tu.get_GroupDNs());
-        user.set_OU_DN(tu.get_OrganizationalUnitDN());
-        user.set_OU_CN(tu.get_OrganizationalUnitCN());*/
 
         user.set_Identifier(user.List_User_Identifier(user.List_Name(domainwidget.template_user_combo->currentText())));
-        user.set_UPN(user.List_SamAccountName(user.get_Name()) + user.get_Identifier());
+        user.set_UPN(user.get_SamAccountName() + "@" + user.get_Identifier());
         user.set_Mail(user.get_UPN());
         user.set_Groups(user.List_User_Group_CNs(user.List_SamAccountName(domainwidget.template_user_combo->currentText())));
         user.set_GroupDNs(user.List_User_Group_DNs(user.List_SamAccountName(domainwidget.template_user_combo->currentText())));
         user.set_OU_DN(user.List_User_OU_DN(domainwidget.template_user_combo->currentText()));
         user.set_OU_CN(user.List_User_OU_CN(domainwidget.template_user_combo->currentText()));
+        user.List_Password_Policy(user.List_Name(domainwidget.template_user_combo->currentText()));
 
         domainwidget.ou_combo->show();
         domainwidget.upn_combo->show();
@@ -573,7 +582,7 @@ void MainWindow::Automate()
 
         for(int i = 0; i < domainwidget.upn_combo->count(); ++i)
         {
-            if(user.List_User_Identifier(user.get_Name()) == tmp_upn.at(i))
+            if(user.get_Identifier() == tmp_upn.at(i))
             {
                 domainwidget.upn_combo->setCurrentIndex(i);
             }
@@ -583,7 +592,7 @@ void MainWindow::Automate()
 
         for(int i = 0; i < domainwidget.ou_combo->count(); ++i)
         {
-            if(user.List_User_OU_CN(tu.get_name()) == tmp_ou_cn.at(i))
+            if(user.get_OU_CN() == tmp_ou_cn.at(i))
             {
                 domainwidget.ou_combo->setCurrentIndex(i);
             }
@@ -596,10 +605,16 @@ void MainWindow::Automate()
         domainwidget.password_edit->show();
         domainwidget.email_edit->show();
         domainwidget.email_edit->setText(user.get_Mail());
-        domainwidget.create_button->show();
+        //domainwidget.create_button->show();
 
 
-        qDebug() << "\nEmploye Name: " + user.get_Name() <<
+
+        domainwidget.informational->setText("Employee name: " + user.get_Name() +"\nUsername: " + user.get_SamAccountName() + "\nEmail address: " + user.get_Mail() + "\nDisplay name: " + user.get_DisplayName() +
+                                            "\nOrganizational unit: " + user.get_OU_CN() + "\nUser Principal Name: " + user.get_UPN() + "\nPassword length must be: " + user.List_ActiveSP_length() +
+                                            "\nPassword Complexity is: " + user.List_ActiveSP_Complexity());
+
+
+        /*qDebug() << "\nEmploye Name: " + user.get_Name() <<
                     "\nUsername: " + user.get_SamAccountName() <<
                     "\nEmail address: " + user.get_Mail() <<
                     "\nDisplay name: " + user.get_DisplayName() <<
@@ -611,8 +626,8 @@ void MainWindow::Automate()
                     "\nUser OU DN: " << user.get_OU_DN() <<
                     "\nUser identifier: " + user.get_Identifier() <<
                     "\nUser upn: " + user.get_UPN() <<
-                    "\nMinimum password length: " + tu.get_ActiveSP_length() <<
-                    "\nPassword policy complexity enabled: " + tu.get_ActiveSP_Complexity();
+                    "\nMinimum password length: " + user.List_ActiveSP_length() <<
+                    "\nPassword policy complexity enabled: " + user.List_ActiveSP_Complexity();*/
 
         /*
         warning_banner = new QMessageBox();

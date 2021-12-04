@@ -10,6 +10,7 @@
 #include <QString>
 #include <QStringList>
 #include <QProcess>
+#include <QTextBrowser>
 
 #include "psintegration.h"
 
@@ -37,6 +38,7 @@ public:
     QPushButton *create_button;
     QPushButton *cancel_button;
     QPushButton *generate_button;
+    QTextBrowser *informational;
 
     QStringList commands;
 
@@ -61,7 +63,7 @@ private:
                               QComboBox *domain_name_combo, QLineEdit *employee_name_edit, QLineEdit *user_edit,
                               QLineEdit *password_edit, QLineEdit *email_edit, QLineEdit *display_name_edit,
                               QLineEdit *primary_proxy_edit, QLineEdit *secondary_proxy_edit, QPushButton *create_button,
-                              QPushButton *cancel_button, QPushButton *generate_button);
+                              QPushButton *cancel_button, QPushButton *generate_button, QTextBrowser *informational);
 
 
 
