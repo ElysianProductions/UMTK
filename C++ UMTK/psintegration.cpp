@@ -22,7 +22,7 @@ QStringList PSIntegration::Execute_Command(QString param)
     process->waitForFinished();
     term_output.append(process->readAllStandardOutput());
     process->terminate();
-    QStringList return_list = QString(term_output).split("\n", QString::SkipEmptyParts);
+    QStringList return_list = QString(term_output).split("\n", Qt::SkipEmptyParts);
     return return_list;
 }
 

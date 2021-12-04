@@ -147,44 +147,44 @@ void MainWindow::initialize_connections()
  void MainWindow::create_local_user()
  {
      Local_User luser;
-     if(localwidget.username_edit->text() <= 0)
+     if(localwidget.username_edit->text().length() <= 0)
      {
          localwidget.username_edit->setStyleSheet("color: black; background-color: red");
          localwidget.username_edit->setPlaceholderText("VALUE CANNOT BE EMPTY");
      }
-     else if(localwidget.username_edit->text() > 0)
+     else if(localwidget.username_edit->text().length() > 0)
      {
          localwidget.username_edit->setStyleSheet("color: black; background-color: white");
          luser.username = localwidget.username_edit->text();
      }
 
-     if(localwidget.fullname_edit->text() <= 0)
+     if(localwidget.fullname_edit->text().length() <= 0)
      {
          localwidget.fullname_edit->setStyleSheet("color: black; background-color: red");
          localwidget.fullname_edit->setPlaceholderText("VALUE CANNOT BE EMPTY");
      }
-     else if(localwidget.fullname_edit->text() > 0)
+     else if(localwidget.fullname_edit->text().length() > 0)
      {
          localwidget.fullname_edit->setStyleSheet("color: black; background-color: white");
          luser.employee_name = localwidget.fullname_edit->text();
      }
 
-     if(localwidget.emailaddress_edit->text() <= 0)
+     if(localwidget.emailaddress_edit->text().length() <= 0)
      {
          localwidget.emailaddress_edit->setStyleSheet("color: black; background-color: red");
          localwidget.emailaddress_edit->setPlaceholderText("VALUE CANNOT BE EMPTY");
      }
-     else if(localwidget.emailaddress_edit->text() > 0)
+     else if(localwidget.emailaddress_edit->text().length() > 0)
      {
          localwidget.emailaddress_edit->setStyleSheet("color: black; background-color: white");
          luser.email_address = localwidget.emailaddress_edit->text();
      }
-     if(localwidget.password_edit->text() <= 0)
+     if(localwidget.password_edit->text().length() <= 0)
      {
          localwidget.password_edit->setStyleSheet("color: black; background-color: red");
          localwidget.password_edit->setPlaceholderText("VALUE CANNOT BE EMPTY");
      }
-     else if(localwidget.password_edit->text() > 0)
+     else if(localwidget.password_edit->text().length() > 0)
      {
          localwidget.password_edit->setStyleSheet("color: black; background-color: white");
          luser.password = localwidget.password_edit->text();
@@ -199,7 +199,7 @@ void MainWindow::initialize_connections()
          luser.is_administrator = "0";
      }
 
-     if(luser.username > 0 && luser.employee_name > 0 && luser.email_address > 0 && luser.password > 0)
+     if(luser.username.length() > 0 && luser.employee_name.length() > 0 && luser.email_address.length() > 0 && luser.password.length() > 0)
      {
          QString tmp = "net user /add " + luser.username + " " + luser.password;
          elevate_and_execute(tmp);
