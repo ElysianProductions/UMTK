@@ -16,9 +16,15 @@ public:
     void Set_FGPP_active(QString MinLength, QString Complexity); // Configure the fine grain password policy as active for this specific user.
     void Set_DDPP_active(QString MinLength, QString Complexity); // Configure the default domain policy as active for this specific user.
     void Set_APP_active(QString MinLength, QString Complexity); // Configure an arbitrary password policy with min length = 10 and complexity = true
+    void Move_ADUser_Orgranizational_Unit(QString command, QString OU); // Move the user to the specified OU.
 
 
     bool Validate_Password(QString pword, QString MinPasswordLength, QString ComplexityEnabled); // Validate whether or not the password meets the requirements of the policy.
+    bool Get_Azure_Status(); // Determine whether or not the Azure module is on the server.
+    bool Employee_Name_Exists(QStringList names, QString new_name); // Validate whether or not a person with the given and surnames already exists.
+    bool Validate_User_Status(QString template_name); // Confirm whether or not the template user is disabled.
+    bool Validate_Email_Address(QString email_address); // Validate whether or not their is a duplicate email address.
+
 
 
     QString User_Exists(QString SamName); // Validate whether or not a user with <SamAccountName> already exists - Done
@@ -33,6 +39,7 @@ public:
     QString List_Name(QString name); // Return cleaned up supplied name. - done
     QString List_ActiveSP_Complexity(); // List the active security policy complexity status for this specific user.
     QString List_ActiveSP_length(); // List the active security policy minimum length for this specific user.
+    QString Run_Azure_Sync(bool var); // Execute an Azure AD Sync if possible.
 
 
     QStringList List_All_OU_DNs(); // Return the Distinguished name of all Organizational units. // Done

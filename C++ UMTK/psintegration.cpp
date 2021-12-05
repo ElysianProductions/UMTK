@@ -19,7 +19,7 @@ QStringList PSIntegration::Execute_Command(QString param)
     QStringList params;
     params = QStringList({"-Command", QString("Start-Process -NoNewWindow -Verb runAs powershell; "), param});
     process->start("powershell", params);
-    process->waitForFinished();
+    process->waitForFinished(-1);
     term_output.append(process->readAllStandardOutput());
     process->terminate();
     QStringList return_list = QString(term_output).split("\n", Qt::SkipEmptyParts);
@@ -203,7 +203,7 @@ QString PSIntegration::Execute(QString param)
     QStringList params;
     params = QStringList({"-Command", QString("Start-Process -NoNewWindow -Verb runAs powershell; "), param});
     process->start("powershell", params);
-    process->waitForFinished();
+    process->waitForFinished(-1);
     term_output.append(process->readAllStandardOutput());
     process->terminate();
     QString data = QString(term_output);
@@ -299,6 +299,45 @@ QString PSIntegration::List_ActiveSP_Complexity()
     return active_SP_Complexity;
 }
 
+QString PSIntegration::Run_Azure_Sync(bool var)
+{
+    if(var)
+    {
+        Execute("Start-ADSyncSyncCycle -PolicyType " + QString("\"") + "Delta" + QString("\""));
+        return QString("A sucessful AD Sync has been executed.");
+    }
+    else if(!var)
+    {
+        return QString("The ADSync module is not installed here. If this client uses Azure AD Sync please get on the server with the AD Sync module and execute the following command: \n Import-Module ADSync; Start-ADSyncSyncCycle -PolicyType "+ QString("\"") + "Delta" + QString("\""));
+    }
+}
+
+bool PSIntegration::Employee_Name_Exists(QStringList names, QString new_name)
+{
+    QStringList tmp;
+    for(auto &i : names)
+    {
+        tmp << Clean_String(i);
+    }
+
+    int test = 0;
+    for(auto i = 0; i < tmp.count(); ++i)
+    {
+        if(tmp.at(i) == new_name)
+        {
+            test = 1;
+        }
+    }
+    if(test == 0)
+    {
+        return false;
+    }
+    else if(test == 1)
+    {
+        return true;
+    }
+}
+
 bool PSIntegration::Validate_Password(QString pword, QString MinPasswordLength, QString ComplexityEnabled)
 {
     if(pword.length() >= MinPasswordLength.toInt())
@@ -342,7 +381,40 @@ bool PSIntegration::Validate_Password(QString pword, QString MinPasswordLength, 
     }
 }
 
+bool PSIntegration::Get_Azure_Status()
+{
+    QString status = Clean_String(Execute("if(Get-Module -ListAvailable -Name " + QString("\"") + "ADSync" + QString("\"") + ") {return 1} else {return 0}"));
+    if(status.toInt() == 1)
+    {
+        return true;
+    }
+    else if(status.toInt() == 0)
+    {
+        return false;
+    }
+}
 
+bool PSIntegration::Validate_User_Status(QString template_name)
+{
+    /*
+     *
+     */
+
+    QString var = Clean_String(Execute("$temp = (Get-ADUser -Filter {Name -Like " + QString("\"") + "Spring Thomas" + QString("\"") + "} -Properties Enabled).Enabled; return $temp"));
+    if(var == "True")
+    {
+        return true;
+    }
+    else if(var == "False")
+    {
+        return false;
+    }
+}
+
+bool PSIntegration::Validate_Email_Address(QString email_address)
+{
+    return false;
+}
 
 void PSIntegration::List_Password_Policy(QString name)
 {
@@ -448,13 +520,10 @@ void PSIntegration::Set_APP_active(QString MinLength, QString Complexity)
     active_SP_Complexity = Complexity;
 }
 
-
-
-
-
-
-
-
+void PSIntegration::Move_ADUser_Orgranizational_Unit(QString command, QString OU)
+{
+    Execute(command + "Move-ADObject -Identity $user -TargetPath " + OU);
+}
 
 
 

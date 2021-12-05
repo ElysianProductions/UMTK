@@ -35,7 +35,6 @@ void MainWindow::initialize_main_window()
     setWindowTitle("User Maintenance Tool Kit");
 }
 
-
 void MainWindow::initialize_connections()
 {
       //connect(saveFileAction, &QAction::triggered, this, &MainWindow::save_command);
@@ -54,7 +53,7 @@ void MainWindow::initialize_connections()
 
 }
 
- void MainWindow::initialize_actions()
+void MainWindow::initialize_actions()
  {
      saveFileAction = new QAction(tr("Save Command"));
      saveFileAction->setShortcuts(QKeySequence::New);
@@ -86,7 +85,7 @@ void MainWindow::initialize_connections()
 
  }
 
- void MainWindow::initialize_menus()
+void MainWindow::initialize_menus()
  {
         fileMenu = menuBar()->addMenu(tr("&File"));
         fileMenu->addAction(saveFileAction);
@@ -114,37 +113,37 @@ void MainWindow::initialize_connections()
         helpMenu->setToolTipsVisible(true);
  }
 
- void MainWindow::launch_local_widget()
+void MainWindow::launch_local_widget()
  {
      key_widget->setCurrentIndex(2);
  }
 
- void MainWindow::launch_server_widget()
+void MainWindow::launch_server_widget()
  {
      key_widget->setCurrentIndex(1);
  }
 
- void MainWindow::launch_edit_user_widget()
+void MainWindow::launch_edit_user_widget()
  {
 
  }
 
- void MainWindow::close_local_widget()
- {
-     key_widget->setCurrentIndex(0);
- }
-
- void MainWindow::close_server_widget()
+void MainWindow::close_local_widget()
  {
      key_widget->setCurrentIndex(0);
  }
 
- void MainWindow::close_edit_user_widget()
+void MainWindow::close_server_widget()
+ {
+     key_widget->setCurrentIndex(0);
+ }
+
+void MainWindow::close_edit_user_widget()
  {
 
  }
 
- void MainWindow::create_local_user()
+void MainWindow::create_local_user()
  {
      Local_User luser;
      if(localwidget.username_edit->text().length() <= 0)
@@ -206,7 +205,7 @@ void MainWindow::initialize_connections()
      }
  }
 
- void MainWindow::create_domain_user()
+void MainWindow::create_domain_user()
  {
     /*Domain_User duser;
     if(domainwidget.employee_name_edit->text().length() <= 0)
@@ -483,40 +482,106 @@ void MainWindow::initialize_connections()
 
      if(user.User_Exists(user.get_SamAccountName()) == "Yes")
      {
-         domainwidget.informational->setTextColor("Yellow");
+         domainwidget.informational->setTextColor("Red");
          domainwidget.informational->setText("WARNING: The username " + user.get_SamAccountName() + " already exists. Please select a new one.");
-         domainwidget.create_button->hide();
          domainwidget.user_edit->setText("");
      }
      if(domainwidget.password_edit->text().length() <= 0 || domainwidget.password_edit->text().length() < user.List_ActiveSP_length().toInt())
      {
-         domainwidget.informational->setTextColor("Yellow");
+         domainwidget.informational->setTextColor("Red");
          domainwidget.informational->setText("WARNING: The password " + domainwidget.password_edit->text() + " does not meet the minimum length requirements.\n Your password must be at least " + user.List_ActiveSP_length() + " characters long.");
-         domainwidget.create_button->hide();
          domainwidget.password_edit->setText("");
      }
      if(user.List_ActiveSP_Complexity() == "True" && user.Validate_Password(domainwidget.password_edit->text(), user.List_ActiveSP_length(), user.List_ActiveSP_Complexity()) == false)
      {
-         domainwidget.informational->setTextColor("Yellow");
+         domainwidget.informational->setTextColor("Red");
          domainwidget.informational->setText("WARNING: The password " + domainwidget.password_edit->text() + " does not meet the complexity requirements.\n Your password must have at least one of the following: \nOne upper case letter"
                                                                                                              "\n One lower case letter. \nOne number\nOne Special character");
-         domainwidget.create_button->hide();
          domainwidget.password_edit->setText("");
      }
-     // Insert check for duplicate full names
+     if(user.Employee_Name_Exists(user.List_All_Domain_Users(), user.get_Name()))
+     {
+         domainwidget.informational->setTextColor("Red");
+         domainwidget.informational->setText("WARNING: We found a person with the same name as " + user.get_Name() + " Please change the new users name. Consider using their initials or some other variation of their name.");
+         domainwidget.employee_name_edit->setText("");
+     }
      // insert check for duplicate email address
      // insert check for duplicate upn
      if(user.get_UPN().length() <= 0)
      {
-         // your upn must be longer
+         domainwidget.informational->setTextColor("Red");
+         domainwidget.informational->setText("WARNING: Your UPN appears to be empty. Please try again.");
      }
-     // insert check for disabled user.
+     if(!user.Validate_User_Status(domainwidget.template_user_combo->currentText()))
+     {
+         domainwidget.informational->setTextColor("Red");
+         domainwidget.informational->setText("WARNING: The template user " + domainwidget.template_user_combo->currentText() + " is disabled. This means it likely has no groups. Please confirm that the user has the groups needed before creating this user.");
+     }
 
-     // insert if all operations pass validation then create the user account
+     if(user.User_Exists(user.get_SamAccountName()) == "No" && domainwidget.password_edit->text().length() >= user.List_ActiveSP_length().toInt() && user.Validate_Password(domainwidget.password_edit->text(), user.List_ActiveSP_length(), user.List_ActiveSP_Complexity()) == true && user.Employee_Name_Exists(user.List_All_Domain_Users(), user.get_Name()) == false && user.get_UPN().length() > 0)
+     {
+         domainwidget.informational->setTextColor("Black");
+
+         warning_banner = new QMessageBox();
+         QPushButton *okay_button = warning_banner->addButton(tr("Okay"), QMessageBox::ActionRole);
+         QPushButton *cancel_button = warning_banner->addButton(tr("Cancel"), QMessageBox::ActionRole);
+         QString data = domainwidget.informational->toPlainText();
+         QString tmp = user.get_Groups().join("\n");
+         warning_banner->setText("Confirm the following by clicking 'Okay'\nTo cancel and redo, click 'Cancel'\n\n" + data + "\nGroups: \n" + tmp + "\nPassword: " + domainwidget.password_edit->text());
+         warning_banner->exec();
+
+         if(warning_banner->clickedButton() == okay_button)
+         {
+             if(domainwidget.primary_proxy_edit->text().length() > 0 && domainwidget.secondary_proxy_edit->text().length() > 0 && domainwidget.display_name_edit->text().length() > 0)
+             {
+
+             }
+             if(domainwidget.primary_proxy_edit->text().length() > 0 && domainwidget.secondary_proxy_edit->text().length() > 0 && domainwidget.display_name_edit->text().length() <= 0)
+             {
+
+             }
+             if(domainwidget.primary_proxy_edit->text().length() > 0 && domainwidget.secondary_proxy_edit->text().length() <= 0 && domainwidget.display_name_edit->text().length() > 0)
+             {
+
+             }
+             if(domainwidget.primary_proxy_edit->text().length() <= 0 && domainwidget.secondary_proxy_edit->text().length() > 0 && domainwidget.display_name_edit->text().length() > 0)
+             {
+
+             }
+             if(domainwidget.primary_proxy_edit->text().length() <= 0 && domainwidget.secondary_proxy_edit->text().length() <= 0 && domainwidget.display_name_edit->text().length() > 0)
+             {
+
+             }
+             if(domainwidget.primary_proxy_edit->text().length() <= 0 && domainwidget.secondary_proxy_edit->text().length() <= 0 && domainwidget.display_name_edit->text().length() <= 0)
+             {
+
+                 QString p = "$p = " + domainwidget.password_edit->text() + "; $sec = $p | ConvertTo-SecureString -AsPlainText -Force; ";
+
+                 user.Execute(p + "New-ADUser -Name " + "\"" + user.get_Name() + "\"" + " -GivenName " + "\"" + user.get_GivenName() + "\"" +
+                              " -Surname " + "\"" + user.get_SurName() + "\"" + " -AccountPassword $sec -UserPrincipalName " + "\"" + user.get_UPN() + "\"" +
+                              " -DisplayName " + "\"" + user.get_DisplayName() + "\"" + " -EmailAddress " + "\"" + user.get_Mail() + "\"" + " -SamAccountName " +
+                              "\"" + user.get_SamAccountName() + "\"" + " -Enabled 1; exit");
+
+                 user.Execute("$tmp = (Get-ADUser -Filter {Name -like \"" + domainwidget.template_user_combo->currentText() + "\"}); "
+                              "$groups = (Get-ADUser $tmp -Properties MemberOf).MemberOf; $usr = \"" + user.get_SamAccountName() + "\"; "
+                              "Foreach ($group in $groups) {Add-ADGroupMember -Identity (Get-ADGroup $group).name -Members $usr}; exit ");
+
+                 user.Execute("Set-ADUser -Identity \"" + user.get_SamAccountName() + "\" -Add @{Proxyaddresses = " + "\"SMTP:" +user.get_Mail() +"\"}");
+                 user.Move_ADUser_Orgranizational_Unit("$user = (Get-ADUser -Filter {SamAccountName -like \"" + user.get_SamAccountName() + "\"} | Select-Object -ExpandProperty DistinguishedName);", user.get_OU_DN() + "; exit");
+
+             }
+
+         }
+         else if (warning_banner->clickedButton() == cancel_button)
+         {
+             clear_ui();
+         }
+
+     }
+
  }
 
-
- void MainWindow::clear_ui()
+void MainWindow::clear_ui()
  {
      domainwidget.employee_name_edit->setText("");
      domainwidget.user_edit->setText("");
@@ -527,7 +592,7 @@ void MainWindow::initialize_connections()
      domainwidget.secondary_proxy_edit->setText("");
  }
 
- void MainWindow::elevate_and_execute(QString param)
+void MainWindow::elevate_and_execute(QString param)
  {
      QProcess *process = new QProcess(this);
      QStringList params = QStringList();
@@ -540,13 +605,11 @@ void MainWindow::initialize_connections()
 
  }
 
-
-void MainWindow::shift_ou(QString command, QString OU)
+void MainWindow::shift_ou(QString command, QString OU) // Migrated to PSIntegration class.
 {
-    elevate_and_execute(command + "Move-ADObject -Identity $user -TargetPath " + OU);
+    user.Execute(command + "Move-ADObject -Identity $user -TargetPath " + OU);
 }
 
-// EXPERIMENTAL
 void MainWindow::Automate()
 {
     if(domainwidget.employee_name_edit->text().length() > 0)
@@ -605,75 +668,13 @@ void MainWindow::Automate()
         domainwidget.password_edit->show();
         domainwidget.email_edit->show();
         domainwidget.email_edit->setText(user.get_Mail());
-        //domainwidget.create_button->show();
+        domainwidget.create_button->show();
 
 
 
         domainwidget.informational->setText("Employee name: " + user.get_Name() +"\nUsername: " + user.get_SamAccountName() + "\nEmail address: " + user.get_Mail() + "\nDisplay name: " + user.get_DisplayName() +
                                             "\nOrganizational unit: " + user.get_OU_CN() + "\nUser Principal Name: " + user.get_UPN() + "\nPassword length must be: " + user.List_ActiveSP_length() +
                                             "\nPassword Complexity is: " + user.List_ActiveSP_Complexity());
-
-
-        /*qDebug() << "\nEmploye Name: " + user.get_Name() <<
-                    "\nUsername: " + user.get_SamAccountName() <<
-                    "\nEmail address: " + user.get_Mail() <<
-                    "\nDisplay name: " + user.get_DisplayName() <<
-                    "\nGiven name: " + user.get_GivenName() <<
-                    "\nSurname: " + user.get_SurName() <<
-                    "\nUser Group CNs: " << user.get_Groups() <<
-                    "\nGroup DNs: " << user.get_GroupDNs() <<
-                    "\nUser OU CN: " << user.get_OU_CN() <<
-                    "\nUser OU DN: " << user.get_OU_DN() <<
-                    "\nUser identifier: " + user.get_Identifier() <<
-                    "\nUser upn: " + user.get_UPN() <<
-                    "\nMinimum password length: " + user.List_ActiveSP_length() <<
-                    "\nPassword policy complexity enabled: " + user.List_ActiveSP_Complexity();*/
-
-        /*
-        warning_banner = new QMessageBox();
-        QPushButton *okay_button = warning_banner->addButton(tr("Okay"), QMessageBox::ActionRole);
-        QPushButton *cancel_button = warning_banner->addButton(tr("Cancel"), QMessageBox::ActionRole);
-
-
-
-        if(domainwidget.upn_combo->currentText().length() > 0 && domainwidget.ou_combo->currentText() > 0 &&
-           domainwidget.template_user_combo->currentText().length() > 0 && domainwidget.employee_name_edit->text() > 0 &&
-           domainwidget.user_edit->text() > 0 && domainwidget.password_edit->text().length() > 0 && domainwidget.email_edit->text().length() > 0)
-        {
-            warning_banner->setText("Confirm the following by clicking 'Okay'\nTo cancel and redo, click 'Cancel'");
-            warning_banner->setInformativeText("");
-            warning_banner->exec();
-            if(warning_banner->clickedButton() == okay_button)
-            {
-                create_domain_user();
-            }
-            else if(warning_banner->clickedButton() == cancel_button)
-            {
-                // do nothing but close the dialog
-            }
-        }
-        else if(domainwidget.upn_combo->currentText().length() <= 0 || domainwidget.ou_combo->currentText() > 0 ||
-                domainwidget.template_user_combo->currentText().length() <= 0 || domainwidget.employee_name_edit->text() <= 0 ||
-                domainwidget.user_edit->text() <= 0 || domainwidget.password_edit->text().length() <= 0 || domainwidget.email_edit->text().length() <= 0)
-        {
-            warning_banner->setText("Confirm the following by clicking 'Okay'\nTo cancel and redo, click 'Cancel'");
-            warning_banner->setInformativeText("One of the values inserted is wrong:\n Minimum Passsword length - " + tu.get_ActiveSP_length() +
-                                               "\nComplexity enabled - " + tu.get_ActiveSP_Complexity() +
-                                               "\n Does this user " + user.get_SamAccountName() + " name already exist? - " + user.does_user_exist(user.get_SamAccountName()) +
-                                               "\nIs this a valid email: " + user.get_Mail() + "\nDid you select a UPN?: " + user.get_Identifier() +
-                                               "\nDid you inpout a template user?: " + domainwidget.template_user_combo->currentText() +
-                                               "\nDid you select the OU?: " + user.get_OU_CN());
-            warning_banner->exec();
-            if(warning_banner->clickedButton() == okay_button)
-            {
-                //
-            }
-            else if(warning_banner->clickedButton() == cancel_button)
-            {
-                // do nothing but close the dialog
-            }
-        }*/
-
     }
     else if(domainwidget.employee_name_edit->text().length() <= 0)
     {
@@ -681,4 +682,5 @@ void MainWindow::Automate()
 
     }
 }
-// EXPERIMENTAL
+
+
