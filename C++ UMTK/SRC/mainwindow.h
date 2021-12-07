@@ -14,7 +14,6 @@
 #include "domainwidget.h"
 #include "localwidget.h"
 #include "editwidget.h"
-#include "templateuser.h"
 #include "newuser.h"
 
 #ifdef __linux__
@@ -67,8 +66,6 @@ public:
     void initialize_warning_banner();
     void create_local_user();
     void create_domain_user();
-    void elevate_and_execute(QString param);
-    void shift_ou(QString command, QString OU);
 
     QFrame *main_frame;
     QStackedWidget *key_widget;
@@ -84,10 +81,6 @@ public:
     QAction *helpMeAction;
     QMessageBox *warning_banner;
 
-    // EXPERIMENTAL
-    void fill_forms(QString template_user, QString employee_name);
-
-    // EXPERIMENTAL
 
 
 private:
@@ -116,41 +109,11 @@ private:
         QString whoami;
     };
 
-    struct Domain_User
-    {
-        QString employe_name; // Full employee name
-        QString given_name; //Employee first name (GivenName)
-        QString surname; // Employee last name (SurName)
-        QString userpname; // Employee user princilple name (UserPrincepleName)
-        QString password; // Employee password(AccountPassword)
-        QString display_name; // Employee display name (DisplayName)
-        QString email_address; // Employee email address (EmailAddress)
-        QString sam_name; //Employee Sam Account (SamAccountName)
-        QString is_enabled = "1"; // Account is enabled (Enabled)
-        QStringList proxy_addresses; // User proxyAddresses
-        QString ou_clean; // OU cleaned up name
-        QString ou_actual; // OU Distingusihed name that's actually used
-        QString UPN; // UPN
-        QString template_user; // TEmplate to copy;
-        QString user_distinguished_name;
-
-        QString date_created; // Date that the account was made.
-        QString time_created; // Time of day the account was made.
-        QString created_by; // Created by <insert username>.
-
-        QString complete_command; // Finialized PS command for creation
-        QString set_groups_command; // String that holds the prebuilt PS command for setting group membership
-        QString set_OU_command; // String that holds the prebuilt PS command for moving the users OU.
-
-    };
-
 
 
 
     void clear_ui();
-
-    // EXPERIMENTAL
     void Automate();
-    // EXPERIMENTAL
+
 };
 #endif // MAINWINDOW_H

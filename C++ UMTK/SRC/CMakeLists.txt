@@ -43,8 +43,6 @@ set(PROJECT_SOURCES
         localwidget.h
         editwidget.cpp
         editwidget.h
-        templateuser.cpp
-        templateuser.h
         newuser.cpp
         newuser.h
         psintegration.cpp

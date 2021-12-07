@@ -201,7 +201,7 @@ void MainWindow::create_local_user()
      if(luser.username.length() > 0 && luser.employee_name.length() > 0 && luser.email_address.length() > 0 && luser.password.length() > 0)
      {
          QString tmp = "net user /add " + luser.username + " " + luser.password;
-         elevate_and_execute(tmp);
+         user.Execute(tmp);
      }
  }
 
@@ -547,13 +547,14 @@ void MainWindow::create_domain_user()
 
                  user.Execute("Set-ADUser -Identity \"" + user.get_SamAccountName() + "\" -Add @{Proxyaddresses = " + "\"SMTP:" + domainwidget.primary_proxy_edit->text() + "\"}");
                  user.Execute("Set-ADUser -Identity \"" + user.get_SamAccountName() + "\" -Add @{Proxyaddresses = " + "\"smtp:" + domainwidget.secondary_proxy_edit->text() + "\"}");
-                 user.Move_ADUser_Orgranizational_Unit(user.get_SamAccountName(), user.Clean_String(user.get_OU_DN()));
+                 user.set_User_DN(user.List_User_DN(user.get_Name()));
+                 user.Move_ADUser_Orgranizational_Unit(user.get_User_DN(), user.get_OU_DN());
 
                  // insert auto print to pdf
 
                  domainwidget.informational->setTextColor("Green");
                  domainwidget.informational->setText("SUCCESS - The following user has been created and a PDF named " + user.get_SamAccountName() + ".pdf has been generated and saved on your desktop <file path>.\nPresent it via encrypted email to the end user.\n\n\nEmployee name: " + user.get_Name() +"\nUsername: " + user.get_SamAccountName() + "\nEmail address: " + user.get_Mail() + "\nDisplay name: " + domainwidget.display_name_edit->text() +
-                                                     "\nOrganizational unit: " + user.get_OU_CN() + "\nUser Principal Name: " + user.get_UPN() + "\nGroups: " + user.get_Groups().join(" ,") + "\nPassword: " + domainwidget.password_edit->text());
+                                                     "\nOrganizational unit: " + user.get_OU_CN() + "\nUser Principal Name: " + user.get_UPN() + "\nGroups: " + user.get_Groups().join(" , ") + "\nPassword: " + domainwidget.password_edit->text());
 
              }
              if(domainwidget.primary_proxy_edit->text().length() > 0 && domainwidget.secondary_proxy_edit->text().length() > 0 && domainwidget.display_name_edit->text().length() <= 0)
@@ -571,13 +572,14 @@ void MainWindow::create_domain_user()
 
                  user.Execute("Set-ADUser -Identity \"" + user.get_SamAccountName() + "\" -Add @{Proxyaddresses = " + "\"SMTP:" + domainwidget.primary_proxy_edit->text() + "\"}");
                  user.Execute("Set-ADUser -Identity \"" + user.get_SamAccountName() + "\" -Add @{Proxyaddresses = " + "\"smtp:" + domainwidget.secondary_proxy_edit->text() + "\"}");
-                 user.Move_ADUser_Orgranizational_Unit(user.get_SamAccountName(), user.Clean_String(user.get_OU_DN()));
+                 user.set_User_DN(user.List_User_DN(user.get_Name()));
+                 user.Move_ADUser_Orgranizational_Unit(user.get_User_DN(), user.get_OU_DN());
 
                  // insert auto print to pdf
 
                  domainwidget.informational->setTextColor("Green");
                  domainwidget.informational->setText("SUCCESS - The following user has been created and a PDF named " + user.get_SamAccountName() + ".pdf has been generated and saved on your desktop <file path>.\nPresent it via encrypted email to the end user.\n\n\nEmployee name: " + user.get_Name() +"\nUsername: " + user.get_SamAccountName() + "\nEmail address: " + user.get_Mail() + "\nDisplay name: " + user.get_DisplayName() +
-                                                     "\nOrganizational unit: " + user.get_OU_CN() + "\nUser Principal Name: " + user.get_UPN() + "\nGroups: " + user.get_Groups().join(" ,") + "\nPassword: " + domainwidget.password_edit->text());
+                                                     "\nOrganizational unit: " + user.get_OU_CN() + "\nUser Principal Name: " + user.get_UPN() + "\nGroups: " + user.get_Groups().join(" , ") + "\nPassword: " + domainwidget.password_edit->text());
              }
              if(domainwidget.primary_proxy_edit->text().length() > 0 && domainwidget.secondary_proxy_edit->text().length() <= 0 && domainwidget.display_name_edit->text().length() > 0)
              {
@@ -593,13 +595,14 @@ void MainWindow::create_domain_user()
                               "Foreach ($group in $groups) {Add-ADGroupMember -Identity (Get-ADGroup $group).name -Members $usr}; exit "));
 
                  user.Execute("Set-ADUser -Identity \"" + user.get_SamAccountName() + "\" -Add @{Proxyaddresses = " + "\"SMTP:" + domainwidget.primary_proxy_edit->text() + "\"}");
-                 user.Move_ADUser_Orgranizational_Unit(user.get_SamAccountName(), user.Clean_String(user.get_OU_DN()));
+                 user.set_User_DN(user.List_User_DN(user.get_Name()));
+                 user.Move_ADUser_Orgranizational_Unit(user.get_User_DN(), user.get_OU_DN());
 
                  // insert auto print to pdf
 
                  domainwidget.informational->setTextColor("Green");
                  domainwidget.informational->setText("SUCCESS - The following user has been created and a PDF named " + user.get_SamAccountName() + ".pdf has been generated and saved on your desktop <file path>.\nPresent it via encrypted email to the end user.\n\n\nEmployee name: " + user.get_Name() +"\nUsername: " + user.get_SamAccountName() + "\nEmail address: " + user.get_Mail() + "\nDisplay name: " + domainwidget.display_name_edit->text() +
-                                                     "\nOrganizational unit: " + user.get_OU_CN() + "\nUser Principal Name: " + user.get_UPN() + "\nGroups: " + user.get_Groups().join(" ,") + "\nPassword: " + domainwidget.password_edit->text());
+                                                     "\nOrganizational unit: " + user.get_OU_CN() + "\nUser Principal Name: " + user.get_UPN() + "\nGroups: " + user.get_Groups().join(" , ") + "\nPassword: " + domainwidget.password_edit->text());
              }
              if(domainwidget.primary_proxy_edit->text().length() <= 0 && domainwidget.secondary_proxy_edit->text().length() > 0 && domainwidget.display_name_edit->text().length() > 0)
              {
@@ -615,13 +618,14 @@ void MainWindow::create_domain_user()
                               "Foreach ($group in $groups) {Add-ADGroupMember -Identity (Get-ADGroup $group).name -Members $usr}; exit ");
 
                  user.Execute("Set-ADUser -Identity \"" + user.get_SamAccountName() + "\" -Add @{Proxyaddresses = " + "\"smtp:" + domainwidget.secondary_proxy_edit->text() + "\"}");
-                 user.Move_ADUser_Orgranizational_Unit(user.get_SamAccountName(), user.Clean_String(user.get_OU_DN()));
+                 user.set_User_DN(user.List_User_DN(user.get_Name()));
+                 user.Move_ADUser_Orgranizational_Unit(user.get_User_DN(), user.get_OU_DN());
 
                  // insert auto print to pdf
 
                  domainwidget.informational->setTextColor("Green");
                  domainwidget.informational->setText("SUCCESS - The following user has been created and a PDF named " + user.get_SamAccountName() + ".pdf has been generated and saved on your desktop <file path>.\nPresent it via encrypted email to the end user.\n\n\nEmployee name: " + user.get_Name() +"\nUsername: " + user.get_SamAccountName() + "\nEmail address: " + user.get_Mail() + "\nDisplay name: " + domainwidget.display_name_edit->text() +
-                                                     "\nOrganizational unit: " + user.get_OU_CN() + "\nUser Principal Name: " + user.get_UPN() + "\nGroups: " + user.get_Groups().join(" ,") + "\nPassword: " + domainwidget.password_edit->text());
+                                                     "\nOrganizational unit: " + user.get_OU_CN() + "\nUser Principal Name: " + user.get_UPN() + "\nGroups: " + user.get_Groups().join(" , ") + "\nPassword: " + domainwidget.password_edit->text());
 
              }
              if(domainwidget.primary_proxy_edit->text().length() <= 0 && domainwidget.secondary_proxy_edit->text().length() <= 0 && domainwidget.display_name_edit->text().length() > 0)
@@ -638,13 +642,14 @@ void MainWindow::create_domain_user()
                               "Foreach ($group in $groups) {Add-ADGroupMember -Identity (Get-ADGroup $group).name -Members $usr}; exit ");
 
                  user.Execute("Set-ADUser -Identity \"" + user.get_SamAccountName() + "\" -Add @{Proxyaddresses = " + "\"SMTP:" + user.get_Mail() +"\"}");
-                 user.Move_ADUser_Orgranizational_Unit(user.get_SamAccountName(), user.Clean_String(user.get_OU_DN()));
+                 user.set_User_DN(user.List_User_DN(user.get_Name()));
+                 user.Move_ADUser_Orgranizational_Unit(user.get_User_DN(), user.get_OU_DN());
 
                  // insert auto print to pdf
 
                  domainwidget.informational->setTextColor("Green");
                  domainwidget.informational->setText("SUCCESS - The following user has been created and a PDF named " + user.get_SamAccountName() + ".pdf has been generated and saved on your desktop <file path>.\nPresent it via encrypted email to the end user.\n\n\nEmployee name: " + user.get_Name() +"\nUsername: " + user.get_SamAccountName() + "\nEmail address: " + user.get_Mail() + "\nDisplay name: " + domainwidget.display_name_edit->text() +
-                                                     "\nOrganizational unit: " + user.get_OU_CN() + "\nUser Principal Name: " + user.get_UPN() + "\nGroups: " + user.get_Groups().join(" ,") + "\nPassword: " + domainwidget.password_edit->text());
+                                                     "\nOrganizational unit: " + user.get_OU_CN() + "\nUser Principal Name: " + user.get_UPN() + "\nGroups: " + user.get_Groups().join(" , ") + "\nPassword: " + domainwidget.password_edit->text());
 
 
              }
@@ -663,13 +668,14 @@ void MainWindow::create_domain_user()
                               "Foreach ($group in $groups) {Add-ADGroupMember -Identity (Get-ADGroup $group).name -Members $usr}; exit ");
 
                  user.Execute("Set-ADUser -Identity \"" + user.get_SamAccountName() + "\" -Add @{Proxyaddresses = " + "\"SMTP:" + user.get_Mail() +"\"}");
-                 user.Move_ADUser_Orgranizational_Unit(user.get_SamAccountName(), user.Clean_String(user.get_OU_DN()));
+                 user.set_User_DN(user.List_User_DN(user.get_Name()));
+                 user.Move_ADUser_Orgranizational_Unit(user.get_User_DN(), user.get_OU_DN());
 
                  // insert auto print to pdf
 
                  domainwidget.informational->setTextColor("Green");
                  domainwidget.informational->setText("SUCCESS - The following user has been created and a PDF named " + user.get_SamAccountName() + ".pdf has been generated and saved on your desktop <file path>.\nPresent it via encrypted email to the end user.\n\n\nEmployee name: " + user.get_Name() +"\nUsername: " + user.get_SamAccountName() + "\nEmail address: " + user.get_Mail() + "\nDisplay name: " + user.get_DisplayName() +
-                                                     "\nOrganizational unit: " + user.get_OU_CN() + "\nUser Principal Name: " + user.get_UPN() + "\nGroups: " + user.get_Groups().join(" ,") + "\nPassword: " + domainwidget.password_edit->text());
+                                                     "\nOrganizational unit: " + user.get_OU_CN() + "\nUser Principal Name: " + user.get_UPN() + "\nGroups: " + user.get_Groups().join(" , ") + "\nPassword: " + domainwidget.password_edit->text());
 
              }
          }
@@ -693,24 +699,6 @@ void MainWindow::clear_ui()
      domainwidget.secondary_proxy_edit->setText("");
  }
 
-void MainWindow::elevate_and_execute(QString param) // Migragted to PSIntegraion class
- {
-     QProcess *process = new QProcess(this);
-     QStringList params = QStringList();
-     QByteArray output;
-     params = QStringList({"-Command", QString("Start-Process -NoNewWindow -Verb runAs powershell; "), param});
-     process->start("powershell", params);
-     process->waitForFinished();
-     output = process->readAllStandardError();
-     process->terminate();
-
- }
-
-void MainWindow::shift_ou(QString command, QString OU) // Migrated to PSIntegration class.
-{
-    user.Execute(command + "Move-ADObject -Identity $user -TargetPath " + OU);
-}
-
 void MainWindow::Automate()
 {
     if(domainwidget.employee_name_edit->text().length() > 0)
@@ -728,9 +716,6 @@ void MainWindow::Automate()
             qDebug() << user.get_OtherName();
         }
         user.set_SamAccountName(Names.first().at(0).toUpper() + Names.last().toLower());
-        TemplateUser tu;
-
-
         user.set_Identifier(user.List_User_Identifier(user.List_Name(domainwidget.template_user_combo->currentText())));
         user.set_UPN(user.get_SamAccountName() + "@" + user.get_Identifier());
         user.set_Mail(user.get_UPN());
@@ -739,6 +724,7 @@ void MainWindow::Automate()
         user.set_OU_DN(user.List_User_OU_DN(domainwidget.template_user_combo->currentText()));
         user.set_OU_CN(user.List_User_OU_CN(domainwidget.template_user_combo->currentText()));
         user.List_Password_Policy(user.List_Name(domainwidget.template_user_combo->currentText()));
+
 
         domainwidget.ou_combo->show();
         domainwidget.upn_combo->show();

@@ -31,6 +31,7 @@ public:
     QStringList get_Groups();
     QStringList get_GroupDNs();
     QString get_Identifier();
+    QString get_User_DN();
 
     void set_password(QString password);
     void set_UPN(QString UPN);
@@ -47,6 +48,7 @@ public:
     void set_Groups(QStringList groups);
     void set_GroupDNs(QStringList groupsdistinguished);
     void set_Identifier(QString identifier);
+    void set_User_DN(QString DN);
 
     void set_attrib_upn(QString UPN);
     void set_attrib_name(QString name);
@@ -77,6 +79,7 @@ private:
     QString Identifier;
     QStringList Groups;
     QStringList GroupsDistinguished;
+    QString User_DN;
 
 
 };

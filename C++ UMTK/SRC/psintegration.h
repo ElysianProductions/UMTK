@@ -16,7 +16,7 @@ public:
     void Set_FGPP_active(QString MinLength, QString Complexity); // Configure the fine grain password policy as active for this specific user.
     void Set_DDPP_active(QString MinLength, QString Complexity); // Configure the default domain policy as active for this specific user.
     void Set_APP_active(QString MinLength, QString Complexity); // Configure an arbitrary password policy with min length = 10 and complexity = true
-    void Move_ADUser_Orgranizational_Unit(QString SamAccount, QString Template_OU_Distinguished); // Move the specified user to the specified OU.
+    void Move_ADUser_Orgranizational_Unit(QString User_CN, QString Template_OU_Distinguished); // Move the specified user to the specified OU.
 
 
     bool Validate_Password(QString pword, QString MinPasswordLength, QString ComplexityEnabled); // Validate whether or not the password meets the requirements of the policy.

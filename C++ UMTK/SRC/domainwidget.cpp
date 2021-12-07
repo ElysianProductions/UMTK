@@ -101,35 +101,6 @@ QWidget* DomainWidget::initalize_widget(QComboBox *upn_combo, QComboBox *ou_comb
         return primary_display;
 }
 
-/*
-QStringList DomainWidget::execute_command(QString param) // Migrated to PSIntegration class.
-{
-      QProcess *process = new QProcess();
-      QByteArray term_output;
-      QStringList params;
-      params = QStringList({"-Command", QString("Start-Process -NoNewWindow -Verb runAs powershell; "), param});
-      process->start("powershell", params);
-      process->waitForFinished();
-      term_output.append(process->readAllStandardOutput());
-      process->terminate();
-      QStringList return_list = QString(term_output).split("\n", QString::SkipEmptyParts);
-      return return_list;
-}
-
-QString DomainWidget::execute(QString param) // Migrated to PSIntegration class.
-{
-    QProcess *process = new QProcess();
-    QByteArray term_output;
-    QStringList params;
-    params = QStringList({"-Command", QString("Start-Process -NoNewWindow -Verb runAs powershell; "), param});
-    process->start("powershell", params);
-    process->waitForFinished();
-    term_output.append(process->readAllStandardOutput());
-    process->terminate();
-    QString data = QString(term_output);
-    return data;
-}*/
-
 void DomainWidget::load_domain_information()
 {
     Domain_Name = List_All_Forests();
@@ -143,39 +114,3 @@ void DomainWidget::load_domain_information()
     AD_Users = List_All_Domain_Users();
 }
 
-/*
-QStringList DomainWidget::get_UPNs()
-{
-    return Domain_UPNS;
-}
-
-QStringList DomainWidget::get_domain_name()
-{
-    return Domain_Name;
-}
-
-QStringList DomainWidget::get_OU_CNs()
-{
-    return OU_Names;
-}
-
-QString DomainWidget::clean_string(QString str) // Migrated to PSIntegration class.
-{
-    bool bad_chars = true;
-    while(bad_chars)
-    {
-        if(str.contains("\r"))
-        {
-            str = str.remove(QChar('\r'));
-        }
-        if(str.contains("\n"))
-        {
-            str = str.remove(QChar('\n'));
-        }
-        if(!str.contains("\r") && !str.contains("\n"))
-        {
-            bad_chars = false;
-        }
-    }
-    return str;
-}*/

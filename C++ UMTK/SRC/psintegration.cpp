@@ -207,7 +207,6 @@ QString PSIntegration::Execute(QString param)
     process->waitForFinished(-1);
     success.append(process->readAllStandardOutput());
     error.append(process->readAllStandardError());
-    qDebug() << error;
     process->terminate();
     QString data = QString(success);
     return data;
@@ -523,10 +522,9 @@ void PSIntegration::Set_APP_active(QString MinLength, QString Complexity)
     active_SP_Complexity = Complexity;
 }
 
-void PSIntegration::Move_ADUser_Orgranizational_Unit(QString SamAccount, QString Template_OU_Distinguished)
+void PSIntegration::Move_ADUser_Orgranizational_Unit(QString User_CN, QString Template_OU_Distinguished)
 {
-    Execute("Move-ADObject -Identity " + QString("\"") + SamAccount + QString("\"") + " -TargetPath " + QString("\"") + Template_OU_Distinguished + QString("\""));
-    //Execute(Clean_String(command + "Move-ADObject -Identity $user -TargetPath " + OU));
+    Execute("Move-ADObject -Identity " + QString("\"") + User_CN + QString("\"") + " -TargetPath " + QString("\"") + Template_OU_Distinguished + QString("\""));
 }
 
 

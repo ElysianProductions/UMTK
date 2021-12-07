@@ -44,9 +44,6 @@ public:
 
 
     void load_domain_information();
-    //QStringList get_UPNs();
-    //QStringList get_domain_name();
-    //QStringList get_OU_CNs();
 
     QStringList AD_Users;
     QStringList Domain_UPNS;
@@ -55,19 +52,12 @@ public:
     QStringList Domain_Name;
 
 private:
-    //QStringList execute_command(QString param);
-    //QString execute(QString param);
-    //QString clean_string(QString str);
 
     QWidget* initalize_widget(QComboBox *upn_combo, QComboBox *ou_combo, QComboBox *template_user_combo,
                               QComboBox *domain_name_combo, QLineEdit *employee_name_edit, QLineEdit *user_edit,
                               QLineEdit *password_edit, QLineEdit *email_edit, QLineEdit *display_name_edit,
                               QLineEdit *primary_proxy_edit, QLineEdit *secondary_proxy_edit, QPushButton *create_button,
                               QPushButton *cancel_button, QPushButton *generate_button, QTextBrowser *informational);
-
-
-
-    //void load_template_user(QString user);
 };
 
 #endif // DOMAINWIDGET_H
