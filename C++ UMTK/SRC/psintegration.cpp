@@ -403,7 +403,7 @@ bool PSIntegration::Validate_User_Status(QString template_name)
      *
      */
 
-    QString var = Clean_String(Execute("$temp = (Get-ADUser -Filter {Name -Like " + QString("\"") + "Spring Thomas" + QString("\"") + "} -Properties Enabled).Enabled; return $temp"));
+    QString var = Clean_String(Execute("$temp = (Get-ADUser -Filter {Name -Like " + QString("\"") + template_name + QString("\"") + "} -Properties Enabled).Enabled; return $temp"));
     if(var == "True")
     {
         return true;
