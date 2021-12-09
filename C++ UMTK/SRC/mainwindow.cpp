@@ -44,11 +44,9 @@ void MainWindow::initialize_connections()
       connect(mainwidget.server_button, &QPushButton::clicked, this, &MainWindow::launch_server_widget);
       connect(domainwidget.create_button, &QPushButton::clicked, this, &MainWindow::create_domain_user);
       connect(domainwidget.cancel_button, &QPushButton::clicked, this, &MainWindow::close_server_widget);
-
       connect(mainwidget.local_button, &QPushButton::clicked, this, &MainWindow::launch_local_widget);
       connect(localwidget.cancel_button, &QPushButton::clicked, this, &MainWindow::close_local_widget);
       connect(localwidget.create_button, &QPushButton::clicked, this, &MainWindow::create_local_user);
-
       connect(domainwidget.generate_button, &QPushButton::clicked, this, &MainWindow::Automate);
 
 }
@@ -207,278 +205,6 @@ void MainWindow::create_local_user()
 
 void MainWindow::create_domain_user()
  {
-    /*Domain_User duser;
-    if(domainwidget.employee_name_edit->text().length() <= 0)
-    {
-        domainwidget.employee_name_edit->setStyleSheet("color: black; background-color: red");
-        domainwidget.employee_name_edit->setPlaceholderText("VALUE CANNOT BE EMPTY");
-    }
-    else if(domainwidget.employee_name_edit->text() > 0)
-    {
-        duser.employe_name = domainwidget.employee_name_edit->text();
-        duser.display_name = domainwidget.employee_name_edit->text();
-        QStringList name = duser.employe_name.split(" ");
-        duser.given_name = name.first();
-        duser.surname = name.last();
-    }
-    if(domainwidget.user_edit->text().length() <= 0)
-    {
-        domainwidget.user_edit->setStyleSheet("color: black; background-color: red");
-        domainwidget.user_edit->setPlaceholderText("VALUE CANNOT BE EMPTY");
-    }
-    else if(domainwidget.user_edit->text().length() > 0)
-    {
-        duser.sam_name = domainwidget.user_edit->text();
-    }
-    if(domainwidget.password_edit->text().length() <= 0)
-    {
-        domainwidget.password_edit->setStyleSheet("color: black; background-color: red");
-        domainwidget.password_edit->setPlaceholderText("VALUE CANNOT BE EMPTY");
-    }
-    else if(domainwidget.password_edit->text().length() > 0)
-    {
-        duser.password = "\"" + domainwidget.password_edit->text() + "\"";
-    }
-    if(domainwidget.email_edit->text().length() <= 0)
-    {
-        domainwidget.email_edit->setStyleSheet("color: black; background-color: red");
-        domainwidget.email_edit->setPlaceholderText("VALUE CANNOT BE EMPTY");
-    }
-    else if(domainwidget.email_edit->text().length() > 0)
-    {
-        duser.email_address = domainwidget.email_edit->text();
-        duser.proxy_addresses << domainwidget.email_edit->text();
-    }
-    if(duser.employe_name.length() > 0 && duser.sam_name.length() > 0 && duser.password.length() > 0 && duser.email_address.length() > 0)
-    {
-
-        QString p = "$p = " + duser.password + "; $sec = $p | ConvertTo-SecureString -AsPlainText -Force; ";
-        duser.ou_clean = domainwidget.ou_combo->currentText();
-
-
-        duser.ou_actual = "\"" + domainwidget.OU_DN_Names.at(domainwidget.ou_combo->currentIndex()) + "\"";
-
-        bool bad_chars = true;
-        while(bad_chars)
-        {
-            if(duser.ou_actual.contains("\r"))
-            {
-                duser.ou_actual = duser.ou_actual.remove(QChar('\r'));
-            }
-            if(duser.ou_actual.contains("\n"))
-            {
-                duser.ou_actual = duser.ou_actual.remove(QChar('\n'));
-            }
-            if(!duser.ou_actual.contains("\r") && !duser.ou_actual.contains("\n"))
-            {
-                bad_chars = false;
-            }
-        }
-
-        duser.template_user = domainwidget.template_user_combo->currentText();
-
-        bad_chars = true;
-        while(bad_chars)
-        {
-            if(duser.template_user.contains("\r"))
-            {
-                duser.template_user = duser.template_user.remove(QChar('\r'));
-            }
-            if(duser.template_user.contains("\n"))
-            {
-                duser.template_user = duser.template_user.remove(QChar('\n'));
-            }
-            if(!duser.template_user.contains("\r") && !duser.template_user.contains("\n"))
-            {
-                bad_chars = false;
-            }
-        }
-
-
-
-        if(duser.UPN.length() <= 0)
-        {
-            duser.userpname = duser.sam_name + "@" + domainwidget.domain_name_combo->currentText();
-            duser.userpname.remove(QChar('"'));
-        }
-        else if(duser.UPN.length() > 0)
-        {
-            duser.userpname = duser.sam_name + duser.UPN;
-        }
-
-        if(domainwidget.primary_proxy_edit->text().length() > 0)
-        {
-            duser.proxy_addresses << domainwidget.primary_proxy_edit->text();
-        }
-        else if(domainwidget.primary_proxy_edit->text().length() <= 0)
-        {
-            duser.proxy_addresses << "SMTP:" + duser.email_address;
-        }
-
-        if(domainwidget.secondary_proxy_edit->text().length() > 0)
-        {
-            duser.proxy_addresses << domainwidget.secondary_proxy_edit->text();
-        }
-
-        if(domainwidget.display_name_edit->isHidden() && domainwidget.display_name_edit->text().length() > 0)
-        {
-            duser.display_name = domainwidget.display_name_edit->text();
-        }
-        else if(!domainwidget.display_name_edit->isHidden() && domainwidget.display_name_edit->text().length() > 0)
-        {
-            duser.display_name = domainwidget.display_name_edit->text();
-        }
-
-        duser.complete_command = p + "New-ADUser -Name " + "\"" + duser.employe_name +"\"" + " -GivenName " + "\"" + duser.given_name + "\""
-                + " -Surname " + "\"" + duser.surname + "\"" + " -AccountPassword $sec " + " -UserPrincipalName " + "\"" + duser.userpname + "\""
-                " -DisplayName " + "\"" + duser.display_name + "\"" + " -EmailAddress " + "\"" + duser.email_address + "\"" + " -SamAccountName " +
-                "\"" + duser.sam_name + "\"" + " -Enabled " + duser.is_enabled + "; exit";
-
-
-        duser.set_groups_command = "$tmp = (Get-ADUser -Filter {Name -like \"" + duser.template_user + "\"}); "
-                                   "$groups = (Get-ADUser $tmp -Properties MemberOf).MemberOf; $usr = \"" + duser.sam_name + "\"; "
-                                   "Foreach ($group in $groups) {Add-ADGroupMember -Identity (Get-ADGroup $group).name -Members $usr}; exit ";
-
-        warning_banner = new QMessageBox();
-        QPushButton *okay_button = warning_banner->addButton(tr("Okay"), QMessageBox::ActionRole);
-        QPushButton *cancel_button = warning_banner->addButton(tr("Cancel"), QMessageBox::ActionRole);
-        warning_banner->setText("Confirm the following by clicking 'Okay'\nTo cancel and redo, click 'Cancel'");
-
-        if (domainwidget.primary_proxy_edit->isHidden())
-        {
-            if(domainwidget.primary_proxy_edit->text().length() > 0 && domainwidget.secondary_proxy_edit->text().length() > 0)
-            {
-                if(domainwidget.display_name_edit->isHidden())
-                {
-                    warning_banner->setInformativeText("Employee Name: " + duser.employe_name +"\nUsername: " + duser.sam_name + "\nPassword: " + duser.password + "\nEmail Address: " + duser.email_address + "\nPrimary proxy: " + duser.proxy_addresses.first() + "\nSecondary Proxy: " + duser.proxy_addresses.last() + "; exit");
-                }
-                else if(!domainwidget.display_name_edit->isHidden() && domainwidget.display_name_edit->text().length() > 0)
-                {
-                    warning_banner->setInformativeText("Employee Name: " + duser.employe_name +"\nUsername: " + duser.sam_name + "\nPassword: " + duser.password + "\nEmail Address: " + duser.email_address + "\nDisplay name: " + duser.display_name + "\nPrimary proxy: " + duser.proxy_addresses.first() + "\nSecondary Proxy: " + duser.proxy_addresses.last() + "; exit");
-                }
-            }
-            if(domainwidget.primary_proxy_edit->text().length() <= 0 && domainwidget.secondary_proxy_edit->text().length() > 0)
-            {
-                if(domainwidget.display_name_edit->isHidden())
-                {
-                    warning_banner->setInformativeText("Employee Name: " + duser.employe_name +"\nUsername: " + duser.sam_name + "\nPassword: " + duser.password + "\nEmail Address: " + duser.email_address + "\nPrimary proxy: " + "SMTP:" + duser.email_address + "\nSecondary Proxy: " + duser.proxy_addresses.last() + "; exit");
-                }
-                else if(!domainwidget.display_name_edit->isHidden() && domainwidget.display_name_edit->text().length() > 0)
-                {
-                    warning_banner->setInformativeText("Employee Name: " + duser.employe_name +"\nUsername: " + duser.sam_name + "\nPassword: " + duser.password + "\nEmail Address: " + duser.email_address + "\nDisplay name: " + duser.display_name + "\nPrimary proxy: " + "SMTP:" + duser.email_address + "\nSecondary Proxy: " + duser.proxy_addresses.last() + "; exit");
-                }
-            }
-            if(domainwidget.primary_proxy_edit->text().length() > 0 && domainwidget.secondary_proxy_edit->text().length() <= 0)
-            {
-                if(domainwidget.display_name_edit->isHidden())
-                {
-                    warning_banner->setInformativeText("Employee Name: " + duser.employe_name +"\nUsername: " + duser.sam_name + "\nPassword: " + duser.password + "\nEmail Address: " + duser.email_address + "\nPrimary proxy: " + duser.proxy_addresses.first() + "; exit");
-                }
-                else if(!domainwidget.display_name_edit->isHidden() && domainwidget.display_name_edit->text().length() > 0)
-                {
-                    warning_banner->setInformativeText("Employee Name: " + duser.employe_name +"\nUsername: " + duser.sam_name + "\nPassword: " + duser.password + "\nEmail Address: " + duser.email_address + "\nDisplay name: " + duser.display_name + "\nPrimary proxy: " + duser.proxy_addresses.first() + "; exit");
-                }
-            }
-            if(domainwidget.primary_proxy_edit->text().length() <= 0 && domainwidget.secondary_proxy_edit->text().length() <= 0)
-            {
-                if(domainwidget.display_name_edit->isHidden())
-                {
-                    warning_banner->setInformativeText("Employee Name: " + duser.employe_name +"\nUsername: " + duser.sam_name + "\nPassword: " + duser.password + "\nEmail Address: " + duser.email_address + "\nDefault proxy: " + "SMTP:" + duser.email_address + "; exit");
-                }
-                else if(!domainwidget.display_name_edit->isHidden() && domainwidget.display_name_edit->text().length() > 0)
-                {
-                    warning_banner->setInformativeText("Employee Name: " + duser.employe_name +"\nUsername: " + duser.sam_name + "\nPassword: " + duser.password + "\nEmail Address: " + duser.email_address + "\nDisplay name: " + duser.display_name + "\nDefault proxy: " + "SMTP:" + duser.email_address + "; exit");
-                }
-            }
-
-        }
-        else if(!domainwidget.primary_proxy_edit->isHidden())
-        {
-            if(domainwidget.primary_proxy_edit->text().length() > 0 && domainwidget.secondary_proxy_edit->text().length() > 0)
-            {
-                if(domainwidget.display_name_edit->isHidden())
-                {
-                    warning_banner->setInformativeText("Employee Name: " + duser.employe_name +"\nUsername: " + duser.sam_name + "\nPassword: " + duser.password + "\nEmail Address: " + duser.email_address + "\nPrimary proxy: " + duser.proxy_addresses.first() + "\nSecondary Proxy: " + duser.proxy_addresses.last() + "; exit");
-                }
-                else if(!domainwidget.display_name_edit->isHidden() && domainwidget.display_name_edit->text().length() > 0)
-                {
-                    warning_banner->setInformativeText("Employee Name: " + duser.employe_name +"\nUsername: " + duser.sam_name + "\nPassword: " + duser.password + "\nEmail Address: " + duser.email_address + "\nDisplay name: " + duser.display_name + "\nPrimary proxy: " + duser.proxy_addresses.first() + "\nSecondary Proxy: " + duser.proxy_addresses.last() + "; exit");
-                }
-            }
-            if(domainwidget.primary_proxy_edit->text().length() <= 0 && domainwidget.secondary_proxy_edit->text().length() > 0)
-            {
-                if(domainwidget.display_name_edit->isHidden())
-                {
-                    warning_banner->setInformativeText("Employee Name: " + duser.employe_name +"\nUsername: " + duser.sam_name + "\nPassword: " + duser.password + "\nEmail Address: " + duser.email_address + "\nPrimary proxy: " + "SMTP:" + duser.email_address + "\nSecondary Proxy: " + duser.proxy_addresses.last() + "; exit");
-                }
-                else if(!domainwidget.display_name_edit->isHidden() && domainwidget.display_name_edit->text().length() > 0)
-                {
-                    warning_banner->setInformativeText("Employee Name: " + duser.employe_name +"\nUsername: " + duser.sam_name + "\nPassword: " + duser.password + "\nEmail Address: " + duser.email_address + "\nDisplay name: " + duser.display_name + "\nPrimary proxy: " + "SMTP:" + duser.email_address + "\nSecondary Proxy: " + duser.proxy_addresses.last() + "; exit");
-                }
-            }
-            if(domainwidget.primary_proxy_edit->text().length() > 0 && domainwidget.secondary_proxy_edit->text().length() <= 0)
-            {
-                if(domainwidget.display_name_edit->isHidden())
-                {
-                    warning_banner->setInformativeText("Employee Name: " + duser.employe_name +"\nUsername: " + duser.sam_name + "\nPassword: " + duser.password + "\nEmail Address: " + duser.email_address + "\nPrimary proxy: " + duser.proxy_addresses.first() + "; exit");
-                }
-                else if(!domainwidget.display_name_edit->isHidden() && domainwidget.display_name_edit->text().length() > 0)
-                {
-                    warning_banner->setInformativeText("Employee Name: " + duser.employe_name +"\nUsername: " + duser.sam_name + "\nPassword: " + duser.password + "\nEmail Address: " + duser.email_address + "\nDisplay name: " + duser.display_name + "\nPrimary proxy: " + duser.proxy_addresses.first() + "; exit");
-                }
-            }
-            if(domainwidget.primary_proxy_edit->text().length() <= 0 && domainwidget.secondary_proxy_edit->text().length() <= 0)
-            {
-                if(domainwidget.display_name_edit->isHidden())
-                {
-                    warning_banner->setInformativeText("Employee Name: " + duser.employe_name +"\nUsername: " + duser.sam_name + "\nPassword: " + duser.password + "\nEmail Address: " + duser.email_address + "\nDefault proxy: " + "SMTP:" + duser.email_address + "; exit");
-                }
-                else if(!domainwidget.display_name_edit->isHidden() && domainwidget.display_name_edit->text().length() > 0)
-                {
-                    warning_banner->setInformativeText("Employee Name: " + duser.employe_name +"\nUsername: " + duser.sam_name + "\nPassword: " + duser.password + "\nEmail Address: " + duser.email_address + "\nDisplay name: " + duser.display_name + "\nDefault proxy: " + "SMTP:" + duser.email_address + "; exit");
-                }
-            }
-        }
-
-
-        warning_banner->exec();
-        if(warning_banner->clickedButton() == okay_button)
-        {
-            elevate_and_execute(duser.complete_command);
-
-            elevate_and_execute(duser.set_groups_command);
-
-
-            if(domainwidget.primary_proxy_edit->text().length() > 0 && domainwidget.secondary_proxy_edit->text().length() > 0)
-            {
-                elevate_and_execute("Set-ADUser -Identity " + QString("\"") + duser.sam_name + QString("\"") + " -Add @{Proxyaddresses = " + "\"SMTP:" + duser.proxy_addresses.first() + "\"}; exit");
-                elevate_and_execute("Set-ADUser -Identity " + QString("\"") + duser.sam_name + QString("\"") +  " -Add @{Proxyaddresses = " + "\"smtp:" + duser.proxy_addresses.last() + "\"}; exit");
-            }
-            else if(domainwidget.primary_proxy_edit->text().length() > 0 && domainwidget.secondary_proxy_edit->text().length() <= 0)
-            {
-                elevate_and_execute("Set-ADUser -Identity " + QString("\"") + duser.sam_name + QString("\"") + " -Add @{Proxyaddresses = " + "\"SMTP:" + duser.proxy_addresses.first() +"\"}; exit");
-            }
-            else if(domainwidget.secondary_proxy_edit->text().length() > 0 && domainwidget.primary_proxy_edit->text().length() <= 0)
-            {
-                elevate_and_execute("Set-ADUser -Identity " + QString("\"") + duser.sam_name + QString("\"") +  " -Add @{Proxyaddresses = " + "\"SMTP:" + duser.email_address +"\"}; exit");
-                elevate_and_execute("Set-ADUser -Identity " + QString("\"") + duser.sam_name + QString("\"") +  " -Add @{Proxyaddresses = " + "\"smtp:" + duser.proxy_addresses.last() +"\"}; exit");
-            }
-            else if(domainwidget.secondary_proxy_edit->text().length() <= 0 && domainwidget.primary_proxy_edit->text().length() <= 0)
-            {
-
-                elevate_and_execute("Set-ADUser -Identity \"" + duser.sam_name + "\" -Add @{Proxyaddresses = " + "\"SMTP:" + duser.email_address +"\"}");
-            }
-
-            shift_ou("$user = (Get-ADUser -Filter {SamAccountName -like \"" + duser.sam_name + "\"} | Select-Object -ExpandProperty DistinguishedName);", duser.ou_actual + "; exit");
-        }
-        else if (warning_banner->clickedButton() == cancel_button)
-        {
-            clear_ui();
-        }
-
-
-    }*/
-
 
      if(user.User_Exists(user.get_SamAccountName()) == "Yes")
      {
@@ -556,6 +282,15 @@ void MainWindow::create_domain_user()
                  domainwidget.informational->setText("SUCCESS - The following user has been created and a PDF named " + user.get_SamAccountName() + ".pdf has been generated and saved on your desktop <file path>.\nPresent it via encrypted email to the end user.\n\n\nEmployee name: " + user.get_Name() +"\nUsername: " + user.get_SamAccountName() + "\nEmail address: " + user.get_Mail() + "\nDisplay name: " + domainwidget.display_name_edit->text() +
                                                      "\nOrganizational unit: " + user.get_OU_CN() + "\nUser Principal Name: " + user.get_UPN() + "\nGroups: " + user.get_Groups().join(" , ") + "\nPassword: " + domainwidget.password_edit->text());
 
+
+                 user.Set_URL_Image_Path("");
+                 user.Dump_User_Form("<html> <h1> <center> The following information pretains to the new user request that you have submitted: </center> </h1> <br><br><br> <body> <strong> Employee name: </strong> " + user.get_Name() +
+                                     "<br> <strong> Username: </strong> " + user.get_SamAccountName() + " <br> <strong> Email address: </strong> " + user.get_Mail() +
+                                     "<br> <strong> Password: </strong> " + domainwidget.password_edit->text() + " <br> <strong> Groups: </strong> " + user.get_Groups().join(" , ") +
+                                     "<br> <strong> Template user provided: </strong> " + domainwidget.template_user_combo->currentText() +
+                                     "</body> </html>", user.List_URL_Image_Path(), user.get_Name()
+                             );
+
              }
              if(domainwidget.primary_proxy_edit->text().length() > 0 && domainwidget.secondary_proxy_edit->text().length() > 0 && domainwidget.display_name_edit->text().length() <= 0)
              {
@@ -580,6 +315,15 @@ void MainWindow::create_domain_user()
                  domainwidget.informational->setTextColor("Green");
                  domainwidget.informational->setText("SUCCESS - The following user has been created and a PDF named " + user.get_SamAccountName() + ".pdf has been generated and saved on your desktop <file path>.\nPresent it via encrypted email to the end user.\n\n\nEmployee name: " + user.get_Name() +"\nUsername: " + user.get_SamAccountName() + "\nEmail address: " + user.get_Mail() + "\nDisplay name: " + user.get_DisplayName() +
                                                      "\nOrganizational unit: " + user.get_OU_CN() + "\nUser Principal Name: " + user.get_UPN() + "\nGroups: " + user.get_Groups().join(" , ") + "\nPassword: " + domainwidget.password_edit->text());
+
+
+                 user.Set_URL_Image_Path("");
+                 user.Dump_User_Form("<html> <h1> <center> The following information pretains to the new user request that you have submitted: </center> </h1> <br><br><br> <body> <strong> Employee name: </strong> " + user.get_Name() +
+                                     "<br> <strong> Username: </strong> " + user.get_SamAccountName() + " <br> <strong> Email address: </strong> " + user.get_Mail() +
+                                     "<br> <strong> Password: </strong> " + domainwidget.password_edit->text() + " <br> <strong> Groups: </strong> " + user.get_Groups().join(" , ") +
+                                     "<br> <strong> Template user provided: </strong> " + domainwidget.template_user_combo->currentText() +
+                                     "</body> </html>", user.List_URL_Image_Path(), user.get_Name()
+                             );
              }
              if(domainwidget.primary_proxy_edit->text().length() > 0 && domainwidget.secondary_proxy_edit->text().length() <= 0 && domainwidget.display_name_edit->text().length() > 0)
              {
@@ -603,6 +347,15 @@ void MainWindow::create_domain_user()
                  domainwidget.informational->setTextColor("Green");
                  domainwidget.informational->setText("SUCCESS - The following user has been created and a PDF named " + user.get_SamAccountName() + ".pdf has been generated and saved on your desktop <file path>.\nPresent it via encrypted email to the end user.\n\n\nEmployee name: " + user.get_Name() +"\nUsername: " + user.get_SamAccountName() + "\nEmail address: " + user.get_Mail() + "\nDisplay name: " + domainwidget.display_name_edit->text() +
                                                      "\nOrganizational unit: " + user.get_OU_CN() + "\nUser Principal Name: " + user.get_UPN() + "\nGroups: " + user.get_Groups().join(" , ") + "\nPassword: " + domainwidget.password_edit->text());
+
+
+                 user.Set_URL_Image_Path("");
+                 user.Dump_User_Form("<html> <h1> <center> The following information pretains to the new user request that you have submitted: </center> </h1> <br><br><br> <body> <strong> Employee name: </strong> " + user.get_Name() +
+                                     "<br> <strong> Username: </strong> " + user.get_SamAccountName() + " <br> <strong> Email address: </strong> " + user.get_Mail() +
+                                     "<br> <strong> Password: </strong> " + domainwidget.password_edit->text() + " <br> <strong> Groups: </strong> " + user.get_Groups().join(" , ") +
+                                     "<br> <strong> Template user provided: </strong> " + domainwidget.template_user_combo->currentText() +
+                                     "</body> </html>", user.List_URL_Image_Path(), user.get_Name()
+                             );
              }
              if(domainwidget.primary_proxy_edit->text().length() <= 0 && domainwidget.secondary_proxy_edit->text().length() > 0 && domainwidget.display_name_edit->text().length() > 0)
              {
@@ -626,6 +379,15 @@ void MainWindow::create_domain_user()
                  domainwidget.informational->setTextColor("Green");
                  domainwidget.informational->setText("SUCCESS - The following user has been created and a PDF named " + user.get_SamAccountName() + ".pdf has been generated and saved on your desktop <file path>.\nPresent it via encrypted email to the end user.\n\n\nEmployee name: " + user.get_Name() +"\nUsername: " + user.get_SamAccountName() + "\nEmail address: " + user.get_Mail() + "\nDisplay name: " + domainwidget.display_name_edit->text() +
                                                      "\nOrganizational unit: " + user.get_OU_CN() + "\nUser Principal Name: " + user.get_UPN() + "\nGroups: " + user.get_Groups().join(" , ") + "\nPassword: " + domainwidget.password_edit->text());
+
+
+                 user.Set_URL_Image_Path("");
+                 user.Dump_User_Form("<html> <h1> <center> The following information pretains to the new user request that you have submitted: </center> </h1> <br><br><br> <body> <strong> Employee name: </strong> " + user.get_Name() +
+                                     "<br> <strong> Username: </strong> " + user.get_SamAccountName() + " <br> <strong> Email address: </strong> " + user.get_Mail() +
+                                     "<br> <strong> Password: </strong> " + domainwidget.password_edit->text() + " <br> <strong> Groups: </strong> " + user.get_Groups().join(" , ") +
+                                     "<br> <strong> Template user provided: </strong> " + domainwidget.template_user_combo->currentText() +
+                                     "</body> </html>", user.List_URL_Image_Path(), user.get_Name()
+                             );
 
              }
              if(domainwidget.primary_proxy_edit->text().length() <= 0 && domainwidget.secondary_proxy_edit->text().length() <= 0 && domainwidget.display_name_edit->text().length() > 0)
@@ -652,6 +414,15 @@ void MainWindow::create_domain_user()
                                                      "\nOrganizational unit: " + user.get_OU_CN() + "\nUser Principal Name: " + user.get_UPN() + "\nGroups: " + user.get_Groups().join(" , ") + "\nPassword: " + domainwidget.password_edit->text());
 
 
+                 user.Set_URL_Image_Path("");
+                 user.Dump_User_Form("<html> <h1> <center> The following information pretains to the new user request that you have submitted: </center> </h1> <br><br><br> <body> <strong> Employee name: </strong> " + user.get_Name() +
+                                     "<br> <strong> Username: </strong> " + user.get_SamAccountName() + " <br> <strong> Email address: </strong> " + user.get_Mail() +
+                                     "<br> <strong> Password: </strong> " + domainwidget.password_edit->text() + " <br> <strong> Groups: </strong> " + user.get_Groups().join(" , ") +
+                                     "<br> <strong> Template user provided: </strong> " + domainwidget.template_user_combo->currentText() +
+                                     "</body> </html>", user.List_URL_Image_Path(), user.get_Name()
+                             );
+
+
              }
              if(domainwidget.primary_proxy_edit->text().length() <= 0 && domainwidget.secondary_proxy_edit->text().length() <= 0 && domainwidget.display_name_edit->text().length() <= 0)
              {
@@ -676,6 +447,14 @@ void MainWindow::create_domain_user()
                  domainwidget.informational->setTextColor("Green");
                  domainwidget.informational->setText("SUCCESS - The following user has been created and a PDF named " + user.get_SamAccountName() + ".pdf has been generated and saved on your desktop <file path>.\nPresent it via encrypted email to the end user.\n\n\nEmployee name: " + user.get_Name() +"\nUsername: " + user.get_SamAccountName() + "\nEmail address: " + user.get_Mail() + "\nDisplay name: " + user.get_DisplayName() +
                                                      "\nOrganizational unit: " + user.get_OU_CN() + "\nUser Principal Name: " + user.get_UPN() + "\nGroups: " + user.get_Groups().join(" , ") + "\nPassword: " + domainwidget.password_edit->text());
+
+                 user.Set_URL_Image_Path("");
+                 user.Dump_User_Form("<html> <h1> <center> The following information pretains to the new user request that you have submitted: </center> </h1> <br><br><br> <body> <strong> Employee name: </strong> " + user.get_Name() +
+                                     "<br> <strong> Username: </strong> " + user.get_SamAccountName() + " <br> <strong> Email address: </strong> " + user.get_Mail() +
+                                     "<br> <strong> Password: </strong> " + domainwidget.password_edit->text() + " <br> <strong> Groups: </strong> " + user.get_Groups().join(" , ") +
+                                     "<br> <strong> Template user provided: </strong> " + domainwidget.template_user_combo->currentText() +
+                                     "</body> </html>", user.List_URL_Image_Path(), user.get_Name()
+                             );
 
              }
          }
@@ -752,6 +531,7 @@ void MainWindow::Automate()
         domainwidget.employee_name_edit->setText(user.get_Name());
         domainwidget.user_edit->show();
         domainwidget.user_edit->setText(user.get_SamAccountName());
+        domainwidget.password_edit->setPlaceholderText("Minimum password length " + user.List_ActiveSP_length() + " Complexity on: " + user.List_ActiveSP_Complexity());
         domainwidget.password_edit->show();
         domainwidget.email_edit->show();
         domainwidget.email_edit->setText(user.get_Mail());

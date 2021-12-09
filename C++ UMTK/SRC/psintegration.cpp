@@ -2,7 +2,7 @@
 
 PSIntegration::PSIntegration()
 {
-
+    image = "";
 }
 
 
@@ -192,10 +192,10 @@ QString PSIntegration::Clean_String(QString str)
 
 QString PSIntegration::Execute(QString param)
 {
-    /*
-     *
-     *
-     *
+    /* Implement QProcess with Lambda and forgoe usage of waitForFinished(-1) to prevent GUI hard locks and improve general performance.
+     * Also need to implement a process bar to give some indication on time duration to not frighten people.
+     * Could even use https://www.qt.io/blog/2017/08/25/a-new-qprocessstartdetached which is great but since I went from 5.2.x to 6.2.x I never knew this was implemented.
+     * Running detached and using the same session would also work.
      */
 
     QProcess *process = new QProcess();
@@ -207,6 +207,7 @@ QString PSIntegration::Execute(QString param)
     process->waitForFinished(-1);
     success.append(process->readAllStandardOutput());
     error.append(process->readAllStandardError());
+    qDebug() << error;
     process->terminate();
     QString data = QString(success);
     return data;
@@ -312,6 +313,11 @@ QString PSIntegration::Run_Azure_Sync(bool var)
     {
         return QString("The ADSync module is not installed here. If this client uses Azure AD Sync please get on the server with the AD Sync module and execute the following command: \n Import-Module ADSync; Start-ADSyncSyncCycle -PolicyType "+ QString("\"") + "Delta" + QString("\""));
     }
+}
+
+QString PSIntegration::List_URL_Image_Path()
+{
+    return image;
 }
 
 bool PSIntegration::Employee_Name_Exists(QStringList names, QString new_name)
@@ -527,10 +533,40 @@ void PSIntegration::Move_ADUser_Orgranizational_Unit(QString User_CN, QString Te
     Execute("Move-ADObject -Identity " + QString("\"") + User_CN + QString("\"") + " -TargetPath " + QString("\"") + Template_OU_Distinguished + QString("\""));
 }
 
+void PSIntegration::Dump_User_Form(QString data, QUrl image_path, QString name)
+{
+    /* I'm going to take the same HTML approach as I did in the PowerShell version.
+     * The string will be built with the HTML tags. For this reason the provided image
+     * needs to be in the QUrl format
+     */
+    if(image_path.isEmpty())
+    {
+        // ignore variaible and use just the contents of data.
+        QString path;
 
+        path = Clean_String(Execute("$t = (Get-ItemProperty -Path 'HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\User Shell Folders\\' -Name Desktop | Select-Object Desktop -ErrorAction SilentlyContinue); "
+                       "if($null -ne $t.Desktop) {$str = $t.Desktop.toString() + " + QString("\"") + "\\" + QString("\"") + "; return $str } else {$str = $ENV:USERPROFILE + " + QString("\"") + "\\Downloads\\; return $str" + QString("\"") + "}"
+                    ));
+        QTextDocument document;
+        document.setHtml(data);
+        QPrinter printer(QPrinter::PrinterResolution);
+        printer.setOutputFormat(QPrinter::PdfFormat);
+        printer.setPageSize(QPageSize::A4);
+        printer.setOutputFileName(path + name + ".pdf");
+        printer.setPageMargins(QMarginsF(15, 15, 15, 15));
 
+        document.print(&printer);
+    }
+    else if(!image_path.isEmpty())
+    {
+        // Use the path and include it in the string.
+    }
+}
 
-
+void PSIntegration::Set_URL_Image_Path(QString path)
+{
+    image = path;
+}
 
 
 

@@ -5,6 +5,12 @@
 #include <QProcess>
 #include <QRegularExpressionMatch>
 #include <QRegularExpression>
+#include <QTextStream>
+#include <QUrl>
+#include <QPdfWriter>
+#include <QPainter>
+#include <QTextDocument>
+#include <QPrinter>
 
 class PSIntegration
 {
@@ -17,6 +23,8 @@ public:
     void Set_DDPP_active(QString MinLength, QString Complexity); // Configure the default domain policy as active for this specific user.
     void Set_APP_active(QString MinLength, QString Complexity); // Configure an arbitrary password policy with min length = 10 and complexity = true
     void Move_ADUser_Orgranizational_Unit(QString User_CN, QString Template_OU_Distinguished); // Move the specified user to the specified OU.
+    void Dump_User_Form(QString data, QUrl image_path, QString name); // Take the contents of the data and draw it on a pdf. If chosen you can supply an image to paint as well.
+    void Set_URL_Image_Path(QString url); // Set the path to the image
 
 
     bool Validate_Password(QString pword, QString MinPasswordLength, QString ComplexityEnabled); // Validate whether or not the password meets the requirements of the policy.
@@ -40,7 +48,7 @@ public:
     QString List_ActiveSP_Complexity(); // List the active security policy complexity status for this specific user.
     QString List_ActiveSP_length(); // List the active security policy minimum length for this specific user.
     QString Run_Azure_Sync(bool var); // Execute an Azure AD Sync if possible.
-
+    QString List_URL_Image_Path(); // dump the path to the url image.
 
     QStringList List_All_OU_DNs(); // Return the Distinguished name of all Organizational units. // Done
     QStringList List_All_OU_CNs(); // Return the clean name of all Organizational units // Done
@@ -52,6 +60,9 @@ public:
     QStringList List_All_Forests(); // List all of the AD forest names - Done
     QStringList List_All_Domain_Users(); // List the names of all domain users
     QStringList Execute_Command(QString param); // Launch an elevated ps session and execute a command that returns a QStringList - Done
+
+protected:
+    QString image;
 
 private:
 
