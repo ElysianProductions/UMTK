@@ -34,7 +34,6 @@ public:
     bool Validate_Email_Address(QString email_address); // Validate whether or not their is a duplicate email address.
 
 
-
     QString User_Exists(QString SamName); // Validate whether or not a user with <SamAccountName> already exists - Done
     QString List_User_Identifier(QString name); // List the UPN - Done
     QString List_User_DN(QString name); // User distinguished name - Done
@@ -49,6 +48,8 @@ public:
     QString List_ActiveSP_length(); // List the active security policy minimum length for this specific user.
     QString Run_Azure_Sync(bool var); // Execute an Azure AD Sync if possible.
     QString List_URL_Image_Path(); // dump the path to the url image.
+    QString List_User_UserPrincipalName(QString name); // List the UserPrincipalName property of the specified user.
+    QString List_User_DisplayName(QString name); // List the displayName property of the specified user.
 
     QStringList List_All_OU_DNs(); // Return the Distinguished name of all Organizational units. // Done
     QStringList List_All_OU_CNs(); // Return the clean name of all Organizational units // Done

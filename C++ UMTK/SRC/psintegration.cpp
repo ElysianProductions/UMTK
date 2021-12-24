@@ -5,7 +5,6 @@ PSIntegration::PSIntegration()
     image = "";
 }
 
-
 QStringList PSIntegration::Execute_Command(QString param)
 {
     /*
@@ -311,13 +310,23 @@ QString PSIntegration::Run_Azure_Sync(bool var)
     }
     else if(!var)
     {
-        return QString("The ADSync module is not installed here. If this client uses Azure AD Sync please get on the server with the AD Sync module and execute the following command: \n Import-Module ADSync; Start-ADSyncSyncCycle -PolicyType "+ QString("\"") + "Delta" + QString("\""));
+        return QString("\nThe ADSync module is not installed here. If this client uses Azure AD Sync please get on the server with the AD Sync module and execute the following command: \n Import-Module ADSync; Start-ADSyncSyncCycle -PolicyType "+ QString("\"") + "Delta" + QString("\""));
     }
 }
 
 QString PSIntegration::List_URL_Image_Path()
 {
     return image;
+}
+
+QString PSIntegration::List_User_UserPrincipalName(QString name)
+{
+    return Clean_String(Execute("(Get-ADUser -Filter {Name -Like "  + QString("\"") + name + QString("\"") + "} | Select-Object -ExpandProperty UserPrincipalName)"));
+}
+
+QString PSIntegration::List_User_DisplayName(QString name)
+{
+    return Clean_String(Execute("(Get-ADUser -Filter {Name -Like " + QString("\"") + name + QString("\"") + "} -Properties displayName).displayName"));
 }
 
 bool PSIntegration::Employee_Name_Exists(QStringList names, QString new_name)

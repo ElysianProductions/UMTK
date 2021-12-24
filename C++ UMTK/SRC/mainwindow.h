@@ -16,17 +16,6 @@
 #include "editwidget.h"
 #include "newuser.h"
 
-#ifdef __linux__
-    // Linux shit
-#elif _WIN32
-    #include "windows.h"
-    #include "combaseapi.h"
-    #include "shellapi.h"
-    #include "LMaccess.h"
-#elif __APPLE__
-    // MAC shit
-#endif
-
 
 /*
     __linux__       Defined on Linux
@@ -53,6 +42,7 @@ class MainWindow : public QMainWindow
 public:
     MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
+
     void launch_local_widget();
     void launch_server_widget();
     void launch_edit_user_widget();;
@@ -66,6 +56,8 @@ public:
     void initialize_warning_banner();
     void create_local_user();
     void create_domain_user();
+    void edit_domain_user();
+
 
     QFrame *main_frame;
     QStackedWidget *key_widget;
@@ -114,6 +106,7 @@ private:
 
     void clear_ui();
     void Automate();
+    void Automate_Edit_User();
 
 };
 #endif // MAINWINDOW_H

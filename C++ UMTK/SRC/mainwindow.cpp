@@ -16,7 +16,7 @@ MainWindow::MainWindow(QWidget *parent)
     key_widget->addWidget(mainwidget.get_widget());
     key_widget->insertWidget(1, domainwidget.get_widget());
     key_widget->insertWidget(2, localwidget.get_widget());
-    //key_widget->insertWidget(2, editwidget.get_widget());
+    key_widget->insertWidget(3, editwidget.get_widget());
     initialize_main_window();
     initialize_actions();
     initialize_menus();
@@ -48,7 +48,10 @@ void MainWindow::initialize_connections()
       connect(localwidget.cancel_button, &QPushButton::clicked, this, &MainWindow::close_local_widget);
       connect(localwidget.create_button, &QPushButton::clicked, this, &MainWindow::create_local_user);
       connect(domainwidget.generate_button, &QPushButton::clicked, this, &MainWindow::Automate);
-
+      connect(mainwidget.edit_user_button, &QPushButton::clicked, this, &MainWindow::launch_edit_user_widget);
+      connect(editwidget.edit_button, &QPushButton::clicked, this, &MainWindow::edit_domain_user);
+      connect(editwidget.cancel_button, &QPushButton::clicked, this, &MainWindow::close_edit_user_widget);
+      connect(editwidget.load_button, &QPushButton::clicked, this, &MainWindow::Automate_Edit_User);
 }
 
 void MainWindow::initialize_actions()
@@ -123,7 +126,7 @@ void MainWindow::launch_server_widget()
 
 void MainWindow::launch_edit_user_widget()
  {
-
+      key_widget->setCurrentIndex(3);
  }
 
 void MainWindow::close_local_widget()
@@ -138,7 +141,7 @@ void MainWindow::close_server_widget()
 
 void MainWindow::close_edit_user_widget()
  {
-
+     key_widget->setCurrentIndex(0);
  }
 
 void MainWindow::create_local_user()
@@ -205,43 +208,54 @@ void MainWindow::create_local_user()
 
 void MainWindow::create_domain_user()
  {
+     QString error = "";
+     bool errorDetected = false;
 
      if(user.User_Exists(user.get_SamAccountName()) == "Yes")
-     {
-         domainwidget.informational->setTextColor("Red");
-         domainwidget.informational->setText("WARNING: The username " + user.get_SamAccountName() + " already exists. Please select a new one.");
+     { 
+         error = error + "\nWARNING: The username " + user.get_SamAccountName() + " already exists. Please select a new one.\n";
+         errorDetected = true;
          domainwidget.user_edit->setText("");
      }
      if(domainwidget.password_edit->text().length() <= 0 || domainwidget.password_edit->text().length() < user.List_ActiveSP_length().toInt())
      {
-         domainwidget.informational->setTextColor("Red");
-         domainwidget.informational->setText("WARNING: The password " + domainwidget.password_edit->text() + " does not meet the minimum length requirements.\n Your password must be at least " + user.List_ActiveSP_length() + " characters long.");
+         errorDetected = true;
+         error = error + "\nWARNING: The password " + domainwidget.password_edit->text() + " does not meet the minimum length requirements.\n Your password must be at least " + user.List_ActiveSP_length() + " characters long.\n";
          domainwidget.password_edit->setText("");
      }
      if(user.List_ActiveSP_Complexity() == "True" && user.Validate_Password(domainwidget.password_edit->text(), user.List_ActiveSP_length(), user.List_ActiveSP_Complexity()) == false)
      {
-         domainwidget.informational->setTextColor("Red");
-         domainwidget.informational->setText("WARNING: The password " + domainwidget.password_edit->text() + " does not meet the complexity requirements.\n Your password must have at least one of the following: \nOne upper case letter"
-                                                                                                             "\n One lower case letter. \nOne number\nOne Special character");
+         errorDetected = true;
+         error = error + "\nWARNING: The password " + domainwidget.password_edit->text() + " does not meet the complexity requirements.\n Your password must have at least one of the following: \nOne upper case letter"
+                                                                                           "\n One lower case letter. \nOne number\nOne Special character\n";
          domainwidget.password_edit->setText("");
      }
      if(user.Employee_Name_Exists(user.List_All_Domain_Users(), user.get_Name()))
      {
-         domainwidget.informational->setTextColor("Red");
-         domainwidget.informational->setText("WARNING: We found a person with the same name as " + user.get_Name() + " Please change the new users name. Consider using their initials or some other variation of their name.");
+         error = error + "\nWARNING: We found a person with the same name as " + user.get_Name() + " Please change the new users name. Consider using their initials or some other variation of their name.\n";
+         errorDetected = true;
          domainwidget.employee_name_edit->setText("");
      }
      // insert check for duplicate email address
      // insert check for duplicate upn
+     if(domainwidget.display_name_edit->text().length() > 0)
+     {
+         user.set_DisplayName(domainwidget.display_name_edit->text());
+     }
      if(user.get_UPN().length() <= 0)
      {
-         domainwidget.informational->setTextColor("Red");
-         domainwidget.informational->setText("WARNING: Your UPN appears to be empty. Please try again.");
+         error = error + "\nWARNING: Your UPN appears to be empty. Please try again.\n";
+         errorDetected = true;
      }
      if(!user.Validate_User_Status(domainwidget.template_user_combo->currentText()))
      {
+         error = error + "\nWARNING: The template user " + domainwidget.template_user_combo->currentText() + " is disabled. This means it likely has no groups. Please confirm that the user has the groups needed before creating this user.\n";
+         errorDetected = true;
+     }
+     if(errorDetected == true)
+     {
          domainwidget.informational->setTextColor("Red");
-         domainwidget.informational->setText("WARNING: The template user " + domainwidget.template_user_combo->currentText() + " is disabled. This means it likely has no groups. Please confirm that the user has the groups needed before creating this user.");
+         domainwidget.informational->setText(error);
      }
 
      if(user.User_Exists(user.get_SamAccountName()) == "No" && domainwidget.password_edit->text().length() >= user.List_ActiveSP_length().toInt() && user.Validate_Password(domainwidget.password_edit->text(), user.List_ActiveSP_length(), user.List_ActiveSP_Complexity()) == true && user.Employee_Name_Exists(user.List_All_Domain_Users(), user.get_Name()) == false && user.get_UPN().length() > 0)
@@ -279,12 +293,13 @@ void MainWindow::create_domain_user()
                  // insert auto print to pdf
 
                  domainwidget.informational->setTextColor("Green");
+                 QString azure = user.Run_Azure_Sync(user.Get_Azure_Status());
                  domainwidget.informational->setText("SUCCESS - The following user has been created and a PDF named " + user.get_SamAccountName() + ".pdf has been generated and saved on your desktop <file path>.\nPresent it via encrypted email to the end user.\n\n\nEmployee name: " + user.get_Name() +"\nUsername: " + user.get_SamAccountName() + "\nEmail address: " + user.get_Mail() + "\nDisplay name: " + domainwidget.display_name_edit->text() +
-                                                     "\nOrganizational unit: " + user.get_OU_CN() + "\nUser Principal Name: " + user.get_UPN() + "\nGroups: " + user.get_Groups().join(" , ") + "\nPassword: " + domainwidget.password_edit->text());
+                                                     "\nOrganizational unit: " + user.get_OU_CN() + "\nUser Principal Name: " + user.get_UPN() + "\nGroups: " + user.get_Groups().join(" , ") + "\nPassword: " + domainwidget.password_edit->text() + "\n\n" + azure);
 
 
                  user.Set_URL_Image_Path("");
-                 user.Dump_User_Form("<html> <h1> <center> The following information pretains to the new user request that you have submitted: </center> </h1> <br><br><br> <body> <strong> Employee name: </strong> " + user.get_Name() +
+                 user.Dump_User_Form("<html> <h1> <center> The following information pertains to the new user request that you have submitted: </center> </h1> <br><br><br> <body> <strong> Employee name: </strong> " + user.get_Name() +
                                      "<br> <strong> Username: </strong> " + user.get_SamAccountName() + " <br> <strong> Email address: </strong> " + user.get_Mail() +
                                      "<br> <strong> Password: </strong> " + domainwidget.password_edit->text() + " <br> <strong> Groups: </strong> " + user.get_Groups().join(" , ") +
                                      "<br> <strong> Template user provided: </strong> " + domainwidget.template_user_combo->currentText() +
@@ -313,12 +328,13 @@ void MainWindow::create_domain_user()
                  // insert auto print to pdf
 
                  domainwidget.informational->setTextColor("Green");
+                 QString azure = user.Run_Azure_Sync(user.Get_Azure_Status());
                  domainwidget.informational->setText("SUCCESS - The following user has been created and a PDF named " + user.get_SamAccountName() + ".pdf has been generated and saved on your desktop <file path>.\nPresent it via encrypted email to the end user.\n\n\nEmployee name: " + user.get_Name() +"\nUsername: " + user.get_SamAccountName() + "\nEmail address: " + user.get_Mail() + "\nDisplay name: " + user.get_DisplayName() +
-                                                     "\nOrganizational unit: " + user.get_OU_CN() + "\nUser Principal Name: " + user.get_UPN() + "\nGroups: " + user.get_Groups().join(" , ") + "\nPassword: " + domainwidget.password_edit->text());
+                                                     "\nOrganizational unit: " + user.get_OU_CN() + "\nUser Principal Name: " + user.get_UPN() + "\nGroups: " + user.get_Groups().join(" , ") + "\nPassword: " + domainwidget.password_edit->text() + "\n\n" + azure);
 
 
                  user.Set_URL_Image_Path("");
-                 user.Dump_User_Form("<html> <h1> <center> The following information pretains to the new user request that you have submitted: </center> </h1> <br><br><br> <body> <strong> Employee name: </strong> " + user.get_Name() +
+                 user.Dump_User_Form("<html> <h1> <center> The following information pertains to the new user request that you have submitted: </center> </h1> <br><br><br> <body> <strong> Employee name: </strong> " + user.get_Name() +
                                      "<br> <strong> Username: </strong> " + user.get_SamAccountName() + " <br> <strong> Email address: </strong> " + user.get_Mail() +
                                      "<br> <strong> Password: </strong> " + domainwidget.password_edit->text() + " <br> <strong> Groups: </strong> " + user.get_Groups().join(" , ") +
                                      "<br> <strong> Template user provided: </strong> " + domainwidget.template_user_combo->currentText() +
@@ -345,12 +361,13 @@ void MainWindow::create_domain_user()
                  // insert auto print to pdf
 
                  domainwidget.informational->setTextColor("Green");
+                 QString azure = user.Run_Azure_Sync(user.Get_Azure_Status());
                  domainwidget.informational->setText("SUCCESS - The following user has been created and a PDF named " + user.get_SamAccountName() + ".pdf has been generated and saved on your desktop <file path>.\nPresent it via encrypted email to the end user.\n\n\nEmployee name: " + user.get_Name() +"\nUsername: " + user.get_SamAccountName() + "\nEmail address: " + user.get_Mail() + "\nDisplay name: " + domainwidget.display_name_edit->text() +
-                                                     "\nOrganizational unit: " + user.get_OU_CN() + "\nUser Principal Name: " + user.get_UPN() + "\nGroups: " + user.get_Groups().join(" , ") + "\nPassword: " + domainwidget.password_edit->text());
+                                                     "\nOrganizational unit: " + user.get_OU_CN() + "\nUser Principal Name: " + user.get_UPN() + "\nGroups: " + user.get_Groups().join(" , ") + "\nPassword: " + domainwidget.password_edit->text() + "\n\n" + azure);
 
 
                  user.Set_URL_Image_Path("");
-                 user.Dump_User_Form("<html> <h1> <center> The following information pretains to the new user request that you have submitted: </center> </h1> <br><br><br> <body> <strong> Employee name: </strong> " + user.get_Name() +
+                 user.Dump_User_Form("<html> <h1> <center> The following information pertains to the new user request that you have submitted: </center> </h1> <br><br><br> <body> <strong> Employee name: </strong> " + user.get_Name() +
                                      "<br> <strong> Username: </strong> " + user.get_SamAccountName() + " <br> <strong> Email address: </strong> " + user.get_Mail() +
                                      "<br> <strong> Password: </strong> " + domainwidget.password_edit->text() + " <br> <strong> Groups: </strong> " + user.get_Groups().join(" , ") +
                                      "<br> <strong> Template user provided: </strong> " + domainwidget.template_user_combo->currentText() +
@@ -377,12 +394,13 @@ void MainWindow::create_domain_user()
                  // insert auto print to pdf
 
                  domainwidget.informational->setTextColor("Green");
+                 QString azure = user.Run_Azure_Sync(user.Get_Azure_Status());
                  domainwidget.informational->setText("SUCCESS - The following user has been created and a PDF named " + user.get_SamAccountName() + ".pdf has been generated and saved on your desktop <file path>.\nPresent it via encrypted email to the end user.\n\n\nEmployee name: " + user.get_Name() +"\nUsername: " + user.get_SamAccountName() + "\nEmail address: " + user.get_Mail() + "\nDisplay name: " + domainwidget.display_name_edit->text() +
-                                                     "\nOrganizational unit: " + user.get_OU_CN() + "\nUser Principal Name: " + user.get_UPN() + "\nGroups: " + user.get_Groups().join(" , ") + "\nPassword: " + domainwidget.password_edit->text());
+                                                     "\nOrganizational unit: " + user.get_OU_CN() + "\nUser Principal Name: " + user.get_UPN() + "\nGroups: " + user.get_Groups().join(" , ") + "\nPassword: " + domainwidget.password_edit->text() + "\n\n" + azure);
 
 
                  user.Set_URL_Image_Path("");
-                 user.Dump_User_Form("<html> <h1> <center> The following information pretains to the new user request that you have submitted: </center> </h1> <br><br><br> <body> <strong> Employee name: </strong> " + user.get_Name() +
+                 user.Dump_User_Form("<html> <h1> <center> The following information pertains to the new user request that you have submitted: </center> </h1> <br><br><br> <body> <strong> Employee name: </strong> " + user.get_Name() +
                                      "<br> <strong> Username: </strong> " + user.get_SamAccountName() + " <br> <strong> Email address: </strong> " + user.get_Mail() +
                                      "<br> <strong> Password: </strong> " + domainwidget.password_edit->text() + " <br> <strong> Groups: </strong> " + user.get_Groups().join(" , ") +
                                      "<br> <strong> Template user provided: </strong> " + domainwidget.template_user_combo->currentText() +
@@ -410,12 +428,13 @@ void MainWindow::create_domain_user()
                  // insert auto print to pdf
 
                  domainwidget.informational->setTextColor("Green");
+                 QString azure = user.Run_Azure_Sync(user.Get_Azure_Status());
                  domainwidget.informational->setText("SUCCESS - The following user has been created and a PDF named " + user.get_SamAccountName() + ".pdf has been generated and saved on your desktop <file path>.\nPresent it via encrypted email to the end user.\n\n\nEmployee name: " + user.get_Name() +"\nUsername: " + user.get_SamAccountName() + "\nEmail address: " + user.get_Mail() + "\nDisplay name: " + domainwidget.display_name_edit->text() +
-                                                     "\nOrganizational unit: " + user.get_OU_CN() + "\nUser Principal Name: " + user.get_UPN() + "\nGroups: " + user.get_Groups().join(" , ") + "\nPassword: " + domainwidget.password_edit->text());
+                                                     "\nOrganizational unit: " + user.get_OU_CN() + "\nUser Principal Name: " + user.get_UPN() + "\nGroups: " + user.get_Groups().join(" , ") + "\nPassword: " + domainwidget.password_edit->text() + "\n\n" + azure);
 
 
                  user.Set_URL_Image_Path("");
-                 user.Dump_User_Form("<html> <h1> <center> The following information pretains to the new user request that you have submitted: </center> </h1> <br><br><br> <body> <strong> Employee name: </strong> " + user.get_Name() +
+                 user.Dump_User_Form("<html> <h1> <center> The following information pertains to the new user request that you have submitted: </center> </h1> <br><br><br> <body> <strong> Employee name: </strong> " + user.get_Name() +
                                      "<br> <strong> Username: </strong> " + user.get_SamAccountName() + " <br> <strong> Email address: </strong> " + user.get_Mail() +
                                      "<br> <strong> Password: </strong> " + domainwidget.password_edit->text() + " <br> <strong> Groups: </strong> " + user.get_Groups().join(" , ") +
                                      "<br> <strong> Template user provided: </strong> " + domainwidget.template_user_combo->currentText() +
@@ -445,11 +464,16 @@ void MainWindow::create_domain_user()
                  // insert auto print to pdf
 
                  domainwidget.informational->setTextColor("Green");
+
+                 QString azure = user.Run_Azure_Sync(user.Get_Azure_Status());
                  domainwidget.informational->setText("SUCCESS - The following user has been created and a PDF named " + user.get_SamAccountName() + ".pdf has been generated and saved on your desktop <file path>.\nPresent it via encrypted email to the end user.\n\n\nEmployee name: " + user.get_Name() +"\nUsername: " + user.get_SamAccountName() + "\nEmail address: " + user.get_Mail() + "\nDisplay name: " + user.get_DisplayName() +
-                                                     "\nOrganizational unit: " + user.get_OU_CN() + "\nUser Principal Name: " + user.get_UPN() + "\nGroups: " + user.get_Groups().join(" , ") + "\nPassword: " + domainwidget.password_edit->text());
+                                                     "\nOrganizational unit: " + user.get_OU_CN() + "\nUser Principal Name: " + user.get_UPN() + "\nGroups: " + user.get_Groups().join(" , ") + "\nPassword: " + domainwidget.password_edit->text() + "\n\n" + azure);
+
+
+
 
                  user.Set_URL_Image_Path("");
-                 user.Dump_User_Form("<html> <h1> <center> The following information pretains to the new user request that you have submitted: </center> </h1> <br><br><br> <body> <strong> Employee name: </strong> " + user.get_Name() +
+                 user.Dump_User_Form("<html> <h1> <center> The following information pertains to the new user request that you have submitted: </center> </h1> <br><br><br> <body> <strong> Employee name: </strong> " + user.get_Name() +
                                      "<br> <strong> Username: </strong> " + user.get_SamAccountName() + " <br> <strong> Email address: </strong> " + user.get_Mail() +
                                      "<br> <strong> Password: </strong> " + domainwidget.password_edit->text() + " <br> <strong> Groups: </strong> " + user.get_Groups().join(" , ") +
                                      "<br> <strong> Template user provided: </strong> " + domainwidget.template_user_combo->currentText() +
@@ -466,6 +490,11 @@ void MainWindow::create_domain_user()
      }
 
  }
+
+void MainWindow::edit_domain_user()
+{
+
+}
 
 void MainWindow::clear_ui()
  {
@@ -549,4 +578,51 @@ void MainWindow::Automate()
     }
 }
 
+void MainWindow::Automate_Edit_User()
+{
+    if(editwidget.user_combo->currentText().length() > 0)
+     {
+        editwidget.givenname_edit->setText(editwidget.user_combo->currentText().split(" ").first());
+        editwidget.surname_edit->setText(editwidget.user_combo->currentText().split(" ").last());
+        editwidget.username_edit->setText(user.List_SamAccountName(editwidget.user_combo->currentText()));
+        editwidget.password_edit->setPlaceholderText("Input new password");
+        editwidget.email_edit->setText(user.List_Mail(editwidget.user_combo->currentText()));
+        editwidget.displayname_edit->setText(user.List_User_DisplayName(editwidget.user_combo->currentText()));
+        QStringList tmp_upn = user.List_All_UPNs();
 
+        for(int i = 0; i < editwidget.upn_combo->count(); ++i)
+        {
+            if(user.List_User_Identifier(user.List_Name(editwidget.user_combo->currentText())) == tmp_upn.at(i))
+            {
+                editwidget.upn_combo->setCurrentIndex(i);
+            }
+        }
+
+        QStringList tmp_ou_cn = user.List_All_OU_CNs();
+
+        for(int i = 0; i < editwidget.ou_combo->count(); ++i)
+        {
+            if(user.List_User_OU_CN(editwidget.user_combo->currentText()) == tmp_ou_cn.at(i))
+            {
+                editwidget.ou_combo->setCurrentIndex(i);
+            }
+        }
+
+
+
+        editwidget.surname_edit->show();
+        editwidget.givenname_edit->show();
+        editwidget.username_edit->show();
+        editwidget.upn_combo->show();
+        editwidget.ou_combo->show();
+        editwidget.current_groups_combo->show();
+        editwidget.password_edit->show();
+        editwidget.email_edit->show();
+     }
+     else
+     {
+
+     }
+
+
+}
