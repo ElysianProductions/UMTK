@@ -15,7 +15,7 @@
 #include "localwidget.h"
 #include "editwidget.h"
 #include "newuser.h"
-
+#include "disablewidget.h"
 
 /*
     __linux__       Defined on Linux
@@ -45,10 +45,12 @@ public:
 
     void launch_local_widget();
     void launch_server_widget();
-    void launch_edit_user_widget();;
+    void launch_edit_user_widget();
+    void launch_disable_user_widget();
     void close_local_widget();
     void close_server_widget();
     void close_edit_user_widget();
+    void close_disable_user_widget();
     void initialize_main_window();
     void initialize_connections();
     void initialize_actions();
@@ -82,6 +84,7 @@ private:
     LocalWidget localwidget;
     EditWidget editwidget;
     NewUser user;
+    DisableWidget disableuser;
 
     struct Local_User
     {
@@ -107,6 +110,7 @@ private:
     void clear_ui();
     void Automate();
     void Automate_Edit_User();
+    void disable_user();
 
 };
 #endif // MAINWINDOW_H

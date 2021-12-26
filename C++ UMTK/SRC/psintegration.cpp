@@ -577,7 +577,50 @@ void PSIntegration::Set_URL_Image_Path(QString path)
     image = path;
 }
 
+void PSIntegration::Edit_Full_Name(QString name, QString first, QString middle, QString last)
+{
 
+}
+
+void PSIntegration::Edit_Password(QString name, QString password)
+{
+
+}
+
+void PSIntegration::Edit_Display_Name(QString name, QString display_name)
+{
+
+}
+
+void PSIntegration::Edit_Proxy_Addresses(QString name, QStringList proxies)
+{
+
+}
+
+void PSIntegration::Edit_Email_Address(QString name, QString email)
+{
+
+}
+
+void PSIntegration::Edit_UserPrincipalName(QString name, QString upn)
+{
+
+}
+
+void PSIntegration::Edit_Group_Memebership(QString name, QStringList GroupsToAdd, QStringList GroupsToRemove)
+{
+
+}
+
+void PSIntegration::Edit_User_Status(QString name)
+{
+    /* https://docs.microsoft.com/en-us/powershell/module/activedirectory/disable-adaccount?view=windowsserver2022-ps
+     *
+     *
+     */
+    QString identity = List_SamAccountName(name);
+    QString result = Execute("Disable-ADAccount -Identity " + identity);
+}
 
 
 

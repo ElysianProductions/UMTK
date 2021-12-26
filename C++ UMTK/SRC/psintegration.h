@@ -26,6 +26,15 @@ public:
     void Dump_User_Form(QString data, QUrl image_path, QString name); // Take the contents of the data and draw it on a pdf. If chosen you can supply an image to paint as well.
     void Set_URL_Image_Path(QString url); // Set the path to the image
 
+    void Edit_Full_Name(QString name, QString first, QString middle, QString last);
+    void Edit_Password(QString name, QString password);
+    void Edit_Display_Name(QString name, QString display_name);
+    void Edit_Proxy_Addresses(QString name, QStringList proxies);
+    void Edit_Email_Address(QString name, QString email);
+    void Edit_UserPrincipalName(QString name, QString upn);
+    void Edit_Group_Memebership(QString name, QStringList GroupsToAdd, QStringList GroupsToRemove);
+    void Edit_User_Status(QString name); // Disable the user account
+
 
     bool Validate_Password(QString pword, QString MinPasswordLength, QString ComplexityEnabled); // Validate whether or not the password meets the requirements of the policy.
     bool Get_Azure_Status(); // Determine whether or not the Azure module is on the server.

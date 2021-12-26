@@ -17,6 +17,7 @@ MainWindow::MainWindow(QWidget *parent)
     key_widget->insertWidget(1, domainwidget.get_widget());
     key_widget->insertWidget(2, localwidget.get_widget());
     key_widget->insertWidget(3, editwidget.get_widget());
+    key_widget->insertWidget(4, disableuser.get_widget());
     initialize_main_window();
     initialize_actions();
     initialize_menus();
@@ -52,6 +53,10 @@ void MainWindow::initialize_connections()
       connect(editwidget.edit_button, &QPushButton::clicked, this, &MainWindow::edit_domain_user);
       connect(editwidget.cancel_button, &QPushButton::clicked, this, &MainWindow::close_edit_user_widget);
       connect(editwidget.load_button, &QPushButton::clicked, this, &MainWindow::Automate_Edit_User);
+      connect(mainwidget.disable_user_button, &QPushButton::clicked, this, &MainWindow::launch_disable_user_widget);
+      connect(disableuser.cancel_button, &QPushButton::clicked, this, &MainWindow::close_disable_user_widget);
+      connect(disableuser.disable_button, &QPushButton::clicked, this, &MainWindow::disable_user);
+
 }
 
 void MainWindow::initialize_actions()
@@ -125,9 +130,14 @@ void MainWindow::launch_server_widget()
  }
 
 void MainWindow::launch_edit_user_widget()
- {
+{
       key_widget->setCurrentIndex(3);
- }
+}
+
+void MainWindow::launch_disable_user_widget()
+{
+    key_widget->setCurrentIndex(4);
+}
 
 void MainWindow::close_local_widget()
  {
@@ -143,6 +153,11 @@ void MainWindow::close_edit_user_widget()
  {
      key_widget->setCurrentIndex(0);
  }
+
+void MainWindow::close_disable_user_widget()
+{
+    key_widget->setCurrentIndex(0);
+}
 
 void MainWindow::create_local_user()
  {
@@ -281,6 +296,7 @@ void MainWindow::create_domain_user()
                               " -DisplayName " + "\"" + domainwidget.display_name_edit->text() + "\"" + " -EmailAddress " + "\"" + user.get_Mail() + "\"" + " -SamAccountName " +
                               "\"" + user.get_SamAccountName() + "\"" + " -Enabled 1; exit");
 
+
                  user.Execute("$tmp = (Get-ADUser -Filter {Name -like \"" + domainwidget.template_user_combo->currentText() + "\"}); "
                               "$groups = (Get-ADUser $tmp -Properties MemberOf).MemberOf; $usr = \"" + user.get_SamAccountName() + "\"; "
                               "Foreach ($group in $groups) {Add-ADGroupMember -Identity (Get-ADGroup $group).name -Members $usr}; exit ");
@@ -294,7 +310,7 @@ void MainWindow::create_domain_user()
 
                  domainwidget.informational->setTextColor("Green");
                  QString azure = user.Run_Azure_Sync(user.Get_Azure_Status());
-                 domainwidget.informational->setText("SUCCESS - The following user has been created and a PDF named " + user.get_SamAccountName() + ".pdf has been generated and saved on your desktop <file path>.\nPresent it via encrypted email to the end user.\n\n\nEmployee name: " + user.get_Name() +"\nUsername: " + user.get_SamAccountName() + "\nEmail address: " + user.get_Mail() + "\nDisplay name: " + domainwidget.display_name_edit->text() +
+                 domainwidget.informational->setText("SUCCESS - The following user has been created and a PDF named " + user.get_SamAccountName() + ".pdf has been generated and saved on your desktop.\nPresent it via encrypted email to the end user.\n\n\nEmployee name: " + user.get_Name() +"\nUsername: " + user.get_SamAccountName() + "\nEmail address: " + user.get_Mail() + "\nDisplay name: " + domainwidget.display_name_edit->text() +
                                                      "\nOrganizational unit: " + user.get_OU_CN() + "\nUser Principal Name: " + user.get_UPN() + "\nGroups: " + user.get_Groups().join(" , ") + "\nPassword: " + domainwidget.password_edit->text() + "\n\n" + azure);
 
 
@@ -316,6 +332,7 @@ void MainWindow::create_domain_user()
                               " -DisplayName " + "\"" + user.get_DisplayName() + "\"" + " -EmailAddress " + "\"" + user.get_Mail() + "\"" + " -SamAccountName " +
                               "\"" + user.get_SamAccountName() + "\"" + " -Enabled 1; exit");
 
+
                  user.Execute("$tmp = (Get-ADUser -Filter {Name -like \"" + domainwidget.template_user_combo->currentText() + "\"}); "
                               "$groups = (Get-ADUser $tmp -Properties MemberOf).MemberOf; $usr = \"" + user.get_SamAccountName() + "\"; "
                               "Foreach ($group in $groups) {Add-ADGroupMember -Identity (Get-ADGroup $group).name -Members $usr}; exit ");
@@ -329,7 +346,7 @@ void MainWindow::create_domain_user()
 
                  domainwidget.informational->setTextColor("Green");
                  QString azure = user.Run_Azure_Sync(user.Get_Azure_Status());
-                 domainwidget.informational->setText("SUCCESS - The following user has been created and a PDF named " + user.get_SamAccountName() + ".pdf has been generated and saved on your desktop <file path>.\nPresent it via encrypted email to the end user.\n\n\nEmployee name: " + user.get_Name() +"\nUsername: " + user.get_SamAccountName() + "\nEmail address: " + user.get_Mail() + "\nDisplay name: " + user.get_DisplayName() +
+                 domainwidget.informational->setText("SUCCESS - The following user has been created and a PDF named " + user.get_SamAccountName() + ".pdf has been generated and saved on your desktop.\nPresent it via encrypted email to the end user.\n\n\nEmployee name: " + user.get_Name() +"\nUsername: " + user.get_SamAccountName() + "\nEmail address: " + user.get_Mail() + "\nDisplay name: " + user.get_DisplayName() +
                                                      "\nOrganizational unit: " + user.get_OU_CN() + "\nUser Principal Name: " + user.get_UPN() + "\nGroups: " + user.get_Groups().join(" , ") + "\nPassword: " + domainwidget.password_edit->text() + "\n\n" + azure);
 
 
@@ -345,10 +362,28 @@ void MainWindow::create_domain_user()
              {
                  QString p = "$p = " + QString("\"") + domainwidget.password_edit->text() + QString("\"") + "; $sec = $p | ConvertTo-SecureString -AsPlainText -Force; ";
 
-                 user.Execute(p + "New-ADUser -Name " + "\"" + user.get_Name() + "\"" + " -GivenName " + "\"" + user.get_GivenName() + "\"" +
+                 /*user.Execute(p + "New-ADUser -Name " + "\"" + user.get_Name() + "\"" + " -GivenName " + "\"" + user.get_GivenName() + "\"" +
                               " -Surname " + "\"" + user.get_SurName() + "\"" + " -AccountPassword $sec -UserPrincipalName " + "\"" + user.get_UPN() + "\"" +
                               " -DisplayName " + "\"" + domainwidget.display_name_edit->text() + "\"" + " -EmailAddress " + "\"" + user.get_Mail() + "\"" + " -SamAccountName " +
-                              "\"" + user.get_SamAccountName() + "\"" + " -Enabled 1; exit");
+                              "\"" + user.get_SamAccountName() + "\"" + " -Enabled 1; exit");*/
+
+
+
+                 if(user.get_OtherName().length() > 0)
+                 {
+                     user.Execute(p + "New-ADUser -Name " + "\"" + user.get_Name() + "\"" + " -GivenName " + "\"" + user.get_GivenName() + "\"" +
+                                  " -Surname " + "\"" + user.get_SurName() + "\"" + " -OtherName" + "\"" + user.get_OtherName() + "\"" + " -AccountPassword $sec -UserPrincipalName " + "\"" + user.get_UPN() + "\"" +
+                                  " -DisplayName " + "\"" + domainwidget.display_name_edit->text() + "\"" + " -EmailAddress " + "\"" + user.get_Mail() + "\"" + " -SamAccountName " +
+                                  "\"" + user.get_SamAccountName() + "\"" + " -Enabled 1; exit");
+                 }
+                 else if(user.get_OtherName().length() <= 0)
+                 {
+                     user.Execute(p + "New-ADUser -Name " + "\"" + user.get_Name() + "\"" + " -GivenName " + "\"" + user.get_GivenName() + "\"" +
+                                  " -Surname " + "\"" + user.get_SurName() + "\"" + " -AccountPassword $sec -UserPrincipalName " + "\"" + user.get_UPN() + "\"" +
+                                  " -DisplayName " + "\"" + domainwidget.display_name_edit->text() + "\"" + " -EmailAddress " + "\"" + user.get_Mail() + "\"" + " -SamAccountName " +
+                                  "\"" + user.get_SamAccountName() + "\"" + " -Enabled 1; exit");
+                 }
+
 
                  user.Execute(user.Clean_String("$tmp = (Get-ADUser -Filter {Name -like \"" + domainwidget.template_user_combo->currentText() + "\"}); "
                               "$groups = (Get-ADUser $tmp -Properties MemberOf).MemberOf; $usr = \"" + user.get_SamAccountName() + "\"; "
@@ -362,7 +397,7 @@ void MainWindow::create_domain_user()
 
                  domainwidget.informational->setTextColor("Green");
                  QString azure = user.Run_Azure_Sync(user.Get_Azure_Status());
-                 domainwidget.informational->setText("SUCCESS - The following user has been created and a PDF named " + user.get_SamAccountName() + ".pdf has been generated and saved on your desktop <file path>.\nPresent it via encrypted email to the end user.\n\n\nEmployee name: " + user.get_Name() +"\nUsername: " + user.get_SamAccountName() + "\nEmail address: " + user.get_Mail() + "\nDisplay name: " + domainwidget.display_name_edit->text() +
+                 domainwidget.informational->setText("SUCCESS - The following user has been created and a PDF named " + user.get_SamAccountName() + ".pdf has been generated and saved on your desktop.\nPresent it via encrypted email to the end user.\n\n\nEmployee name: " + user.get_Name() +"\nUsername: " + user.get_SamAccountName() + "\nEmail address: " + user.get_Mail() + "\nDisplay name: " + domainwidget.display_name_edit->text() +
                                                      "\nOrganizational unit: " + user.get_OU_CN() + "\nUser Principal Name: " + user.get_UPN() + "\nGroups: " + user.get_Groups().join(" , ") + "\nPassword: " + domainwidget.password_edit->text() + "\n\n" + azure);
 
 
@@ -383,6 +418,7 @@ void MainWindow::create_domain_user()
                               " -DisplayName " + "\"" + domainwidget.display_name_edit->text() + "\"" + " -EmailAddress " + "\"" + user.get_Mail() + "\"" + " -SamAccountName " +
                               "\"" + user.get_SamAccountName() + "\"" + " -Enabled 1; exit");
 
+
                  user.Execute("$tmp = (Get-ADUser -Filter {Name -like \"" + domainwidget.template_user_combo->currentText() + "\"}); "
                               "$groups = (Get-ADUser $tmp -Properties MemberOf).MemberOf; $usr = \"" + user.get_SamAccountName() + "\"; "
                               "Foreach ($group in $groups) {Add-ADGroupMember -Identity (Get-ADGroup $group).name -Members $usr}; exit ");
@@ -395,7 +431,7 @@ void MainWindow::create_domain_user()
 
                  domainwidget.informational->setTextColor("Green");
                  QString azure = user.Run_Azure_Sync(user.Get_Azure_Status());
-                 domainwidget.informational->setText("SUCCESS - The following user has been created and a PDF named " + user.get_SamAccountName() + ".pdf has been generated and saved on your desktop <file path>.\nPresent it via encrypted email to the end user.\n\n\nEmployee name: " + user.get_Name() +"\nUsername: " + user.get_SamAccountName() + "\nEmail address: " + user.get_Mail() + "\nDisplay name: " + domainwidget.display_name_edit->text() +
+                 domainwidget.informational->setText("SUCCESS - The following user has been created and a PDF named " + user.get_SamAccountName() + ".pdf has been generated and saved on your desktop.\nPresent it via encrypted email to the end user.\n\n\nEmployee name: " + user.get_Name() +"\nUsername: " + user.get_SamAccountName() + "\nEmail address: " + user.get_Mail() + "\nDisplay name: " + domainwidget.display_name_edit->text() +
                                                      "\nOrganizational unit: " + user.get_OU_CN() + "\nUser Principal Name: " + user.get_UPN() + "\nGroups: " + user.get_Groups().join(" , ") + "\nPassword: " + domainwidget.password_edit->text() + "\n\n" + azure);
 
 
@@ -429,7 +465,7 @@ void MainWindow::create_domain_user()
 
                  domainwidget.informational->setTextColor("Green");
                  QString azure = user.Run_Azure_Sync(user.Get_Azure_Status());
-                 domainwidget.informational->setText("SUCCESS - The following user has been created and a PDF named " + user.get_SamAccountName() + ".pdf has been generated and saved on your desktop <file path>.\nPresent it via encrypted email to the end user.\n\n\nEmployee name: " + user.get_Name() +"\nUsername: " + user.get_SamAccountName() + "\nEmail address: " + user.get_Mail() + "\nDisplay name: " + domainwidget.display_name_edit->text() +
+                 domainwidget.informational->setText("SUCCESS - The following user has been created and a PDF named " + user.get_SamAccountName() + ".pdf has been generated and saved on your desktop.\nPresent it via encrypted email to the end user.\n\n\nEmployee name: " + user.get_Name() +"\nUsername: " + user.get_SamAccountName() + "\nEmail address: " + user.get_Mail() + "\nDisplay name: " + domainwidget.display_name_edit->text() +
                                                      "\nOrganizational unit: " + user.get_OU_CN() + "\nUser Principal Name: " + user.get_UPN() + "\nGroups: " + user.get_Groups().join(" , ") + "\nPassword: " + domainwidget.password_edit->text() + "\n\n" + azure);
 
 
@@ -466,7 +502,7 @@ void MainWindow::create_domain_user()
                  domainwidget.informational->setTextColor("Green");
 
                  QString azure = user.Run_Azure_Sync(user.Get_Azure_Status());
-                 domainwidget.informational->setText("SUCCESS - The following user has been created and a PDF named " + user.get_SamAccountName() + ".pdf has been generated and saved on your desktop <file path>.\nPresent it via encrypted email to the end user.\n\n\nEmployee name: " + user.get_Name() +"\nUsername: " + user.get_SamAccountName() + "\nEmail address: " + user.get_Mail() + "\nDisplay name: " + user.get_DisplayName() +
+                 domainwidget.informational->setText("SUCCESS - The following user has been created and a PDF named " + user.get_SamAccountName() + ".pdf has been generated and saved on your desktop.\nPresent it via encrypted email to the end user.\n\n\nEmployee name: " + user.get_Name() +"\nUsername: " + user.get_SamAccountName() + "\nEmail address: " + user.get_Mail() + "\nDisplay name: " + user.get_DisplayName() +
                                                      "\nOrganizational unit: " + user.get_OU_CN() + "\nUser Principal Name: " + user.get_UPN() + "\nGroups: " + user.get_Groups().join(" , ") + "\nPassword: " + domainwidget.password_edit->text() + "\n\n" + azure);
 
 
@@ -518,10 +554,9 @@ void MainWindow::Automate()
         user.set_GivenName(Names.first());
         user.set_SurName(Names.last());
         user.set_DisplayName(user.get_Name());
-        if(Names.count() > 2)
+        if(Names.count() >= 2)
         {
-            user.set_OtherName(Names[2]);
-            qDebug() << user.get_OtherName();
+            user.set_OtherName(Names[1]);
         }
         user.set_SamAccountName(Names.first().at(0).toUpper() + Names.last().toLower());
         user.set_Identifier(user.List_User_Identifier(user.List_Name(domainwidget.template_user_combo->currentText())));
@@ -615,7 +650,7 @@ void MainWindow::Automate_Edit_User()
         editwidget.username_edit->show();
         editwidget.upn_combo->show();
         editwidget.ou_combo->show();
-        editwidget.current_groups_combo->show();
+        //editwidget.current_groups_combo->show();
         editwidget.password_edit->show();
         editwidget.email_edit->show();
      }
@@ -625,4 +660,20 @@ void MainWindow::Automate_Edit_User()
      }
 
 
+}
+
+void MainWindow::disable_user()
+{
+    QString name = disableuser.user_selection->currentText();
+    QString username = user.List_SamAccountName(name);
+    QString email = user.List_Mail(name);
+    QString OU_Clean = user.List_User_OU_CN(name);
+    QStringList Groups_Clean = user.List_User_Group_CNs(user.List_SamAccountName(name));
+    user.Edit_User_Status(name);
+    disableuser.informational->setText("The user " + name + " has been disabled.");
+    user.Dump_User_Form("<html> <h1> <center> The following information pertains to the disable user request that you have submitted: </center> </h1> <br><br><br> <body> <strong> Employee name: </strong> " + name +
+                        "<br> <strong> Username: </strong> " + username + " <br> <strong> Email address: </strong> " + email +
+                        "<br> <strong> Groups: </strong> " + user.get_Groups().join(" , ") +
+                        "</body> </html>", QUrl(""), name
+                );
 }

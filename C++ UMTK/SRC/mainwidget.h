@@ -16,12 +16,12 @@ public:
     QPushButton *server_button;
     QPushButton *local_button;
     QPushButton *edit_user_button;
-
+    QPushButton *disable_user_button;
 
 
 
 private:
-     QWidget* initalize_widget(QPushButton *server_button, QPushButton *local_button, QPushButton *edit_user_button);
+     QWidget* initalize_widget(QPushButton *server_button, QPushButton *local_button, QPushButton *edit_user_button, QPushButton *disable_user_button);
 };
 
 #endif // MAINWIDGET_H

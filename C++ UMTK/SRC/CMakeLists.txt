@@ -47,6 +47,8 @@ set(PROJECT_SOURCES
         newuser.h
         psintegration.cpp
         psintegration.h
+        disablewidget.cpp
+        disablewidget.h
 
 )
 
