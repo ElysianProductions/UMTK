@@ -321,6 +321,7 @@ void MainWindow::create_domain_user()
                                      "<br> <strong> Template user provided: </strong> " + domainwidget.template_user_combo->currentText() +
                                      "</body> </html>", user.List_URL_Image_Path(), user.get_Name()
                              );
+                 clear_ui();
 
              }
              if(domainwidget.primary_proxy_edit->text().length() > 0 && domainwidget.secondary_proxy_edit->text().length() > 0 && domainwidget.display_name_edit->text().length() <= 0)
@@ -357,6 +358,7 @@ void MainWindow::create_domain_user()
                                      "<br> <strong> Template user provided: </strong> " + domainwidget.template_user_combo->currentText() +
                                      "</body> </html>", user.List_URL_Image_Path(), user.get_Name()
                              );
+                 clear_ui();
              }
              if(domainwidget.primary_proxy_edit->text().length() > 0 && domainwidget.secondary_proxy_edit->text().length() <= 0 && domainwidget.display_name_edit->text().length() > 0)
              {
@@ -408,6 +410,7 @@ void MainWindow::create_domain_user()
                                      "<br> <strong> Template user provided: </strong> " + domainwidget.template_user_combo->currentText() +
                                      "</body> </html>", user.List_URL_Image_Path(), user.get_Name()
                              );
+                 clear_ui();
              }
              if(domainwidget.primary_proxy_edit->text().length() <= 0 && domainwidget.secondary_proxy_edit->text().length() > 0 && domainwidget.display_name_edit->text().length() > 0)
              {
@@ -442,6 +445,7 @@ void MainWindow::create_domain_user()
                                      "<br> <strong> Template user provided: </strong> " + domainwidget.template_user_combo->currentText() +
                                      "</body> </html>", user.List_URL_Image_Path(), user.get_Name()
                              );
+                 clear_ui();
 
              }
              if(domainwidget.primary_proxy_edit->text().length() <= 0 && domainwidget.secondary_proxy_edit->text().length() <= 0 && domainwidget.display_name_edit->text().length() > 0)
@@ -476,6 +480,7 @@ void MainWindow::create_domain_user()
                                      "<br> <strong> Template user provided: </strong> " + domainwidget.template_user_combo->currentText() +
                                      "</body> </html>", user.List_URL_Image_Path(), user.get_Name()
                              );
+                 clear_ui();
 
 
              }
@@ -515,6 +520,7 @@ void MainWindow::create_domain_user()
                                      "<br> <strong> Template user provided: </strong> " + domainwidget.template_user_combo->currentText() +
                                      "</body> </html>", user.List_URL_Image_Path(), user.get_Name()
                              );
+                 clear_ui();
 
              }
          }
@@ -669,11 +675,14 @@ void MainWindow::disable_user()
     QString email = user.List_Mail(name);
     QString OU_Clean = user.List_User_OU_CN(name);
     QStringList Groups_Clean = user.List_User_Group_CNs(user.List_SamAccountName(name));
+
+    user.Execute("$user = " + QString("\"") + user.List_SamAccountName(name) + QString("\"") + "; Get-ADPrincipalGroupMembership $user | Foreach {Remove-ADGroupMember $_ -Members $user -Confirm:$false}");
+
     user.Edit_User_Status(name);
     disableuser.informational->setText("The user " + name + " has been disabled.");
     user.Dump_User_Form("<html> <h1> <center> The following information pertains to the disable user request that you have submitted: </center> </h1> <br><br><br> <body> <strong> Employee name: </strong> " + name +
                         "<br> <strong> Username: </strong> " + username + " <br> <strong> Email address: </strong> " + email +
-                        "<br> <strong> Groups: </strong> " + user.get_Groups().join(" , ") +
+                        "<br> <strong> Groups: </strong> " + Groups_Clean.join(" , ") +
                         "</body> </html>", QUrl(""), name
                 );
 }

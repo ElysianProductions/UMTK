@@ -62,7 +62,7 @@ else()
             ${PROJECT_SOURCES}
         )
     else()
-        add_executable(UMTK
+        add_executable(UMTK WIN32
             ${PROJECT_SOURCES}
         )
     endif()
