@@ -153,7 +153,8 @@ QStringList PSIntegration::List_All_Domain_Users()
      *
      */
 
-    QStringList tmp = Execute_Command("Get-ADUser -Filter * | Select-Object -ExpandProperty Name");
+    //QStringList tmp = Execute_Command("Get-ADUser -Filter * | Select-Object -ExpandProperty Name");
+    QStringList tmp = Execute_Command("$tmp = (Get-ADUser -Filter * | Select-Object Name, GivenName, SurName | Sort-Object SurName, GivenName); return $tmp.Name");
     QStringList AD_Users;
     for(auto &i : tmp)
     {

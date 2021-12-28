@@ -8,7 +8,7 @@ set(CMAKE_AUTOUIC ON)
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 
-set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # QtCreator supports the following variables for Android, which are identical to qmake Android variables.
@@ -53,19 +53,13 @@ set(PROJECT_SOURCES
 )
 
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
-    qt_add_executable(UMTK
+    qt_add_executable(UMTK WIN32
         ${PROJECT_SOURCES}
     )
 else()
-    if(ANDROID)
-        add_library(UMTK SHARED
-            ${PROJECT_SOURCES}
-        )
-    else()
-        add_executable(UMTK WIN32
-            ${PROJECT_SOURCES}
-        )
-    endif()
+    add_executable(UMTK WIN32
+        ${PROJECT_SOURCES}
+    )
 endif()
 
 target_link_libraries(UMTK PRIVATE Qt${QT_VERSION_MAJOR}::Widgets Qt${QT_VERSION_MAJOR}::PrintSupport)

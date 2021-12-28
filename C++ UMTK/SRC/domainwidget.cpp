@@ -39,6 +39,7 @@ QWidget* DomainWidget::initalize_widget(QComboBox *upn_combo, QComboBox *ou_comb
 
         template_user_combo->setToolTip("Please select the appropriate template user.");
         template_user_combo->addItems(AD_Users);
+        // sort ADUsers before adding to the combo box
 
         ou_combo->setToolTip("Please select the appropriate OU from the list.");
         ou_combo->addItems(OU_Names);
