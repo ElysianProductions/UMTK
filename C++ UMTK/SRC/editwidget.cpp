@@ -2,6 +2,7 @@
 
 EditWidget::EditWidget()
 {
+    select_action = new QComboBox();
     upn_combo = new QComboBox();
     ou_combo = new QComboBox();
     user_combo = new QComboBox();
@@ -19,30 +20,36 @@ EditWidget::EditWidget()
     cancel_button = new QPushButton();
     load_button = new QPushButton();
     informational = new QTextBrowser();
+    middlename_edit = new QLineEdit();
 }
 
 QWidget* EditWidget::get_widget()
 {
-    return initalize_widget(upn_combo, ou_combo, user_combo, forest_combo,
+    return initalize_widget(select_action, upn_combo, ou_combo, user_combo, forest_combo,
                             username_edit, password_edit, email_edit,
                             displayname_edit, primary_proxy_edit, secondary_proxy_edit,
                             edit_button, givenname_edit, surname_edit, current_groups_combo,
-                            cancel_button, load_button, informational);
+                            cancel_button, load_button, informational, middlename_edit);
 }
 
-QWidget* EditWidget::initalize_widget(QComboBox *upn_combo, QComboBox *ou_combo, QComboBox *user_combo, QComboBox *forest_combo, QLineEdit *username_edit, QLineEdit *password_edit, QLineEdit *email_edit, QLineEdit *displayname_edit, QLineEdit *primary_proxy_edit, QLineEdit *secondary_proxy_edit, QPushButton *edit_button, QLineEdit *givenname_edit, QLineEdit *surname_edit, QComboBox *current_groups_combo, QPushButton *cancel_button, QPushButton *load_button, QTextBrowser *informational)
+QWidget* EditWidget::initalize_widget(QComboBox *select_action, QComboBox *upn_combo, QComboBox *ou_combo, QComboBox *user_combo, QComboBox *forest_combo, QLineEdit *username_edit, QLineEdit *password_edit, QLineEdit *email_edit, QLineEdit *displayname_edit,
+                                      QLineEdit *primary_proxy_edit, QLineEdit *secondary_proxy_edit, QPushButton *edit_button, QLineEdit *givenname_edit, QLineEdit *surname_edit, QComboBox *current_groups_combo, QPushButton *cancel_button,
+                                      QPushButton *load_button, QTextBrowser *informational, QLineEdit *middlename_edit)
 {
         QVBoxLayout *main_layout = new QVBoxLayout();
         QWidget *primary_display = new QWidget();
+
+        QStringList actions;
+        actions << "Edit full name" << "Edit username" << "Edit display name" << "Edit email address" << "Edit password" << "Edit user principal name" << "Edit organizational unit" << "Edit group membership";
+        select_action->addItems(actions);
 
         upn_combo->setToolTip("Please select the appropriate UPN from the window. If no UPNs are available use the domain name option");
         upn_combo->addItems(List_All_UPNs());
         upn_combo->hide();
 
-
-
         user_combo->setToolTip("Please select the appropriate user.");
         user_combo->addItems(List_All_Domain_Users());
+        user_combo->hide();
 
         ou_combo->setToolTip("Please select the appropriate OU from the list.");
         ou_combo->addItems(List_All_OU_CNs());
@@ -56,9 +63,13 @@ QWidget* EditWidget::initalize_widget(QComboBox *upn_combo, QComboBox *ou_combo,
         givenname_edit->setPlaceholderText("Input new first name");
         givenname_edit->hide();
 
+        middlename_edit->setToolTip("Use this field to change the users middle name");
+        middlename_edit->setPlaceholderText("Input new middle name");
+        middlename_edit->hide();
+
         surname_edit->setToolTip("Use this field to change the users last name");
         surname_edit->setPlaceholderText("Input new last name");
-        surname_edit->hide();
+        surname_edit->hide();                
 
         current_groups_combo->hide();
         current_groups_combo->setToolTip("");
@@ -91,12 +102,14 @@ QWidget* EditWidget::initalize_widget(QComboBox *upn_combo, QComboBox *ou_combo,
 
         cancel_button->setText("Cancel");
 
+        main_layout->addWidget(select_action);
         main_layout->addWidget(upn_combo);
         main_layout->addWidget(ou_combo);
         main_layout->addWidget(user_combo);
         main_layout->addWidget(forest_combo);
         main_layout->addWidget(current_groups_combo);
         main_layout->addWidget(givenname_edit);
+        main_layout->addWidget(middlename_edit);
         main_layout->addWidget(surname_edit);
         main_layout->addWidget(username_edit);
         main_layout->addWidget(password_edit);

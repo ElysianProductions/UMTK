@@ -26,7 +26,7 @@ public:
     void Dump_User_Form(QString data, QUrl image_path, QString name); // Take the contents of the data and draw it on a pdf. If chosen you can supply an image to paint as well.
     void Set_URL_Image_Path(QString url); // Set the path to the image
 
-    void Edit_Name(QString name);
+    void Edit_Name(QString name, QString first_name, QString middle_name, QString last_name);
     void Edit_Password(QString name, QString password);
     void Edit_Display_Name(QString name, QString display_name);
     void Edit_Proxy_Addresses(QString name, QStringList proxies);

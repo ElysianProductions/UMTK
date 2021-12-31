@@ -635,7 +635,42 @@ void MainWindow::Automate()
 
 void MainWindow::Automate_Edit_User()
 {
-    if(editwidget.user_combo->currentText().length() > 0)
+
+     if(editwidget.select_action->currentIndex() == 0)
+     {
+
+     }
+     else if(editwidget.select_action->currentIndex() == 1)
+     {
+
+     }
+     else if(editwidget.select_action->currentIndex() == 2)
+     {
+
+     }
+     else if(editwidget.select_action->currentIndex() == 3)
+     {
+
+     }
+     else if(editwidget.select_action->currentIndex() == 4)
+     {
+
+     }
+     else if(editwidget.select_action->currentIndex() == 5)
+     {
+
+     }
+     else if(editwidget.select_action->currentIndex() == 6)
+     {
+
+     }
+     else if(editwidget.select_action->currentIndex() == 7)
+     {
+
+     }
+
+
+    /*if(editwidget.user_combo->currentText().length() > 0)
      {
         editwidget.givenname_edit->setText(editwidget.user_combo->currentText().split(" ").first());
         editwidget.surname_edit->setText(editwidget.user_combo->currentText().split(" ").last());
@@ -677,7 +712,7 @@ void MainWindow::Automate_Edit_User()
      else
      {
 
-     }
+     }*/
 
 
 }
