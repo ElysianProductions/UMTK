@@ -200,14 +200,11 @@ QString PSIntegration::Execute(QString param)
 
     QProcess *process = new QProcess();
     QByteArray success;
-    QByteArray error;
     QStringList params;
     params = QStringList({"-Command", QString("Start-Process -NoNewWindow -Verb runAs powershell; "), param});
     process->start("powershell", params);
     process->waitForFinished(-1);
     success.append(process->readAllStandardOutput());
-    error.append(process->readAllStandardError());
-    qDebug() << error;
     process->terminate();
     QString data = QString(success);
     return data;
@@ -578,9 +575,29 @@ void PSIntegration::Set_URL_Image_Path(QString path)
     image = path;
 }
 
-void PSIntegration::Edit_Full_Name(QString name, QString first, QString middle, QString last)
+void PSIntegration::Edit_Name(QString name)
 {
-
+    QStringList names = name.split(' ');
+    if(names.count() >= 2)
+    {
+        QString givenName = names[0];
+        QString otherName = names[1];
+        QString surName = names[2];
+        Execute("Set-ADUser -Identity ((Get-ADUser -Filter {Name -Like " + QString("\"") + name + QString("\"") + " } -Properties SamAccountName).SamAccountName) -GivenName " + QString("\"") + givenName +
+               QString("\"") + " -Surname " + QString("\"") + surName + QString("\"") + " -OtherName " + QString("\"") + otherName + QString("\""));
+        QString newName = names.join(' ');
+        Execute("Rename-ADObject -Identity ((Get-ADUser -Filter {Name -Like " +QString("\"") + "} -Properties DistinguishedName).DistinguishedName) -NewName " + QString("\"") + newName + QString("\""));
+        
+    }
+    else
+    {
+        QString givenName = names[0];
+        QString surName = names[1];
+        Execute("Set-ADUser -Identity ((Get-ADUser -Filter {Name -Like " + QString("\"") + name + QString("\"") + " } -Properties SamAccountName).SamAccountName) -GivenName " + QString("\"") + givenName +
+               QString("\"") + " -Surname " + QString("\"") + surName + QString("\""));
+        QString newName = names.join(' ');
+        Execute("Rename-ADObject -Identity ((Get-ADUser -Filter {Name -Like " +QString("\"") + "} -Properties DistinguishedName).DistinguishedName) -NewName " + QString("\"") + newName + QString("\""));
+    }
 }
 
 void PSIntegration::Edit_Password(QString name, QString password)

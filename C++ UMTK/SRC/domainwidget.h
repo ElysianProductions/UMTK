@@ -12,6 +12,7 @@
 #include <QProcess>
 #include <QTextBrowser>
 
+
 #include "psintegration.h"
 
 class DomainWidget : public QObject, PSIntegration

@@ -147,6 +147,20 @@ void MainWindow::close_local_widget()
 void MainWindow::close_server_widget()
  {
      key_widget->setCurrentIndex(0);
+     clear_ui();
+     domainwidget.user_edit->hide();
+     domainwidget.password_edit->hide();
+     domainwidget.email_edit->hide();
+     domainwidget.informational->setTextColor("Black");
+     domainwidget.informational->setText("");
+     domainwidget.upn_combo->setCurrentIndex(0);
+     domainwidget.template_user_combo->setCurrentIndex(0);
+     domainwidget.ou_combo->setCurrentIndex(0);
+     domainwidget.ou_combo->hide();
+     domainwidget.primary_proxy_edit->hide();
+     domainwidget.secondary_proxy_edit->hide();
+     domainwidget.display_name_edit->hide();
+
  }
 
 void MainWindow::close_edit_user_widget()
