@@ -32,6 +32,7 @@ public:
     void Edit_Proxy_Addresses(QString name, QStringList proxies);
     void Edit_Email_Address(QString name, QString email);
     void Edit_UserPrincipalName(QString name, QString upn);
+    void Edit_UserSamAccountName(QString name, QString SamAccount);
     void Edit_Group_Memebership(QString name, QStringList GroupsToAdd, QStringList GroupsToRemove);
     void Edit_User_Status(QString name); // Disable the user account
     void Edit_User_Strip_All_Groups(); // Remove user from all memberships

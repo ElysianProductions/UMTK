@@ -584,22 +584,28 @@ void PSIntegration::Edit_Name(QString name, QString first_name, QString middle_n
     {
         if(first_name.length() > 0 && middle_name.length() > 0 && last_name.length() > 0)
         {
-            QString full_name = first_name + " " + middle_name + " " + last_name;
-
             Execute("Set-ADUser -Identity ((Get-ADUser -Filter {Name -Like " + QString("\"") + name + QString("\"") + " } -Properties SamAccountName).SamAccountName) -GivenName " + QString("\"") + first_name +
                    QString("\"") + " -Surname " + QString("\"") + last_name + QString("\"") + " -OtherName " + QString("\"") + middle_name + QString("\""));
 
-            Execute("Rename-ADObject -Identity ((Get-ADUser -Filter {Name -Like " + QString("\"") + name + QString("\"") + "} -Properties DistinguishedName).DistinguishedName) -NewName " + QString("\"") + full_name + QString("\""));
+            Execute("Rename-ADObject -Identity ((Get-ADUser -Filter {Name -Like " + QString("\"") + name + QString("\"") + "} -Properties DistinguishedName).DistinguishedName) -NewName " + QString("\"") + first_name + " " + middle_name + " " + last_name + QString("\""));
 
-            QString tmp_sam = first_name.at(0).toUpper() + last_name.toLower();
-            QString tmp_upn = tmp_sam + "@" + List_User_Identifier(full_name);
-
-            Execute("Set-ADUser -Identity ((Get-ADUser -Filter {Name -Like " + QString("\"") + full_name + QString("\"") + "} -Properties SamAccountName).SamAccountName) -SamAccountName " + QString("\"")) + tmp_sam + QString("\"") +
-                    " -UserPrincipalName " + QString("\"") + tmp_upn + QString("\"");
+            Edit_UserSamAccountName(first_name + " " + last_name, first_name.at(0).toUpper() + last_name.toLower());
+            Edit_UserPrincipalName(first_name + " " + last_name, first_name.at(0).toUpper() + last_name.toLower() + "@" + List_User_Identifier(first_name + " " + last_name));
+            Edit_Display_Name(first_name + " " + last_name, first_name + " " + last_name);
+            Edit_Email_Address(first_name + " " + last_name, first_name.at(0).toUpper() + last_name.toLower() + "@" + List_User_Identifier(first_name + " " + last_name));
         }
         if(first_name.length() <= 0 && middle_name.length() > 0 && last_name.length() > 0)
         {
+            Execute("Set-ADUser -Identity ((Get-ADUser -Filter {Name -Like " + QString("\"") + name + QString("\"") + " } -Properties SamAccountName).SamAccountName) -OtherName " + QString("\"") + middle_name +
+                   QString("\"") + " -Surname " + QString("\"") + last_name + QString("\""));
 
+            Execute("Rename-ADObject -Identity ((Get-ADUser -Filter {Name -Like " + QString("\"") + name + QString("\"") + "} -Properties DistinguishedName).DistinguishedName) -NewName " +
+                    QString("\"") + name.split(" ").first() + " " + middle_name + " " + last_name + QString("\""));
+
+            Edit_UserSamAccountName(first_name + " " + last_name, first_name.at(0).toUpper() + last_name.toLower());
+            Edit_UserPrincipalName(first_name + " " + last_name, first_name.at(0).toUpper() + last_name.toLower() + "@" + List_User_Identifier(first_name + " " + last_name));
+            Edit_Display_Name(first_name + " " + last_name, first_name + " " + last_name);
+            Edit_Email_Address(first_name + " " + last_name, first_name.at(0).toUpper() + last_name.toLower() + "@" + List_User_Identifier(first_name + " " + last_name));
         }
         if(first_name.length() <= 0 && middle_name.length() <= 0 && last_name.length() > 0)
         {
@@ -611,36 +617,40 @@ void PSIntegration::Edit_Name(QString name, QString first_name, QString middle_n
         }
         if(first_name.length() > 0 && middle_name.length() <= 0 && last_name.length() > 0)
         {
-            QString full_name = first_name + " " + last_name;
 
             Execute("Set-ADUser -Identity ((Get-ADUser -Filter {Name -Like " + QString("\"") + name + QString("\"") + " } -Properties SamAccountName).SamAccountName) -GivenName " + QString("\"") + first_name +
                    QString("\"") + " -Surname " + QString("\"") + last_name + QString("\""));
 
-            Execute("Rename-ADObject -Identity ((Get-ADUser -Filter {Name -Like " + QString("\"") + name + QString("\"") + "} -Properties DistinguishedName).DistinguishedName) -NewName " + QString("\"") + full_name + QString("\""));
+            Execute("Rename-ADObject -Identity ((Get-ADUser -Filter {Name -Like " + QString("\"") + name + QString("\"") + "} -Properties DistinguishedName).DistinguishedName) -NewName " + QString("\"") + first_name + " " + last_name + QString("\""));
 
-            QString tmp_sam = first_name.at(0).toUpper() + last_name.toLower();
-            QString tmp_upn = tmp_sam + "@" + List_User_Identifier(full_name);
-            QString tmp_display = full_name;
-            QString email = tmp_upn;
-
-            qDebug() << "Name - " + full_name << "SamAccountName  - " + tmp_sam << "UserPrincipalName - " + tmp_upn << "Display name - " + tmp_display << "Email - " + email;
-
-            Execute("Set-ADUser -Identity ((Get-ADUser -Filter {Name -Like " + QString("\"") + full_name + QString("\"") + "} -Properties SamAccountName).SamAccountName) -SamAccountName " + QString("\"")) + tmp_sam + QString("\"") +
-                    " -UserPrincipalName " + QString("\"") + tmp_upn + QString("\"");
-
-            Execute("Set-ADUser -Identity ((Get-ADUser -Filter {Name -Like " + QString("\"") + full_name + QString("\"") + "} -Properties SamAccountName).SamAccountName) -EmailAddress " + QString("\"") + email);
-
-            Execute("Set-ADUser -Identity ((Get-ADUser -Filter {Name -Like " + QString("\"") + full_name + QString("\"") + "} -Properties SamAccountName).SamAccountName) -displayName " + QString("\"") + tmp_display + QString("\""));
+            Edit_UserSamAccountName(first_name + " " + last_name, first_name.at(0).toUpper() + last_name.toLower());
+            Edit_UserPrincipalName(first_name + " " + last_name, first_name.at(0).toUpper() + last_name.toLower() + "@" + List_User_Identifier(first_name + " " + last_name));
+            Edit_Display_Name(first_name + " " + last_name, first_name + " " + last_name);
+            Edit_Email_Address(first_name + " " + last_name, first_name.at(0).toUpper() + last_name.toLower() + "@" + List_User_Identifier(first_name + " " + last_name));
         }
         if(first_name.length() > 0 && middle_name.length() > 0 && last_name.length() <= 0)
         {
+            Execute("Set-ADUser -Identity ((Get-ADUser -Filter {Name -Like " + QString("\"") + name + QString("\"") + " } -Properties SamAccountName).SamAccountName) -GivenName " + QString("\"") + first_name +
+                   QString("\"") + " -OtherName " + QString("\"") + middle_name + QString("\""));
 
+            Execute("Rename-ADObject -Identity ((Get-ADUser -Filter {Name -Like " + QString("\"") + name + QString("\"") + "} -Properties DistinguishedName).DistinguishedName) -NewName " +
+                    QString("\"") + first_name + " " + middle_name + " " + name.split(" ").last() + QString("\""));
+
+            Edit_UserSamAccountName(first_name + " " + name.split(" ").last(), first_name.at(0).toUpper() + name.split(" ").last().toLower());
+            Edit_UserPrincipalName(first_name + " " + name.split(" ").last(), first_name.at(0).toUpper() + name.split(" ").last().toLower() + "@" + List_User_Identifier(first_name + " " + name.split(" ").last()));
+            Edit_Display_Name(first_name + " " + name.split(" ").last(), first_name + " " + name.split(" ").last());
+            Edit_Email_Address(first_name + " " + name.split(" ").last(), first_name.at(0).toUpper() + name.split(" ").last().toLower() + "@" + List_User_Identifier(first_name + " " + name.split(" ").last()));
         }
     }
     else
     {
 
     }
+}
+
+void PSIntegration::Edit_UserSamAccountName(QString name, QString SamAccount)
+{
+    Execute("Set-ADUser -Identity ((Get-ADUser -Filter {Name -Like " + QString("\"") + name + QString("\"") + "} -Properties SamAccountName).SamAccountName) -SamAccountName " + QString("\"") + SamAccount + QString("\""));
 }
 
 void PSIntegration::Edit_Password(QString name, QString password)
@@ -650,7 +660,7 @@ void PSIntegration::Edit_Password(QString name, QString password)
 
 void PSIntegration::Edit_Display_Name(QString name, QString display_name)
 {
-
+    Execute("Set-ADUser -Identity ((Get-ADUser -Filter {Name -Like " + QString("\"") + name + QString("\"") + "} -Properties SamAccountName).SamAccountName) -displayName " + QString("\"") + display_name + QString("\""));
 }
 
 void PSIntegration::Edit_Proxy_Addresses(QString name, QStringList proxies)
@@ -660,12 +670,12 @@ void PSIntegration::Edit_Proxy_Addresses(QString name, QStringList proxies)
 
 void PSIntegration::Edit_Email_Address(QString name, QString email)
 {
-
+    Execute("Set-ADUser -Identity ((Get-ADUser -Filter {Name -Like " + QString("\"") + name + QString("\"") + "} -Properties SamAccountName).SamAccountName) -EmailAddress " + QString("\"") + email + QString("\""));
 }
 
 void PSIntegration::Edit_UserPrincipalName(QString name, QString upn)
 {
-
+    Execute("Set-ADUser -Identity ((Get-ADUser -Filter {Name -Like " + QString("\"") + name + QString("\"") + "} -Properties SamAccountName).SamAccountName) -UserPrincipalName " + QString("\"") + upn + QString("\""));
 }
 
 void PSIntegration::Edit_Group_Memebership(QString name, QStringList GroupsToAdd, QStringList GroupsToRemove)

@@ -95,7 +95,7 @@ QWidget* EditWidget::initalize_widget(QComboBox *select_action, QComboBox *upn_c
         secondary_proxy_edit->setToolTip("You do not have to type smtp: ");
         secondary_proxy_edit->hide();
 
-        edit_button->setText("Create");
+        edit_button->setText("Change");
         edit_button->hide();
 
         load_button->setText("Load user");

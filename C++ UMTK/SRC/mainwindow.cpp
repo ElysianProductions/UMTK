@@ -726,6 +726,8 @@ void MainWindow::Edit_User_Widget(int choice)
     }
     if(choice == 1)
     {
+        editwidget.informational->setTextColor("Black");
+        editwidget.informational->setText("Informational Event: Please be aware that this will change all of the following values:\nName\nGiven name\nSurname\nMiddle name\nEmail address\nSamAccountName\nUserPrincipalName\nDisplay name");
         editwidget.user_combo->show();
         editwidget.givenname_edit->show();
         editwidget.middlename_edit->show();
