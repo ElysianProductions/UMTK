@@ -200,11 +200,14 @@ QString PSIntegration::Execute(QString param)
 
     QProcess *process = new QProcess();
     QByteArray success;
+    QByteArray errors;
     QStringList params;
     params = QStringList({"-Command", QString("Start-Process -NoNewWindow -Verb runAs powershell; "), param});
     process->start("powershell", params);
     process->waitForFinished(-1);
     success.append(process->readAllStandardOutput());
+    errors.append(process->readAllStandardError());
+    qDebug() << errors;
     process->terminate();
     QString data = QString(success);
     return data;
@@ -577,29 +580,58 @@ void PSIntegration::Set_URL_Image_Path(QString path)
 
 void PSIntegration::Edit_Name(QString name, QString first_name, QString middle_name, QString last_name)
 {
-    //QStringList names = name.split(' ');
-    if(first_name.length() > 0 && middle_name.length() > 0 && last_name.length() > 0)
+    /*if(first_name.length() > 0 && middle_name.length() > 0 && last_name.length() > 0)
     {
-        //QString givenName = names[0];
-        //QString otherName = names[1];
-        //QString surName = names[2];
         Execute("Set-ADUser -Identity ((Get-ADUser -Filter {Name -Like " + QString("\"") + name + QString("\"") + " } -Properties SamAccountName).SamAccountName) -GivenName " + QString("\"") + first_name +
                QString("\"") + " -Surname " + QString("\"") + last_name + QString("\"") + " -OtherName " + QString("\"") + middle_name + QString("\""));
-        //QString newName = names.join(' ');
         Execute("Rename-ADObject -Identity ((Get-ADUser -Filter {Name -Like " +QString("\"") + "} -Properties DistinguishedName).DistinguishedName) -NewName " + QString("\"") + first_name + middle_name + last_name + QString("\""));
         
     }
-    else if(first_name.length() <= 0 && last_name.length() > 0)
+    if(first_name.length() <= 0 && last_name.length() > 0)
     {
-        //QString givenName = names[0];
-        //QString surName = names[1];
         QStringList names = name.split(' ');
-        //first_name = names[0];
-
         Execute("Set-ADUser -Identity ((Get-ADUser -Filter {Name -Like " + QString("\"") + name + QString("\"") + " } -Properties SamAccountName).SamAccountName) -GivenName " + QString("\"") + names.first() +
                QString("\"") + " -Surname " + QString("\"") + last_name + QString("\""));
         QString newName = names.first() + last_name;
         Execute("Rename-ADObject -Identity ((Get-ADUser -Filter {Name -Like " +QString("\"") + "} -Properties DistinguishedName).DistinguishedName) -NewName " + QString("\"") + newName + QString("\""));
+    }*/
+    qDebug() << "Made it.";
+    if(first_name.length() > 0 || last_name.length() > 0 || middle_name.length() > 0)
+    {
+        if(first_name.length() > 0 && middle_name.length() > 0 && last_name.length() > 0)
+        {
+            Execute("Set-ADUser -Identity ((Get-ADUser -Filter {Name -Like " + QString("\"") + name + QString("\"") + " } -Properties SamAccountName).SamAccountName) -GivenName " + QString("\"") + first_name +
+                   QString("\"") + " -Surname " + QString("\"") + last_name + QString("\"") + " -OtherName " + QString("\"") + middle_name + QString("\""));
+            Execute("Rename-ADObject -Identity ((Get-ADUser -Filter {Name -Like " + QString("\"") + name + QString("\"") + "} -Properties DistinguishedName).DistinguishedName) -NewName " + QString("\"") + first_name + middle_name + last_name + QString("\""));
+        }
+        if(first_name.length() <= 0 && middle_name.length() > 0 && last_name.length() > 0)
+        {
+
+        }
+        if(first_name.length() <= 0 && middle_name.length() <= 0 && last_name.length() > 0)
+        {
+
+        }
+        if(first_name.length() <= 0 && middle_name.length() > 0 && last_name.length() <= 0)
+        {
+
+        }
+        if(first_name.length() > 0 && middle_name.length() <= 0 && last_name.length() > 0)
+        {
+            QStringList names = name.split(' ');
+            Execute("Set-ADUser -Identity ((Get-ADUser -Filter {Name -Like " + QString("\"") + name + QString("\"") + " } -Properties SamAccountName).SamAccountName) -GivenName " + QString("\"") + names.first() +
+                   QString("\"") + " -Surname " + QString("\"") + last_name + QString("\""));
+            QString newName = names.first() + last_name;
+            Execute("Rename-ADObject -Identity ((Get-ADUser -Filter {Name -Like " + QString("\"") + name + QString("\"") + "} -Properties DistinguishedName).DistinguishedName) -NewName " + QString("\"") + newName + QString("\""));
+        }
+        if(first_name.length() > 0 && middle_name.length() > 0 && last_name.length() <= 0)
+        {
+
+        }
+    }
+    else
+    {
+
     }
 }
 

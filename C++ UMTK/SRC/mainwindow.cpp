@@ -50,9 +50,10 @@ void MainWindow::initialize_connections()
       connect(localwidget.create_button, &QPushButton::clicked, this, &MainWindow::create_local_user);
       connect(domainwidget.generate_button, &QPushButton::clicked, this, &MainWindow::Automate);
       connect(mainwidget.edit_user_button, &QPushButton::clicked, this, &MainWindow::launch_edit_user_widget);
-      connect(editwidget.edit_button, &QPushButton::clicked, this, &MainWindow::edit_domain_user);
+      //connect(editwidget.edit_button, &QPushButton::clicked, this, &MainWindow::edit_domain_user);
       connect(editwidget.cancel_button, &QPushButton::clicked, this, &MainWindow::close_edit_user_widget);
-      connect(editwidget.load_button, &QPushButton::clicked, this, &MainWindow::Automate_Edit_User);
+      //connect(editwidget.load_button, &QPushButton::clicked, this, &MainWindow::Automate_Edit_User);
+      connect(editwidget.select_action, qOverload<int>(&QComboBox::currentIndexChanged), [=] (int var) { emit(Edit_User_Widget(var) );  } );
       connect(mainwidget.disable_user_button, &QPushButton::clicked, this, &MainWindow::launch_disable_user_widget);
       connect(disableuser.cancel_button, &QPushButton::clicked, this, &MainWindow::close_disable_user_widget);
       connect(disableuser.disable_button, &QPushButton::clicked, this, &MainWindow::disable_user);
@@ -633,7 +634,7 @@ void MainWindow::Automate()
     }
 }
 
-void MainWindow::Automate_Edit_User()
+/*void MainWindow::Automate_Edit_User()
 {
 
      if(editwidget.select_action->currentIndex() == 0)
@@ -670,7 +671,7 @@ void MainWindow::Automate_Edit_User()
      }
 
 
-    /*if(editwidget.user_combo->currentText().length() > 0)
+    if(editwidget.user_combo->currentText().length() > 0)
      {
         editwidget.givenname_edit->setText(editwidget.user_combo->currentText().split(" ").first());
         editwidget.surname_edit->setText(editwidget.user_combo->currentText().split(" ").last());
@@ -712,9 +713,90 @@ void MainWindow::Automate_Edit_User()
      else
      {
 
-     }*/
+     }
 
 
+}*/
+
+void MainWindow::Edit_User_Widget(int choice)
+{
+    if(choice == 0)
+    {
+        qDebug() << choice;
+    }
+    if(choice == 1)
+    {
+        editwidget.user_combo->show();
+        editwidget.givenname_edit->show();
+        editwidget.middlename_edit->show();
+        editwidget.surname_edit->show();
+        editwidget.edit_button->show();
+        connect(editwidget.edit_button, &QPushButton::clicked, [this] {user.Edit_Name(editwidget.user_combo->currentText(), editwidget.givenname_edit->text(), editwidget.middlename_edit->text(), editwidget.surname_edit->text()); } );
+    }
+    if(choice == 2)
+    {
+
+
+        //hide
+        editwidget.givenname_edit->hide();
+        editwidget.middlename_edit->hide();
+        editwidget.surname_edit->hide();
+    }
+    if(choice == 3)
+    {
+
+
+        //hide
+        editwidget.givenname_edit->hide();
+        editwidget.middlename_edit->hide();
+        editwidget.surname_edit->hide();
+    }
+    if(choice == 4)
+    {
+
+
+        //hide
+        editwidget.givenname_edit->hide();
+        editwidget.middlename_edit->hide();
+        editwidget.surname_edit->hide();
+    }
+    if(choice == 5)
+    {
+
+
+        //hide
+        editwidget.givenname_edit->hide();
+        editwidget.middlename_edit->hide();
+        editwidget.surname_edit->hide();
+    }
+    if(choice == 6)
+    {
+
+
+        //hide
+        editwidget.givenname_edit->hide();
+        editwidget.middlename_edit->hide();
+        editwidget.surname_edit->hide();
+    }
+    if(choice == 7)
+    {
+
+
+
+        //hide
+        editwidget.givenname_edit->hide();
+        editwidget.middlename_edit->hide();
+        editwidget.surname_edit->hide();
+    }
+    if(choice == 8)
+    {
+
+
+        //hide
+        editwidget.givenname_edit->hide();
+        editwidget.middlename_edit->hide();
+        editwidget.surname_edit->hide();
+    }
 }
 
 void MainWindow::disable_user()

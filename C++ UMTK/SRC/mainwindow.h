@@ -109,7 +109,7 @@ private:
 
     void clear_ui();
     void Automate();
-    void Automate_Edit_User();
+    void Edit_User_Widget(int choice);
     void disable_user();
 
 };

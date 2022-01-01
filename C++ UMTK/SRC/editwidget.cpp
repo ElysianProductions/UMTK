@@ -40,7 +40,7 @@ QWidget* EditWidget::initalize_widget(QComboBox *select_action, QComboBox *upn_c
         QWidget *primary_display = new QWidget();
 
         QStringList actions;
-        actions << "Edit full name" << "Edit username" << "Edit display name" << "Edit email address" << "Edit password" << "Edit user principal name" << "Edit organizational unit" << "Edit group membership";
+        actions << " " << "Edit full name" << "Edit username" << "Edit display name" << "Edit email address" << "Edit password" << "Edit user principal name" << "Edit organizational unit" << "Edit group membership";
         select_action->addItems(actions);
 
         upn_combo->setToolTip("Please select the appropriate UPN from the window. If no UPNs are available use the domain name option");
@@ -99,6 +99,7 @@ QWidget* EditWidget::initalize_widget(QComboBox *select_action, QComboBox *upn_c
         edit_button->hide();
 
         load_button->setText("Load user");
+        load_button->hide();
 
         cancel_button->setText("Cancel");
 

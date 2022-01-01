@@ -39,11 +39,11 @@ set(PROJECT_SOURCES
 )
 
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
-    qt_add_executable(UMTK [[WIN32]]
+    qt_add_executable(UMTK
         ${PROJECT_SOURCES}
     )
 else()
-    add_executable(UMTK [[WIN32]]
+    add_executable(UMTK
         ${PROJECT_SOURCES}
     )
 endif()
