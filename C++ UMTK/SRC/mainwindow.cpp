@@ -39,9 +39,24 @@ void MainWindow::initialize_main_window()
 void MainWindow::initialize_connections()
 {
       //connect(saveFileAction, &QAction::triggered, this, &MainWindow::save_command);
-      connect(setDisplayNameAction, &QAction::triggered, [this] {if(setDisplayNameAction->isChecked()) { domainwidget.display_name_edit->show();} if(!setDisplayNameAction->isChecked()) {domainwidget.display_name_edit->hide();} });
-      connect(setProxyAction, &QAction::triggered, [this] {if (setProxyAction->isChecked()) { domainwidget.primary_proxy_edit->show(); domainwidget.secondary_proxy_edit->show(); } if(!setProxyAction->isChecked()) {domainwidget.primary_proxy_edit->hide(); domainwidget.secondary_proxy_edit->hide(); } } );
-      connect(setDisplayNameAction, &QAction::triggered, [this] { if(setDisplayNameAction->isChecked()) { domainwidget.display_name_edit->show(); } if(!setDisplayNameAction->isChecked()) { domainwidget.display_name_edit->hide(); } } );
+      //connect(setDisplayNameAction, &QAction::triggered, [this] {if(setDisplayNameAction->isChecked()) { domainwidget.display_name_edit->show();} if(!setDisplayNameAction->isChecked()) {domainwidget.display_name_edit->hide();} });
+      //connect(setProxyAction, &QAction::triggered, [this] {if (setProxyAction->isChecked()) { domainwidget.primary_proxy_edit->show(); domainwidget.secondary_proxy_edit->show(); } if(!setProxyAction->isChecked()) {domainwidget.primary_proxy_edit->hide(); domainwidget.secondary_proxy_edit->hide(); } } );
+      //connect(setDisplayNameAction, &QAction::triggered, [this] { if(setDisplayNameAction->isChecked()) { domainwidget.display_name_edit->show(); } if(!setDisplayNameAction->isChecked()) { domainwidget.display_name_edit->hide(); } } );
+      connect(domainwidget.advanced_button, &QPushButton::clicked, [this] {
+        if(domainwidget.display_name_edit->isVisible() && domainwidget.primary_proxy_edit->isVisible() && domainwidget.secondary_proxy_edit->isVisible())
+          {
+              domainwidget.display_name_edit->hide();
+              domainwidget.primary_proxy_edit->hide();
+              domainwidget.secondary_proxy_edit->hide();
+          }
+          else if(!domainwidget.display_name_edit->isVisible() && !domainwidget.primary_proxy_edit->isVisible() && !domainwidget.secondary_proxy_edit->isVisible())
+          {
+              domainwidget.display_name_edit->show();
+              domainwidget.primary_proxy_edit->show();
+              domainwidget.secondary_proxy_edit->show();
+          }
+       } );
+
       connect(mainwidget.server_button, &QPushButton::clicked, this, &MainWindow::launch_server_widget);
       connect(domainwidget.create_button, &QPushButton::clicked, this, &MainWindow::create_domain_user);
       connect(domainwidget.cancel_button, &QPushButton::clicked, this, &MainWindow::close_server_widget);
@@ -50,9 +65,7 @@ void MainWindow::initialize_connections()
       connect(localwidget.create_button, &QPushButton::clicked, this, &MainWindow::create_local_user);
       connect(domainwidget.generate_button, &QPushButton::clicked, this, &MainWindow::Automate);
       connect(mainwidget.edit_user_button, &QPushButton::clicked, this, &MainWindow::launch_edit_user_widget);
-      //connect(editwidget.edit_button, &QPushButton::clicked, this, &MainWindow::edit_domain_user);
       connect(editwidget.cancel_button, &QPushButton::clicked, this, &MainWindow::close_edit_user_widget);
-      //connect(editwidget.load_button, &QPushButton::clicked, this, &MainWindow::Automate_Edit_User);
       connect(editwidget.select_action, qOverload<int>(&QComboBox::currentIndexChanged), [=] (int var) { emit(Edit_User_Widget(var) );  } );
       connect(mainwidget.disable_user_button, &QPushButton::clicked, this, &MainWindow::launch_disable_user_widget);
       connect(disableuser.cancel_button, &QPushButton::clicked, this, &MainWindow::close_disable_user_widget);
@@ -62,7 +75,7 @@ void MainWindow::initialize_connections()
 
 void MainWindow::initialize_actions()
  {
-     saveFileAction = new QAction(tr("Save Command"));
+     /*saveFileAction = new QAction(tr("Save Command"));
      saveFileAction->setShortcuts(QKeySequence::New);
      saveFileAction->setStatusTip(tr("Click this to save your current command."));
      saveFileAction->setToolTip("Save your current working command to a StringList for future use.");
@@ -88,36 +101,36 @@ void MainWindow::initialize_actions()
 
      helpMeAction = new QAction(tr("Help"));
      helpMeAction->setToolTip("Click to view the help documentation.");
-     helpMeAction->setToolTip("Click to view the help documentation.");
+     helpMeAction->setToolTip("Click to view the help documentation.");*/
 
  }
 
 void MainWindow::initialize_menus()
  {
-        fileMenu = menuBar()->addMenu(tr("&File"));
-        fileMenu->addAction(saveFileAction);
-        fileMenu->addSeparator();
-        fileMenu->addAction(saveFileAsAction);
-        fileMenu->addSeparator();
-        fileMenu->addAction(closeProgramAction);
-        fileMenu->setToolTipsVisible(true);
+        //fileMenu = menuBar()->addMenu(tr("&File"));
+        //fileMenu->addAction(saveFileAction);
+        //fileMenu->addSeparator();
+        //fileMenu->addAction(saveFileAsAction);
+        //fileMenu->addSeparator();
+        //fileMenu->addAction(closeProgramAction);
+        //fileMenu->setToolTipsVisible(true);
 
-        editMenu = menuBar()->addMenu(tr("&Edit"));
+        //editMenu = menuBar()->addMenu(tr("&Edit"));
 
 
 
-        settingsMenu = menuBar()->addMenu(tr("&Settings"));
-        settingsMenu->addAction(setProxyAction);
-        settingsMenu->addSeparator();
-        settingsMenu->addAction(setDisplayNameAction);
+        //settingsMenu = menuBar()->addMenu(tr("&Settings"));
+        //settingsMenu->addAction(setProxyAction);
+        //settingsMenu->addSeparator();
+        //settingsMenu->addAction(setDisplayNameAction);
 
-        helpMenu = menuBar()->addMenu(tr("&Help"));
-        helpMenu->addAction(helpMeAction);
+       // helpMenu = menuBar()->addMenu(tr("&Help"));
+        //helpMenu->addAction(helpMeAction);
 
-        fileMenu->setToolTipsVisible(true);
-        editMenu->setToolTipsVisible(true);
-        settingsMenu->setToolTipsVisible(true);
-        helpMenu->setToolTipsVisible(true);
+        //fileMenu->setToolTipsVisible(true);
+        //editMenu->setToolTipsVisible(true);
+        //settingsMenu->setToolTipsVisible(true);
+        //helpMenu->setToolTipsVisible(true);
  }
 
 void MainWindow::launch_local_widget()
@@ -756,7 +769,6 @@ void MainWindow::Edit_User_Widget(int choice)
     if(choice == 4)
     {
 
-
         //hide
         editwidget.givenname_edit->hide();
         editwidget.middlename_edit->hide();
@@ -764,6 +776,10 @@ void MainWindow::Edit_User_Widget(int choice)
     }
     if(choice == 5)
     {
+        editwidget.password_edit->show();
+
+        user.List_Password_Policy(user.List_Name(editwidget.user_combo->currentText()));
+        editwidget.password_edit->setPlaceholderText("Minimum password length " + user.List_ActiveSP_length() + " Complexity on: " + user.List_ActiveSP_Complexity());
 
 
         //hide
@@ -808,9 +824,8 @@ void MainWindow::disable_user()
     QString email = user.List_Mail(name);
     QString OU_Clean = user.List_User_OU_CN(name);
     QStringList Groups_Clean = user.List_User_Group_CNs(user.List_SamAccountName(name));
-
     user.Execute("$user = " + QString("\"") + user.List_SamAccountName(name) + QString("\"") + "; Get-ADPrincipalGroupMembership $user | Foreach {Remove-ADGroupMember $_ -Members $user -Confirm:$false}");
-
+    user.Edit_Disable_Description(name);
     user.Edit_User_Status(name);
     disableuser.informational->setText("The user " + name + " has been disabled.");
     user.Dump_User_Form("<html> <h1> <center> The following information pertains to the disable user request that you have submitted: </center> </h1> <br><br><br> <body> <strong> Employee name: </strong> " + name +

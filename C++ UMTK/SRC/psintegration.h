@@ -36,6 +36,7 @@ public:
     void Edit_Group_Memebership(QString name, QStringList GroupsToAdd, QStringList GroupsToRemove);
     void Edit_User_Status(QString name); // Disable the user account
     void Edit_User_Strip_All_Groups(); // Remove user from all memberships
+    void Edit_Disable_Description(QString name);
 
     bool Validate_Password(QString pword, QString MinPasswordLength, QString ComplexityEnabled); // Validate whether or not the password meets the requirements of the policy.
     bool Get_Azure_Status(); // Determine whether or not the Azure module is on the server.

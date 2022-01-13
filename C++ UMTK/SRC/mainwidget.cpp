@@ -25,6 +25,7 @@ QWidget* MainWidget::initalize_widget(QPushButton *server_button, QPushButton *l
 
     edit_user_button->setText("Modify user account");
     edit_user_button->setToolTip("Click to modify a pre-existing user account.");
+    edit_user_button->hide();
 
     disable_user_button->setText("Disable user account");
     disable_user_button->setToolTip("Click to disable a domain user account.");

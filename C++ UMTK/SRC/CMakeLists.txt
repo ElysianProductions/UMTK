@@ -14,7 +14,6 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 find_package(QT NAMES Qt6 COMPONENTS Widgets REQUIRED)
 find_package(Qt${QT_VERSION_MAJOR} COMPONENTS Widgets PrintSupport REQUIRED)
 
-include_directories(${PROJECT_SOURCE_DIR}/Scripts)
 
 set(PROJECT_SOURCES
         main.cpp
