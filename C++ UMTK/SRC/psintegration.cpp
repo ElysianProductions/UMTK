@@ -207,7 +207,7 @@ QString PSIntegration::Execute(QString param)
     process->waitForFinished(-1);
     success.append(process->readAllStandardOutput());
     errors.append(process->readAllStandardError());
-    qDebug() << errors;
+    //qDebug() << errors;
     process->terminate();
     QString data = QString(success);
     return data;
