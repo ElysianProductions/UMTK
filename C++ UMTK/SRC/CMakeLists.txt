@@ -2,19 +2,17 @@ cmake_minimum_required(VERSION 3.21.1)
 
 project(UMTK LANGUAGES CXX)
 
-set(CMAKE_INCLUDE_CURRENT_DIR ON)
-
 set(CMAKE_AUTOUIC ON)
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
-
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(Qt6_USE_STATIC_LIBS ON) # Uncomment for static, comment out for dynamic
+set(Qt6_USE_STATIC_RUNTIME ON) #Uncomment for static, comment out for dynamic
 
-find_package(QT NAMES Qt6 COMPONENTS Widgets REQUIRED)
-find_package(Qt${QT_VERSION_MAJOR} COMPONENTS Widgets PrintSupport REQUIRED)
+find_package(Qt6 COMPONENTS Gui Core Widgets PrintSupport REQUIRED)
 
-
+set(INSTALL_DIRECTORY "C:\\BuildDir\\UMTK") # uncomment for static with build directory, comment out for dynamic
 set(PROJECT_SOURCES
         main.cpp
         mainwindow.cpp
@@ -37,14 +35,16 @@ set(PROJECT_SOURCES
 
 )
 
-if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
-    qt_add_executable(UMTK
+if(Qt6_FOUND)
+    qt_add_executable(UMTK WIN32
         ${PROJECT_SOURCES}
     )
-else()
-    add_executable(UMTK
+elseif(NOT Qt6_FOUND)
+    add_executable(UMTK WIN32
         ${PROJECT_SOURCES}
     )
 endif()
 
-target_link_libraries(UMTK PRIVATE Qt${QT_VERSION_MAJOR}::Widgets Qt${QT_VERSION_MAJOR}::PrintSupport)
+
+#target_link_libraries(UMTK PRIVATE Qt::Gui Qt6::Core Qt6::Widgets Qt6::PrintSupport ${ADDITIONAL_LIBRARIES}) # Comment out for static, or uncomment for dynamic
+target_link_libraries(UMTK PRIVATE Qt::Gui Qt6::Core Qt6::Widgets Qt6::PrintSupport ${ADDITIONAL_LIBRARIES} -static) # Uncomment for static, comment out for dynamic
