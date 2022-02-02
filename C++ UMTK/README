@@ -6,6 +6,8 @@
     The Powershell version works but was sidelined for the C++ version. As a consequence 
     of this the PS version is missing quite a few things that the C++ version has.
     
+    For static builds - If you choose to run this static then you need to build QT 6.2.x the code is in the cmake for you.
+    You just need to comment out the appropriate lines as specified there.
     
     
     
