@@ -1,13 +1,19 @@
-    #The license is GPL and is available to you here. There is absolutely no warranty associated with this software
-    usage of this software releases me from any and all liability.
+    #The license is GPL and is available to you here. 
+    There is absolutely no warranty associated with this software. 
+    Usage of this software expressly  releases me from any and all liability.
+    
+    
+    The Powershell version works but was sidelined for the C++ version. As a consequence 
+    of this the PS version is missing quite a few things that the C++ version has.
     
     
     
     
     ##The project - UMTK
 
-    The User Maintenance Tool Kit (UMTK) was created to standardize how new user accounts are created within Windows Active Directory. 
-    The following components are considered by many (though not all) to be standard and should generally always be filled in. 
+    The User Maintenance Tool Kit (UMTK) was created to standardize how new user accounts are created within 
+    Windows Active Directory. The following components are considered by many (though not all) to be standard 
+    and should generally always be filled in. 
 
     A) First name
     B) Last name
@@ -18,12 +24,13 @@
     G) ProxyAddress should at least have SMTP:primary@primaryemail.com
     
     The project also pulls from the default domain security policy to identify your password requirements.
-    If the user is in a group that's associated with a Fine Grain Password policy it will prioritize that grained policy for that user.
-    By default the project forces you to use a template user with the idea being that this template will have the appropriate
-    group associations. 
+    If the user is in a group that's associated with a Fine Grain Password policy it will prioritize that 
+    grained policy for that user. By default the project forces you to use a template user with the idea 
+    being that this template will have the appropriate group associations. 
     
-    Once the account is created it will generate a PDF with all of the information the end user or their supervisor will need 
-    to access the account. You can modify any of the fields that you need to though you shouldn't really have to.
+    Once the account is created it will generate a PDF with all of the information the end user or their 
+    supervisor will need to access the account. You can modify any of the fields that you need to though 
+    you shouldn't really have to.
     
 
     
@@ -47,10 +54,16 @@
     than the generated email, or create a secondary proxy click the ** Advanced Options ** button. 
     Just fill in whichever (or all) of the fields you need.
     
-    The last step in the process along with the PDF creation is that the software will see if the Azure AD Sync modules are installed.
-    If the server can execute an ADSync it will run the ADSync. If the server does not have the ADSync powershell modules 
-    it will reccomend that you run one if it applies to you on the appropriate server. It gives the following command:
-    `Import-Module ADSync; Start-ADSyncSyncCycle -PolicyType Delta` as the recomended sync to run as opposed to an initial (full).
+    The last step in the process along with the PDF creation is that the software will see if the 
+    Azure AD Sync modules are installed. If the server can execute an ADSync it will run the ADSync. 
+    
+    
+    If the server does not have the ADSync powershell modules it will reccomend that you run one if it 
+    applies to you on the appropriate server. It gives the following command:
+    
+    `Import-Module ADSync; Start-ADSyncSyncCycle -PolicyType Delta` 
+   
+    as the recomended sync to run as opposed to an initial (full).
     
     It's a really straightforward process and it can prevent a lot of issues for end users as well as for IT staff. 
     You should always check your work and make sure things look right. The software will validate and prevent people 
