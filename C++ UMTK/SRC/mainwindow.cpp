@@ -211,7 +211,7 @@ void MainWindow::create_local_user()
          localwidget.fullname_edit->setStyleSheet("color: black; background-color: white");
          luser.employee_name = localwidget.fullname_edit->text();
      }
-
+     /*
      if(localwidget.emailaddress_edit->text().length() <= 0)
      {
          localwidget.emailaddress_edit->setStyleSheet("color: black; background-color: red");
@@ -221,7 +221,7 @@ void MainWindow::create_local_user()
      {
          localwidget.emailaddress_edit->setStyleSheet("color: black; background-color: white");
          luser.email_address = localwidget.emailaddress_edit->text();
-     }
+     }*/
      if(localwidget.password_edit->text().length() <= 0)
      {
          localwidget.password_edit->setStyleSheet("color: black; background-color: red");
@@ -242,10 +242,32 @@ void MainWindow::create_local_user()
          luser.is_administrator = "0";
      }
 
-     if(luser.username.length() > 0 && luser.employee_name.length() > 0 && luser.email_address.length() > 0 && luser.password.length() > 0)
+     if(luser.username.length() > 0 && luser.employee_name.length() > 0 /*&& luser.email_address.length() > 0*/ && luser.password.length() > 0)
      {
-         QString tmp = "net user /add " + luser.username + " " + luser.password;
+         QString tmp = "net user " + luser.username + " " + luser.password + " /add";
          user.Execute(tmp);
+
+         if(luser.is_administrator == "1")
+         {
+             QString tmp = "net localgroup administrators " + luser.username + " /add";
+             user.Execute(tmp);
+             user.Set_URL_Image_Path("");
+             user.Dump_User_Form("<html> <h1> <center> The following information pertains to the new user request that you have submitted: </center> </h1> <br><br><br> <body> <strong> Employee name: </strong> " + luser.employee_name +
+                                 "<br> <strong> Username: </strong> " + luser.username +
+                                 "<br> <strong> Password: </strong> " + localwidget.password_edit->text() + " <br> <strong> Groups: Administrators</strong> " +
+                                 "</body> </html>", user.List_URL_Image_Path(), luser.employee_name
+                         );
+
+         }
+         else if(luser.is_administrator == "0")
+         {
+             user.Set_URL_Image_Path("");
+             user.Dump_User_Form("<html> <h1> <center> The following information pertains to the new user request that you have submitted: </center> </h1> <br><br><br> <body> <strong> Employee name: </strong> " + luser.employee_name +
+                                 "<br> <strong> Username: </strong> " + luser.username +
+                                 "<br> <strong> Password: </strong> " + localwidget.password_edit->text() + " <br> <strong> Groups: None</strong> " +
+                                 "</body> </html>", user.List_URL_Image_Path(), luser.employee_name
+                         );
+         }
      }
  }
 

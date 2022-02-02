@@ -29,6 +29,7 @@ QWidget* LocalWidget::initalize_widget(QLineEdit *username_edit, QLineEdit *full
     fullname_edit->setToolTip("Type the users full name.");
     emailaddress_edit->setPlaceholderText("Input mail address.");
     emailaddress_edit->setToolTip("Type the users emaill address.\nOr, leave blank if empty.");
+    emailaddress_edit->hide();
     password_edit->setPlaceholderText("Input password.");
     password_edit->setToolTip("Enter the users password.");
     password_edit->setEchoMode(QLineEdit::Password);
@@ -43,12 +44,12 @@ QWidget* LocalWidget::initalize_widget(QLineEdit *username_edit, QLineEdit *full
 
     QGridLayout *primary_layout = new QGridLayout();
     primary_layout->addWidget(username_edit, 0, 0);
-    primary_layout->addWidget(fullname_edit, 0, 1);
-    primary_layout->addWidget(emailaddress_edit, 1, 0);
-    primary_layout->addWidget(password_edit, 1, 1);
-    primary_layout->addWidget(admin_checkbox, 2, 0);
-    primary_layout->addWidget(create_button, 3, 0);
-    primary_layout->addWidget(cancel_buton, 3, 1);
+    primary_layout->addWidget(fullname_edit, 1, 0);
+    //primary_layout->addWidget(emailaddress_edit, 1, 0);
+    primary_layout->addWidget(password_edit, 2, 0);
+    primary_layout->addWidget(admin_checkbox, 3, 0);
+    primary_layout->addWidget(create_button, 4, 0);
+    primary_layout->addWidget(cancel_buton, 5, 0);
 
     QWidget *primary_display = new QWidget();
     primary_display->setLayout(primary_layout);
