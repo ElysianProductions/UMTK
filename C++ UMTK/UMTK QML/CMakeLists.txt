@@ -21,4 +21,4 @@ qt_add_qml_module(appUMTKQML
 target_compile_definitions(appUMTKQML
     PRIVATE $<$<OR:$<CONFIG:Debug>,$<CONFIG:RelWithDebInfo>>:QT_QML_DEBUG>)
 target_link_libraries(appUMTKQML
-    PRIVATE Qt6::Quick Qt6::PrintSupport ${ADDITIONAL_LIBRARIES})
+    PRIVATE Qt6::Quick Qt6::PrintSupport Qt6::Qml Qt6::Gui Qt6::Core ${ADDITIONAL_LIBRARIES})

@@ -3,6 +3,7 @@ import QtQuick.Controls 2.5
 import QtQuick.Layouts 1.3
 import com.elysianproductions.domainintegration 1.0
 
+
 Window {
     id: domain_account_page
     width: 1024
@@ -14,6 +15,17 @@ Window {
     DomainIntegration
     {
         id: domain_integration
+        da_template: da_template_combo.currentText
+        da_fname: da_name_edit.text
+        da_uname: da_username_edit.text
+        da_email: da_emailaddress_edit.text
+        da_displayname: da_displayname_edit.text
+        da_password: da_password_edit.text
+        da_pproxy: da_primaryproxy_edit.text
+        da_sproxy: da_secondaryproxy_edit.text
+        da_upnselect: da_template_combo.currentIndex
+        da_ouselect: da_template_combo.currentIndex
+
     }
 
     Loader
@@ -28,12 +40,31 @@ Window {
         anchors.horizontalCenter: parent.horizontalCenter
         anchors.verticalCenter: parent.verticalCenter
 
+        ComboBox
+        {
+            id: da_upn_combo
+            Layout.preferredWidth: 400
+            Layout.preferredHeight:  40
+            visible: false
+            model: domain_integration.da_allupns
+
+        }
+
+        ComboBox
+        {
+            id: da_ou_combo
+            Layout.preferredWidth: 400
+            Layout.preferredHeight:  40
+            visible: false
+            model: domain_integration.da_alloucns
+        }
 
         ComboBox
         {
             id: da_template_combo
             Layout.preferredWidth: 400
             Layout.preferredHeight:  40
+            model: domain_integration.da_allusers
         }
 
         TextField
@@ -97,7 +128,7 @@ Window {
             Layout.preferredWidth: 400
             Layout.preferredHeight:  40
             visible: false
-            echoMode: TextInput.Password
+
         }
 
         Button
@@ -111,6 +142,16 @@ Window {
                 // Add automate function
                 da_username_edit.visible = true;
                 da_password_edit.visible = true;
+                da_emailaddress_edit.visible = true;
+                da_upn_combo.visible = true;
+                da_ou_combo.visible = true;
+                domain_integration.automate();
+                da_username_edit.text = domain_integration.da_uname
+                da_emailaddress_edit.text = domain_integration.da_email
+                da_displayname_edit.text = domain_integration.da_displayname
+                da_upn_combo.currentIndex = domain_integration.da_upnselect
+                da_ou_combo.currentIndex = domain_integration.da_ouselect
+                da_password_edit.placeholderText = "Min length: " + domain_integration.da_lengthpolicy + " Complexity on: " + domain_integration.da_complexitypolicy
             }
         }
 

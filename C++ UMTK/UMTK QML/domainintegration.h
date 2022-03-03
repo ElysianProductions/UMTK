@@ -21,6 +21,15 @@ class DomainIntegration : public QObject
     Q_PROPERTY(QString da_password READ da_password WRITE setDAPassword NOTIFY da_PasswordChanged) // Property 6.
     Q_PROPERTY(QString da_pproxy READ da_pproxy WRITE setDAPrimaryProxy NOTIFY da_PrimaryProxyChanged) // Property 7.
     Q_PROPERTY(QString da_sproxy READ da_sproxy WRITE setDASecondaryProxy NOTIFY da_SecondaryProxyChanged) // Property 8.
+    Q_PROPERTY(QStringList da_allusers READ da_allusers WRITE setDAAllUsers NOTIFY da_AllUsersChanged) // Property 9.
+    Q_PROPERTY(QStringList da_allupns READ da_allupns WRITE setDAAllUPNs NOTIFY da_AllUPNsChanged) // Property 10.
+    Q_PROPERTY(QStringList da_alloucns READ da_alloucns WRITE setDAAllOUCns NOTIFY da_AllOUCNsChanged) // Property 11.
+    Q_PROPERTY(int da_ouselect READ da_ouselect WRITE setOUComboIndex NOTIFY da_OUComboIndexChanged) // Property 12.
+    Q_PROPERTY(int da_upnselect READ da_upnselect WRITE setUPNComboIndex NOTIFY da_UPNComboIndexChanged) // Property 13.
+    Q_PROPERTY(QString da_complexitypolicy READ da_complexitypolicy WRITE setDAComplexityPolicy NOTIFY da_ComplexityChanged) // Property 14.
+    Q_PROPERTY(QString da_lengthpolicy READ da_lengthpolicy WRITE setDALengthPolicy NOTIFY da_LengthPolicyChanged) // Property 15.
+    // set combo upn
+    //set password text
 
 public:
     DomainIntegration();
@@ -33,6 +42,13 @@ public:
     void setDAPassword(const QString &dapassword); // See Q_PROPERTY labeled Property 6.
     void setDAPrimaryProxy(const QString &dapproxy); // See Q_PROPERTY labeled Property 7.
     void setDASecondaryProxy(const QString &dasproxy); // See Q_PROPERTY labeled Property 8.
+    void setDAAllUsers(const QStringList &daallusers); // See Q_PROPERTY labeled Property 9.
+    void setDAAllUPNs(const QStringList &daallupns); // See Q_PROPERTY labeled Property 10.
+    void setDAAllOUCns(const QStringList &daalloucns); // See Q_PROPERTY labeled Property 11.
+    void setOUComboIndex(const int &daouselection); // See Q_PROPERTY labeled Property 12.
+    void setUPNComboIndex(const int &daupnselection); // See Q_PROPERTY labeled Property 13.
+    void setDAComplexityPolicy(const QString &dacomplexity); // See Q_PROPERTY labeled Property 14.
+    void setDALengthPolicy(const QString &dalengthpolicy); // See Q_PROPERTY labeled Property 15.
 
     QString da_template(); // See Q_PROPERTY labeled Property 1.
     QString da_fname(); // See Q_PROPERTY labeled Property 2.
@@ -42,14 +58,26 @@ public:
     QString da_password(); // See Q_PROPERTY labeled property 6.
     QString da_pproxy(); // See Q_PROPERTY labeled Property 7.
     QString da_sproxy(); // See Q_PROPERTY labeled Property 8.
+    QStringList da_allusers(); // See Q_PROPERTY labeled Property 9.
+    QStringList da_allupns(); // See Q_PROPERTY labeled Property 10.
+    QStringList da_alloucns(); // See Q_PROPERTY labeled Property 11.
+    int da_ouselect(); // See Q_PROPERTY labeled Property 12.
+    int da_upnselect(); // See Q_PROPERTY labeled Property 13.
+    QString da_complexitypolicy(); // See Q_PROPERTY labeled Property 14.
+    QString da_lengthpolicy(); // See Q_PROPERTY labeled Property 15.
 
+    QString List_ActiveSP_Complexity();
+    QString List_ActiveSP_length();
     QString Execute(QString param);
+
     QStringList Execute_Commands(QString param);
+    QStringList get_all_users();
+
 
 protected:
 
 public slots:
-    void Automate();
+    void automate();
 
 
 signals:
@@ -61,23 +89,48 @@ signals:
     void da_PasswordChanged(); // Password in textedit changed.
     void da_PrimaryProxyChanged(); // Primary SMTP proxy address in textedit changed.
     void da_SecondaryProxyChanged(); // Secondary SMTP proxy address in textedit changed.
+    void da_AllUsersChanged(); // Used to prefill the ComboBox with all domain users found.
+    void da_AllUPNsChanged(); // Used to prefill the ComboBox with all UPNs found.
+    void da_AllOUCNsChanged();// Used to prefil the ComboBox with all OU CNs found in the domain.
+    void da_OUComboIndexChanged(); // Ueed to change index to match the template users OU.
+    void da_UPNComboIndexChanged(); // Used to change the index to match the template users upn.
+    void da_ComplexityChanged(); // Used to set the place holder text for the password policy complexity status.
+    void da_LengthPolicyChanged(); // Use to set the place holder text for the password policy minimum length.
 
 
 private:
     QString template_user; // Template user to copy select from the combo box and set by setDAUserTemplate.
     QString full_name; //Full name of new employee.
+    QString given_name; // The first name of the user.
+    QString sur_name; // The last name of the user.
     QString username; // Username of new employee.
     QString display_name; // Display name of new employee (by default set to the full name).
     QString email_address; // The email of the new employee (byt default full_name + @ + domain/upn.
     QString password; // Password of the new employee.
     QString primary_proxy; // Primary proxy address of the new employee (by default the generated/edited email address).
     QString secondary_proxy; // Secondarty proxy address of the new employee.
+    QString SamAccountName; // User SamAccountName.
+    QString UserPrincipalName; // UserPrincipalName.
+    QString ou_distinguished_name; // The new users OU DN.
+    QString ou_clean_name; // The news users OU CN.
+
+
 
     QString Clean_String(QString str);
+    QString List_User_Identifier(QString name);
+    QString List_SamAccountName(QString name);
+    QString List_User_OU_CN(QString name);
+    QString List_User_OU_DN(QString name);
 
+
+
+    void List_Password_Policy(QString name);
     void load_domain_information();
+    void Set_FGPP_active(QString MinLength, QString Complexity);
+    void Set_DDPP_active(QString MinLength, QString Complexity);
+    void Set_APP_active(QString MinLength, QString Complexity);
 
-    QStringList all_users; // All users found in the domain.
+
     QStringList all_forests; // All forests found in the domain.
     QStringList all_upns; // All UPNs found in the domain.
     QStringList ou_names; // All cleaned organizational names in the domain.
@@ -86,6 +139,9 @@ private:
     QStringList user_group_dns; // All distinguished names of the template users groups.
     QStringList all_group_dns; // All group distinguished names in the domain.
     QStringList all_group_cns; // All clean group names in the domain.
+    QStringList all_users; // All users found in the domain.
+
+
 
 
     QStringList List_All_Forests();
@@ -98,6 +154,27 @@ private:
     QStringList List_User_Group_CNs(QString SamName);
     QStringList List_User_Group_DNs(QString SamName);
 
+    QString DDPP_ComplexityEnabled; // Default Domain Password Policy ComplexityEnabled
+    QString DDPP_MinPasswordLength; // Default Domain Password Policy MinPasswordLength
+
+    QStringList FGPP_Names;                 // Fine Grained Password Policy names
+    QString FGPP_ComplexityEnabled;        // Fine Grained Password Policy ComplexityEnabled
+    QString FGPP_MinPasswordLength;       // Fine Grained Password Policy MinPasswordLength
+    QStringList FGPP_AppliesTo;          // Fine Grained Password Policy AppliesTo
+    QString FGPP_DistinguishedName;     // Fine Grained Password Policy DistinguishedName
+    int FGPP_MatchGrainPolicy;         // Fine Grained Password Policy index positon of matching policy name in FGPP_Names
+
+    QString APP_MinPasswordLength;   //Arbitrary Password Policy MinPasswordLength
+    QString APP_ComplexityEnabled; // Arbitrary Password Policy ComplexityEnabled
+
+
+    QString active_SP_MinLength; // This is the active policy always. It pulls from one of the above variables.
+    QString active_SP_Complexity; // This is the active policy always. It pulls from one of the above variables.
+
+
+
+    int ou_cn_selection; // The CN name to be the index of the ou cn combo box.
+    int upn_selection; // The upn to be the index of the upn combo box
 };
 
 #endif // DOMAININTEGRATION_H
