@@ -139,7 +139,6 @@ Window {
             Layout.preferredHeight:  40
             onClicked:
             {
-                // Add automate function
                 da_username_edit.visible = true;
                 da_password_edit.visible = true;
                 da_emailaddress_edit.visible = true;
@@ -152,6 +151,18 @@ Window {
                 da_upn_combo.currentIndex = domain_integration.da_upnselect
                 da_ou_combo.currentIndex = domain_integration.da_ouselect
                 da_password_edit.placeholderText = "Min length: " + domain_integration.da_lengthpolicy + " Complexity on: " + domain_integration.da_complexitypolicy
+            }
+        }
+
+        Button
+        {
+            id: da_create_button
+            text: "Create"
+            Layout.preferredWidth: 400
+            Layout.preferredHeight: 40
+            onClicked:
+            {
+                da_viewport.text = domain_integration.create_domain_account();
             }
         }
 

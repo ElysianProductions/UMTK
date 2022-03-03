@@ -312,6 +312,391 @@ void DomainIntegration::List_Password_Policy(QString name)
     }
 }
 
+void DomainIntegration::Dump_User_Form(QString data, QUrl image_path, QString name)
+{
+    /* I'm going to take the same HTML approach as I did in the PowerShell version.
+     * The string will be built with the HTML tags. For this reason the provided image
+     * needs to be in the QUrl format
+     */
+    if(image_path.isEmpty())
+    {
+        // ignore variaible and use just the contents of data.
+        QString path;
+
+        path = Clean_String(Execute("$t = (Get-ItemProperty -Path 'HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\User Shell Folders\\' -Name Desktop | Select-Object Desktop -ErrorAction SilentlyContinue); "
+                       "if($null -ne $t.Desktop) {$str = $t.Desktop.toString() + " + QString("\"") + "\\" + QString("\"") + "; return $str } else {$str = $ENV:USERPROFILE + " + QString("\"") + "\\Downloads\\; return $str" + QString("\"") + "}"
+                    ));
+        QTextDocument document;
+        document.setHtml(data);
+        QPrinter printer(QPrinter::PrinterResolution);
+        printer.setOutputFormat(QPrinter::PdfFormat);
+        printer.setPageSize(QPageSize::A4);
+        printer.setOutputFileName(path + name + ".pdf");
+        printer.setPageMargins(QMarginsF(15, 15, 15, 15));
+
+        document.print(&printer);
+    }
+    else if(!image_path.isEmpty())
+    {
+        // Use the path and include it in the string.
+    }
+}
+
+void DomainIntegration::Move_ADUser_Orgranizational_Unit(QString User_CN, QString Template_OU_Distinguished)
+{
+    Execute("Move-ADObject -Identity " + QString("\"") + User_CN + QString("\"") + " -TargetPath " + QString("\"") + Template_OU_Distinguished + QString("\""));
+}
+
+bool DomainIntegration::Employee_Name_Exists(QStringList names, QString new_name)
+{
+    QStringList tmp;
+    for(auto &i : names)
+    {
+        tmp << Clean_String(i);
+    }
+
+    int test = 0;
+    for(auto i = 0; i < tmp.count(); ++i)
+    {
+        if(tmp.at(i) == new_name)
+        {
+            test = 1;
+        }
+    }
+    if(test == 0)
+    {
+        return false;
+    }
+    else if(test == 1)
+    {
+        return true;
+    }
+}
+
+bool DomainIntegration::Validate_Password(QString pword, QString MinPasswordLength, QString ComplexityEnabled)
+{
+    if(pword.length() >= MinPasswordLength.toInt())
+    {
+        if(ComplexityEnabled == "True")
+        {
+            QRegularExpression re;
+            QRegularExpressionMatch match;
+            re.setPattern("(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[^A-Za-z0-9])");
+            match = re.match(pword);
+            bool matching = match.hasMatch();
+            if(matching == true)
+            {
+                return true;
+            }
+            else if(matching == false)
+            {
+                return false;
+            }
+        }
+        else if(ComplexityEnabled == "False")
+        {
+            QRegularExpression re;
+            QRegularExpressionMatch match;
+            re.setPattern("(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[^A-Za-z0-9])");
+            match = re.match(pword);
+            bool matching = match.hasMatch();
+            if(matching == true)
+            {
+                return true;
+            }
+            else if(matching == false)
+            {
+                return false;
+            }
+        }
+    }
+    if(pword.length() < MinPasswordLength.toInt())
+    {
+        return false;
+    }
+}
+
+bool DomainIntegration::Get_Azure_Status()
+{
+    QString status = Clean_String(Execute("if(Get-Module -ListAvailable -Name " + QString("\"") + "ADSync" + QString("\"") + ") {return 1} else {return 0}"));
+    if(status.toInt() == 1)
+    {
+        return true;
+    }
+    else if(status.toInt() == 0)
+    {
+        return false;
+    }
+}
+
+bool DomainIntegration::Validate_User_Status(QString template_name)
+{
+
+    QString var = Clean_String(Execute("$temp = (Get-ADUser -Filter {Name -Like " + QString("\"") + template_name + QString("\"") + "} -Properties Enabled).Enabled; return $temp"));
+    if(var == "True")
+    {
+        return true;
+    }
+    else if(var == "False")
+    {
+        return false;
+    }
+}
+
+QString DomainIntegration::create_domain_account()
+{
+    QString error;
+    bool errorDetected = false;
+    if(User_Exists(da_uname()) == "Yes")
+    {
+        error = error + "\nWARNING: SamAccountName " + da_uname() + " already exists.\n";
+        errorDetected = true;
+    }
+    if(da_password().length() <= 0 || da_password().length() < da_lengthpolicy().toInt())
+    {
+        errorDetected = true;
+        error = error + "\nWARNING: Password " + da_password() + " does not meet the minimum length requirements.\n Your password must be at least " + da_lengthpolicy() + " characters long.\n";
+    }
+    if(da_complexitypolicy() == "True" && Validate_Password(da_password(), da_lengthpolicy(), da_complexitypolicy()) == false)
+    {
+        errorDetected = true;
+        error = error + "\nWARNING: Password " + da_password() + " does not meet the complexity requirements.\n Your password must have at least one of the following: \nOne upper case letter"
+                                                                                          "\n One lower case letter. \nOne number\nOne Special character\n";
+    }
+    if(Employee_Name_Exists(all_users, full_name))
+    {
+        error = error + "\nWARNING: Name " + da_fname() + " already exists, consider using a middle name or initials.\n";
+        errorDetected = true;
+    }
+    if(UserPrincipalName.length() <= 0)
+    {
+        error = error + "\nWARNING: Your UPN appears to be empty. Please try again.\n";
+        errorDetected = true;
+    }
+    if(Validate_User_Status(da_template()) == false)
+    {
+        error = error + "\nWARNING: The template user " + da_template() + " is disabled. This means it likely has no groups.\nPlease confirm that the user has the groups needed before creating this user.\n";
+        errorDetected = true;
+    }
+    if(errorDetected == true)
+    {
+        return error;
+    }
+
+    if(User_Exists(da_uname()) == "No" && da_password().length() >= da_lengthpolicy().toInt() && Validate_Password(da_password(), da_lengthpolicy(), da_complexitypolicy()) == true
+            && Employee_Name_Exists(all_users, full_name) == false && UserPrincipalName.length() > 0)
+    {
+        if(da_pproxy().length() > 0 && da_sproxy().length() > 0 && da_displayname().length() > 0)
+        {
+            QString p = "$p = " + QString("\"") + da_password() + QString("\"") + "; $sec = $p | ConvertTo-SecureString -AsPlainText -Force; ";
+
+            Execute(p + "New-ADUser -Name " + "\"" + da_fname() + "\"" + " -GivenName " + "\"" + given_name + "\"" +
+                        " -Surname " + "\"" + sur_name + "\"" + " -AccountPassword $sec -UserPrincipalName " + "\"" + UserPrincipalName + "\"" +
+                        " -DisplayName " + "\"" + da_displayname() + "\"" + " -EmailAddress " + "\"" + da_email() + "\"" + " -SamAccountName " +
+                        "\"" + SamAccountName + "\"" + " -Enabled 1; exit");
+
+
+            Execute("$tmp = (Get-ADUser -Filter {Name -like \"" + da_template() + "\"}); "
+                    "$groups = (Get-ADUser $tmp -Properties MemberOf).MemberOf; $usr = \"" + SamAccountName + "\"; "
+                    "Foreach ($group in $groups) {Add-ADGroupMember -Identity (Get-ADGroup $group).name -Members $usr}; exit ");
+
+            Execute("Set-ADUser -Identity \"" + SamAccountName + "\" -Add @{Proxyaddresses = " + "\"SMTP:" + da_pproxy() + "\"}");
+            Execute("Set-ADUser -Identity \"" + SamAccountName + "\" -Add @{Proxyaddresses = " + "\"smtp:" + da_sproxy() + "\"}");
+
+            Move_ADUser_Orgranizational_Unit(ou_clean_name, ou_distinguished_name);
+            QString azure = Run_Azure_Sync(Get_Azure_Status());
+
+            Dump_User_Form("<html> <h1> <center> The following information pertains to the new user request that you have submitted: </center> </h1> <br><br><br> <body> <strong> Employee name: </strong> " + da_fname() +
+                                "<br> <strong> Username: </strong> " + SamAccountName + " <br> <strong> Email address: </strong> " + da_email() +
+                                "<br> <strong> Password: </strong> " + da_password() + " <br> <strong> Groups: </strong> " + user_group_cns.join(" , ") +
+                                "<br> <strong> Template user provided: </strong> " + da_template() +
+                                "</body> </html>", QUrl(""), da_fname()
+                               );
+            return QString("SUCCESS - The following user has been created and a PDF named " + SamAccountName + ".pdf has been generated and saved on your desktop.\nPresent it via encrypted email to the end user.\n\n\nEmployee name: " + da_fname() +
+                           "\nUsername: " + SamAccountName + "\nEmail address: " + da_email() + "\nDisplay name: " + da_displayname() + "\nOrganizational unit: " + ou_clean_name +
+                           "\nUser Principal Name: " + UserPrincipalName + "\nGroups: " + user_group_cns.join(" , ")+ "\nPassword: " + da_password() + "\n\n" + azure);
+        }
+        if(da_pproxy().length() > 0 && da_sproxy().length() > 0 && da_displayname().length() <= 0)
+        {
+            QString p = "$p = " + QString("\"") + da_password() + QString("\"") + "; $sec = $p | ConvertTo-SecureString -AsPlainText -Force; ";
+
+            Execute(p + "New-ADUser -Name " + "\"" + da_fname() + "\"" + " -GivenName " + "\"" + given_name + "\"" +
+                        " -Surname " + "\"" + sur_name + "\"" + " -AccountPassword $sec -UserPrincipalName " + "\"" + UserPrincipalName + "\"" +
+                        " -DisplayName " + "\"" + da_fname() + "\"" + " -EmailAddress " + "\"" + da_email() + "\"" + " -SamAccountName " +
+                        "\"" + SamAccountName + "\"" + " -Enabled 1; exit");
+
+
+            Execute("$tmp = (Get-ADUser -Filter {Name -like \"" + da_template() + "\"}); "
+                    "$groups = (Get-ADUser $tmp -Properties MemberOf).MemberOf; $usr = \"" + SamAccountName + "\"; "
+                    "Foreach ($group in $groups) {Add-ADGroupMember -Identity (Get-ADGroup $group).name -Members $usr}; exit ");
+
+            Execute("Set-ADUser -Identity \"" + SamAccountName + "\" -Add @{Proxyaddresses = " + "\"SMTP:" + da_pproxy() + "\"}");
+            Execute("Set-ADUser -Identity \"" + SamAccountName + "\" -Add @{Proxyaddresses = " + "\"smtp:" + da_sproxy() + "\"}");
+
+            Move_ADUser_Orgranizational_Unit(ou_clean_name, ou_distinguished_name);
+            QString azure = Run_Azure_Sync(Get_Azure_Status());
+
+            Dump_User_Form("<html> <h1> <center> The following information pertains to the new user request that you have submitted: </center> </h1> <br><br><br> <body> <strong> Employee name: </strong> " + da_fname() +
+                                "<br> <strong> Username: </strong> " + SamAccountName + " <br> <strong> Email address: </strong> " + da_email() +
+                                "<br> <strong> Password: </strong> " + da_password() + " <br> <strong> Groups: </strong> " + user_group_cns.join(" , ") +
+                                "<br> <strong> Template user provided: </strong> " + da_template() +
+                                "</body> </html>", QUrl(""), da_fname()
+                               );
+            return QString("SUCCESS - The following user has been created and a PDF named " + SamAccountName + ".pdf has been generated and saved on your desktop.\nPresent it via encrypted email to the end user.\n\n\nEmployee name: " + da_fname() +
+                           "\nUsername: " + SamAccountName + "\nEmail address: " + da_email() + "\nDisplay name: " + da_fname() + "\nOrganizational unit: " + ou_clean_name +
+                           "\nUser Principal Name: " + UserPrincipalName + "\nGroups: " + user_group_cns.join(" , ")+ "\nPassword: " + da_password() + "\n\n" + azure);
+        }
+        if(da_pproxy().length() > 0 && da_sproxy().length() <= 0 && da_displayname().length() > 0)
+        {
+            QString p = "$p = " + QString("\"") + da_password() + QString("\"") + "; $sec = $p | ConvertTo-SecureString -AsPlainText -Force; ";
+
+            Execute(p + "New-ADUser -Name " + "\"" + da_fname() + "\"" + " -GivenName " + "\"" + given_name + "\"" +
+                        " -Surname " + "\"" + sur_name + "\"" + " -AccountPassword $sec -UserPrincipalName " + "\"" + UserPrincipalName + "\"" +
+                        " -DisplayName " + "\"" + da_displayname() + "\"" + " -EmailAddress " + "\"" + da_email() + "\"" + " -SamAccountName " +
+                        "\"" + SamAccountName + "\"" + " -Enabled 1; exit");
+
+
+            Execute("$tmp = (Get-ADUser -Filter {Name -like \"" + da_template() + "\"}); "
+                    "$groups = (Get-ADUser $tmp -Properties MemberOf).MemberOf; $usr = \"" + SamAccountName + "\"; "
+                    "Foreach ($group in $groups) {Add-ADGroupMember -Identity (Get-ADGroup $group).name -Members $usr}; exit ");
+
+            Execute("Set-ADUser -Identity \"" + SamAccountName + "\" -Add @{Proxyaddresses = " + "\"SMTP:" + da_pproxy() + "\"}");
+
+
+            Move_ADUser_Orgranizational_Unit(ou_clean_name, ou_distinguished_name);
+            QString azure = Run_Azure_Sync(Get_Azure_Status());
+
+            Dump_User_Form("<html> <h1> <center> The following information pertains to the new user request that you have submitted: </center> </h1> <br><br><br> <body> <strong> Employee name: </strong> " + da_fname() +
+                                "<br> <strong> Username: </strong> " + SamAccountName + " <br> <strong> Email address: </strong> " + da_email() +
+                                "<br> <strong> Password: </strong> " + da_password() + " <br> <strong> Groups: </strong> " + user_group_cns.join(" , ") +
+                                "<br> <strong> Template user provided: </strong> " + da_template() +
+                                "</body> </html>", QUrl(""), da_fname()
+                               );
+            return QString("SUCCESS - The following user has been created and a PDF named " + SamAccountName + ".pdf has been generated and saved on your desktop.\nPresent it via encrypted email to the end user.\n\n\nEmployee name: " + da_fname() +
+                           "\nUsername: " + SamAccountName + "\nEmail address: " + da_email() + "\nDisplay name: " + da_displayname() + "\nOrganizational unit: " + ou_clean_name +
+                           "\nUser Principal Name: " + UserPrincipalName + "\nGroups: " + user_group_cns.join(" , ")+ "\nPassword: " + da_password() + "\n\n" + azure);
+        }
+        if(da_pproxy().length() <= 0 && da_sproxy().length() > 0 && da_displayname().length() > 0)
+        {
+            QString p = "$p = " + QString("\"") + da_password() + QString("\"") + "; $sec = $p | ConvertTo-SecureString -AsPlainText -Force; ";
+
+            Execute(p + "New-ADUser -Name " + "\"" + da_fname() + "\"" + " -GivenName " + "\"" + given_name + "\"" +
+                        " -Surname " + "\"" + sur_name + "\"" + " -AccountPassword $sec -UserPrincipalName " + "\"" + UserPrincipalName + "\"" +
+                        " -DisplayName " + "\"" + da_displayname() + "\"" + " -EmailAddress " + "\"" + da_email() + "\"" + " -SamAccountName " +
+                        "\"" + SamAccountName + "\"" + " -Enabled 1; exit");
+
+
+            Execute("$tmp = (Get-ADUser -Filter {Name -like \"" + da_template() + "\"}); "
+                    "$groups = (Get-ADUser $tmp -Properties MemberOf).MemberOf; $usr = \"" + SamAccountName + "\"; "
+                    "Foreach ($group in $groups) {Add-ADGroupMember -Identity (Get-ADGroup $group).name -Members $usr}; exit ");
+
+            Execute("Set-ADUser -Identity \"" + SamAccountName + "\" -Add @{Proxyaddresses = " + "\"SMTP:" + da_email() + "\"}");
+            Execute("Set-ADUser -Identity \"" + SamAccountName + "\" -Add @{Proxyaddresses = " + "\"smtp:" + da_sproxy() + "\"}");
+
+            Move_ADUser_Orgranizational_Unit(ou_clean_name, ou_distinguished_name);
+            QString azure = Run_Azure_Sync(Get_Azure_Status());
+
+            Dump_User_Form("<html> <h1> <center> The following information pertains to the new user request that you have submitted: </center> </h1> <br><br><br> <body> <strong> Employee name: </strong> " + da_fname() +
+                                "<br> <strong> Username: </strong> " + SamAccountName + " <br> <strong> Email address: </strong> " + da_email() +
+                                "<br> <strong> Password: </strong> " + da_password() + " <br> <strong> Groups: </strong> " + user_group_cns.join(" , ") +
+                                "<br> <strong> Template user provided: </strong> " + da_template() +
+                                "</body> </html>", QUrl(""), da_fname()
+                               );
+            return QString("SUCCESS - The following user has been created and a PDF named " + SamAccountName + ".pdf has been generated and saved on your desktop.\nPresent it via encrypted email to the end user.\n\n\nEmployee name: " + da_fname() +
+                           "\nUsername: " + SamAccountName + "\nEmail address: " + da_email() + "\nDisplay name: " + da_displayname() + "\nOrganizational unit: " + ou_clean_name +
+                           "\nUser Principal Name: " + UserPrincipalName + "\nGroups: " + user_group_cns.join(" , ")+ "\nPassword: " + da_password() + "\n\n" + azure);
+        }
+        if(da_pproxy().length() <= 0 && da_sproxy().length() <= 0 && da_displayname().length() > 0)
+        {
+            QString p = "$p = " + QString("\"") + da_password() + QString("\"") + "; $sec = $p | ConvertTo-SecureString -AsPlainText -Force; ";
+
+            Execute(p + "New-ADUser -Name " + "\"" + da_fname() + "\"" + " -GivenName " + "\"" + given_name + "\"" +
+                        " -Surname " + "\"" + sur_name + "\"" + " -AccountPassword $sec -UserPrincipalName " + "\"" + UserPrincipalName + "\"" +
+                        " -DisplayName " + "\"" + da_displayname() + "\"" + " -EmailAddress " + "\"" + da_email() + "\"" + " -SamAccountName " +
+                        "\"" + SamAccountName + "\"" + " -Enabled 1; exit");
+
+
+            Execute("$tmp = (Get-ADUser -Filter {Name -like \"" + da_template() + "\"}); "
+                    "$groups = (Get-ADUser $tmp -Properties MemberOf).MemberOf; $usr = \"" + SamAccountName + "\"; "
+                    "Foreach ($group in $groups) {Add-ADGroupMember -Identity (Get-ADGroup $group).name -Members $usr}; exit ");
+
+            Execute("Set-ADUser -Identity \"" + SamAccountName + "\" -Add @{Proxyaddresses = " + "\"SMTP:" + da_email() + "\"}");
+
+            Move_ADUser_Orgranizational_Unit(ou_clean_name, ou_distinguished_name);
+            QString azure = Run_Azure_Sync(Get_Azure_Status());
+
+            Dump_User_Form("<html> <h1> <center> The following information pertains to the new user request that you have submitted: </center> </h1> <br><br><br> <body> <strong> Employee name: </strong> " + da_fname() +
+                                "<br> <strong> Username: </strong> " + SamAccountName + " <br> <strong> Email address: </strong> " + da_email() +
+                                "<br> <strong> Password: </strong> " + da_password() + " <br> <strong> Groups: </strong> " + user_group_cns.join(" , ") +
+                                "<br> <strong> Template user provided: </strong> " + da_template() +
+                                "</body> </html>", QUrl(""), da_fname()
+                               );
+            return QString("SUCCESS - The following user has been created and a PDF named " + SamAccountName + ".pdf has been generated and saved on your desktop.\nPresent it via encrypted email to the end user.\n\n\nEmployee name: " + da_fname() +
+                           "\nUsername: " + SamAccountName + "\nEmail address: " + da_email() + "\nDisplay name: " + da_displayname() + "\nOrganizational unit: " + ou_clean_name +
+                           "\nUser Principal Name: " + UserPrincipalName + "\nGroups: " + user_group_cns.join(" , ")+ "\nPassword: " + da_password() + "\n\n" + azure);
+        }
+        if(da_pproxy().length() <= 0 && da_sproxy().length() <= 0 && da_displayname().length() <= 0)
+        {
+            QString p = "$p = " + QString("\"") + da_password() + QString("\"") + "; $sec = $p | ConvertTo-SecureString -AsPlainText -Force; ";
+
+            Execute(p + "New-ADUser -Name " + "\"" + da_fname() + "\"" + " -GivenName " + "\"" + given_name + "\"" +
+                        " -Surname " + "\"" + sur_name + "\"" + " -AccountPassword $sec -UserPrincipalName " + "\"" + UserPrincipalName + "\"" +
+                        " -DisplayName " + "\"" + da_fname() + "\"" + " -EmailAddress " + "\"" + da_email() + "\"" + " -SamAccountName " +
+                        "\"" + SamAccountName + "\"" + " -Enabled 1; exit");
+
+
+            Execute("$tmp = (Get-ADUser -Filter {Name -like \"" + da_template() + "\"}); "
+                    "$groups = (Get-ADUser $tmp -Properties MemberOf).MemberOf; $usr = \"" + SamAccountName + "\"; "
+                    "Foreach ($group in $groups) {Add-ADGroupMember -Identity (Get-ADGroup $group).name -Members $usr}; exit ");
+
+            Execute("Set-ADUser -Identity \"" + SamAccountName + "\" -Add @{Proxyaddresses = " + "\"SMTP:" + da_email() + "\"}");
+
+            Move_ADUser_Orgranizational_Unit(ou_clean_name, ou_distinguished_name);
+            QString azure = Run_Azure_Sync(Get_Azure_Status());
+
+            Dump_User_Form("<html> <h1> <center> The following information pertains to the new user request that you have submitted: </center> </h1> <br><br><br> <body> <strong> Employee name: </strong> " + da_fname() +
+                                "<br> <strong> Username: </strong> " + SamAccountName + " <br> <strong> Email address: </strong> " + da_email() +
+                                "<br> <strong> Password: </strong> " + da_password() + " <br> <strong> Groups: </strong> " + user_group_cns.join(" , ") +
+                                "<br> <strong> Template user provided: </strong> " + da_template() +
+                                "</body> </html>", QUrl(""), da_fname()
+                               );
+            return QString("SUCCESS - The following user has been created and a PDF named " + SamAccountName + ".pdf \nhas been generated and saved on your desktop.\nPresent it via encrypted email to the end user.\n\n\nEmployee name: " + da_fname() +
+                           "\nUsername: " + SamAccountName + "\nEmail address: " + da_email() + "\nDisplay name: " + da_fname() + "\nOrganizational unit: " + ou_clean_name +
+                           "\nUser Principal Name: " + UserPrincipalName + "\nGroups: " + user_group_cns.join(" , ")+ "\nPassword: " + da_password() + "\n\n" + azure);
+        }
+
+
+        //
+    }
+
+}
+
+QString DomainIntegration::Run_Azure_Sync(bool var)
+{
+    if(var)
+    {
+        Execute("Start-ADSyncSyncCycle -PolicyType " + QString("\"") + "Delta" + QString("\""));
+        return QString("A sucessful AD Sync has been executed.");
+    }
+    else if(!var)
+    {
+        return QString("\nThe ADSync module is not installed here. If this client uses Azure AD Sync please get on the server with the AD Sync module and execute the following command: \n Import-Module ADSync; Start-ADSyncSyncCycle -PolicyType "+ QString("\"") + "Delta" + QString("\""));
+    }
+}
+
+QString DomainIntegration::User_Exists(QString SamName)
+{
+    QString var = Clean_String(Execute("$test = (Get-ADUser -Filter {SamAccountName -like " + QString("\"") + SamName + QString("\"") + "}); if($null -ne $test) {return 'Yes'} elseif($null -eq $test) {return 'No'}"));
+    if(var == "Yes")
+    {
+        return QString("Yes");
+    }
+    else if(var == "No")
+    {
+        return QString("No");
+    }
+}
+
 QString DomainIntegration::List_ActiveSP_length()
 {
     return active_SP_MinLength;
