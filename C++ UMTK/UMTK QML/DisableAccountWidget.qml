@@ -19,7 +19,7 @@ Window {
     DomainIntegration
     {
         id: domain_integration
-
+        da_template: da_template_combo.currentText
     }
 
     ColumnLayout
@@ -34,23 +34,26 @@ Window {
             id: da_template_combo
             Layout.preferredWidth: 400
             Layout.preferredHeight:  40
-            model: domain_integration.da_allupns
+            model: domain_integration.da_allusers
 
         }
 
         Button
         {
-            id: la_create_button
+            id: da_disable_button
             text: "Disable"
             Layout.preferredWidth: 400
             Layout.preferredHeight:  40
-
+            onClicked:
+            {
+                disable_account_viewport.text = domain_integration.disable_domain_account();
+            }
 
         }
 
         Button
         {
-            id: la_cancel_button
+            id: da_cancel_button
             text: "Cancel"
             Layout.preferredWidth: 400
             Layout.preferredHeight:  40
