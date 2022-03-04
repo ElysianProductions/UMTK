@@ -162,30 +162,28 @@ void DomainIntegration::automate()
 {
     if(da_fname().length() > 0 && da_fname().contains(" "))
     {
-        given_name = da_fname().split(" ").first();
-        sur_name = da_fname().split(" ").last();
+        given_name = da_fname().split(" ").first(); // create the given name
+        sur_name = da_fname().split(" ").last(); // create the last name
         if(da_displayname().length() <= 0)
         {
-            setDADisplayName(da_fname());
+            setDADisplayName(da_fname()); // If the optional display name is empty set default to first name
         }
-        setDAUName(SamAccountName = given_name.at(0).toUpper() + sur_name.toLower());
-        setDAEmail(UserPrincipalName = SamAccountName + "@" + List_User_Identifier(Clean_String(da_template())));
+        setDAUName(SamAccountName = given_name.at(0).toUpper() + sur_name.toLower()); // Set the SamAccountName
+        setDAEmail(UserPrincipalName = SamAccountName + "@" + List_User_Identifier(Clean_String(da_template()))); // Set the email address
 
-        user_group_dns = List_User_Group_DNs(List_SamAccountName(Clean_String(da_template())));
-        user_group_cns = List_User_Group_CNs(List_SamAccountName(Clean_String(da_template())));
-
-
-
-        ou_distinguished_name = List_User_OU_DN(Clean_String(da_template()));
-        ou_clean_name = List_User_OU_CN(Clean_String(da_template()));
+        user_group_dns = List_User_Group_DNs(List_SamAccountName(Clean_String(da_template()))); // Get the DistinguishedNames from the template users groups
+        user_group_cns = List_User_Group_CNs(List_SamAccountName(Clean_String(da_template()))); // Get the clean names for the template users groups
 
 
-        QString tmp_upn = List_User_Identifier(Clean_String(da_template()));
+        ou_distinguished_name = List_User_OU_DN(Clean_String(da_template())); // Get the distinguished name for the template users OU
+        ou_clean_name = List_User_OU_CN(Clean_String(da_template())); // Get the clean name for the template users ou
+
+        QString tmp_upn = List_User_Identifier(Clean_String(da_template())); // Store a temp copy of the template users upn in a string
         for(auto i = 0; i < all_upns.count(); ++i)
         {
             if(tmp_upn == all_upns.at(i))
             {
-                setUPNComboIndex(i);
+                setUPNComboIndex(i); // Match the upn so we can set the index position in the UPN ComboBox automatically
             }
         }
 
@@ -194,13 +192,11 @@ void DomainIntegration::automate()
         {
             if(ou_clean_name == ou_names.at(i))
             {
-                setOUComboIndex(i);
+                setOUComboIndex(i); // MAtch the users CN OU so we can set the index position in the OU ComboBox automatically
             }
         }
 
-        List_Password_Policy(Clean_String(da_template()));
-
-        // See lines 628 - 658 in original psintegration.cpp it just needs to be handled from within DomainAccountWidget.qml
+        List_Password_Policy(Clean_String(da_template())); // Determine which password policy is used
     }
     else
     {
@@ -314,10 +310,6 @@ void DomainIntegration::List_Password_Policy(QString name)
 
 void DomainIntegration::Dump_User_Form(QString data, QUrl image_path, QString name)
 {
-    /* I'm going to take the same HTML approach as I did in the PowerShell version.
-     * The string will be built with the HTML tags. For this reason the provided image
-     * needs to be in the QUrl format
-     */
     if(image_path.isEmpty())
     {
         // ignore variaible and use just the contents of data.
@@ -342,9 +334,9 @@ void DomainIntegration::Dump_User_Form(QString data, QUrl image_path, QString na
     }
 }
 
-void DomainIntegration::Move_ADUser_Orgranizational_Unit(QString User_CN, QString Template_OU_Distinguished)
+void DomainIntegration::Move_ADUser_Orgranizational_Unit(QString User_DN, QString Template_OU_Distinguished)
 {
-    Execute("Move-ADObject -Identity " + QString("\"") + User_CN + QString("\"") + " -TargetPath " + QString("\"") + Template_OU_Distinguished + QString("\""));
+    Execute("Move-ADObject -Identity " + QString("\"") + User_DN + QString("\"") + " -TargetPath " + QString("\"") + Template_OU_Distinguished + QString("\""));
 }
 
 bool DomainIntegration::Employee_Name_Exists(QStringList names, QString new_name)
@@ -443,6 +435,11 @@ bool DomainIntegration::Validate_User_Status(QString template_name)
     }
 }
 
+QString DomainIntegration::List_User_DN(QString name)
+{
+    return Clean_String(Execute("(Get-ADUser -Filter {Name -Like " + QString("\"") + name + QString("\"") + "} -Properties DistinguishedName).DistinguishedName"));
+}
+
 QString DomainIntegration::create_domain_account()
 {
     QString error;
@@ -503,7 +500,9 @@ QString DomainIntegration::create_domain_account()
             Execute("Set-ADUser -Identity \"" + SamAccountName + "\" -Add @{Proxyaddresses = " + "\"SMTP:" + da_pproxy() + "\"}");
             Execute("Set-ADUser -Identity \"" + SamAccountName + "\" -Add @{Proxyaddresses = " + "\"smtp:" + da_sproxy() + "\"}");
 
-            Move_ADUser_Orgranizational_Unit(ou_clean_name, ou_distinguished_name);
+            user_dn = List_User_DN(da_fname());
+            Move_ADUser_Orgranizational_Unit(user_dn, ou_distinguished_name);
+
             QString azure = Run_Azure_Sync(Get_Azure_Status());
 
             Dump_User_Form("<html> <h1> <center> The following information pertains to the new user request that you have submitted: </center> </h1> <br><br><br> <body> <strong> Employee name: </strong> " + da_fname() +
@@ -533,7 +532,9 @@ QString DomainIntegration::create_domain_account()
             Execute("Set-ADUser -Identity \"" + SamAccountName + "\" -Add @{Proxyaddresses = " + "\"SMTP:" + da_pproxy() + "\"}");
             Execute("Set-ADUser -Identity \"" + SamAccountName + "\" -Add @{Proxyaddresses = " + "\"smtp:" + da_sproxy() + "\"}");
 
-            Move_ADUser_Orgranizational_Unit(ou_clean_name, ou_distinguished_name);
+            user_dn = List_User_DN(da_fname());
+            Move_ADUser_Orgranizational_Unit(user_dn, ou_distinguished_name);
+
             QString azure = Run_Azure_Sync(Get_Azure_Status());
 
             Dump_User_Form("<html> <h1> <center> The following information pertains to the new user request that you have submitted: </center> </h1> <br><br><br> <body> <strong> Employee name: </strong> " + da_fname() +
@@ -563,7 +564,9 @@ QString DomainIntegration::create_domain_account()
             Execute("Set-ADUser -Identity \"" + SamAccountName + "\" -Add @{Proxyaddresses = " + "\"SMTP:" + da_pproxy() + "\"}");
 
 
-            Move_ADUser_Orgranizational_Unit(ou_clean_name, ou_distinguished_name);
+            user_dn = List_User_DN(da_fname());
+            Move_ADUser_Orgranizational_Unit(user_dn, ou_distinguished_name);
+
             QString azure = Run_Azure_Sync(Get_Azure_Status());
 
             Dump_User_Form("<html> <h1> <center> The following information pertains to the new user request that you have submitted: </center> </h1> <br><br><br> <body> <strong> Employee name: </strong> " + da_fname() +
@@ -593,7 +596,9 @@ QString DomainIntegration::create_domain_account()
             Execute("Set-ADUser -Identity \"" + SamAccountName + "\" -Add @{Proxyaddresses = " + "\"SMTP:" + da_email() + "\"}");
             Execute("Set-ADUser -Identity \"" + SamAccountName + "\" -Add @{Proxyaddresses = " + "\"smtp:" + da_sproxy() + "\"}");
 
-            Move_ADUser_Orgranizational_Unit(ou_clean_name, ou_distinguished_name);
+            user_dn = List_User_DN(da_fname());
+            Move_ADUser_Orgranizational_Unit(user_dn, ou_distinguished_name);
+
             QString azure = Run_Azure_Sync(Get_Azure_Status());
 
             Dump_User_Form("<html> <h1> <center> The following information pertains to the new user request that you have submitted: </center> </h1> <br><br><br> <body> <strong> Employee name: </strong> " + da_fname() +
@@ -622,7 +627,9 @@ QString DomainIntegration::create_domain_account()
 
             Execute("Set-ADUser -Identity \"" + SamAccountName + "\" -Add @{Proxyaddresses = " + "\"SMTP:" + da_email() + "\"}");
 
-            Move_ADUser_Orgranizational_Unit(ou_clean_name, ou_distinguished_name);
+            user_dn = List_User_DN(da_fname());
+            Move_ADUser_Orgranizational_Unit(user_dn, ou_distinguished_name);
+
             QString azure = Run_Azure_Sync(Get_Azure_Status());
 
             Dump_User_Form("<html> <h1> <center> The following information pertains to the new user request that you have submitted: </center> </h1> <br><br><br> <body> <strong> Employee name: </strong> " + da_fname() +
@@ -651,7 +658,9 @@ QString DomainIntegration::create_domain_account()
 
             Execute("Set-ADUser -Identity \"" + SamAccountName + "\" -Add @{Proxyaddresses = " + "\"SMTP:" + da_email() + "\"}");
 
-            Move_ADUser_Orgranizational_Unit(ou_clean_name, ou_distinguished_name);
+            user_dn = List_User_DN(da_fname());
+            Move_ADUser_Orgranizational_Unit(user_dn, ou_distinguished_name);
+
             QString azure = Run_Azure_Sync(Get_Azure_Status());
 
             Dump_User_Form("<html> <h1> <center> The following information pertains to the new user request that you have submitted: </center> </h1> <br><br><br> <body> <strong> Employee name: </strong> " + da_fname() +

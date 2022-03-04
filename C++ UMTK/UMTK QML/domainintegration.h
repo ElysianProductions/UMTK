@@ -114,6 +114,7 @@ private:
     QString UserPrincipalName; // UserPrincipalName.
     QString ou_distinguished_name; // The new users OU DN.
     QString ou_clean_name; // The news users OU CN.
+    QString user_dn; // The new uers current DistinguishedName to be used when we move the user to its new OU.
     QString DDPP_ComplexityEnabled; // Default Domain Password Policy ComplexityEnabled
     QString DDPP_MinPasswordLength; // Default Domain Password Policy MinPasswordLength
     QString FGPP_ComplexityEnabled;        // Fine Grained Password Policy ComplexityEnabled
@@ -132,6 +133,7 @@ private:
     QString Run_Azure_Sync(bool var);
     QString List_ActiveSP_Complexity();
     QString List_ActiveSP_length();
+    QString List_User_DN(QString name);
 
 
     void List_Password_Policy(QString name);
@@ -139,7 +141,7 @@ private:
     void Set_FGPP_active(QString MinLength, QString Complexity);
     void Set_DDPP_active(QString MinLength, QString Complexity);
     void Set_APP_active(QString MinLength, QString Complexity);
-    void Move_ADUser_Orgranizational_Unit(QString User_CN, QString Template_OU_Distinguished);
+    void Move_ADUser_Orgranizational_Unit(QString User_DN, QString Template_OU_Distinguished);
     void Dump_User_Form(QString data, QUrl image_path, QString name);
 
     bool Employee_Name_Exists(QStringList names, QString new_name);
@@ -156,6 +158,8 @@ private:
     QStringList all_group_dns; // All group distinguished names in the domain.
     QStringList all_group_cns; // All clean group names in the domain.
     QStringList all_users; // All users found in the domain.
+    QStringList FGPP_Names;                 // Fine Grained Password Policy names
+    QStringList FGPP_AppliesTo;          // Fine Grained Password Policy AppliesTo
     QStringList List_All_Forests();
     QStringList List_All_UPNs();
     QStringList List_All_OU_CNs();
@@ -165,8 +169,7 @@ private:
     QStringList List_ALL_Group_DNs();
     QStringList List_User_Group_CNs(QString SamName);
     QStringList List_User_Group_DNs(QString SamName);
-    QStringList FGPP_Names;                 // Fine Grained Password Policy names
-    QStringList FGPP_AppliesTo;          // Fine Grained Password Policy AppliesTo
+
 
 
 
