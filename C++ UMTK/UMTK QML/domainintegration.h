@@ -51,7 +51,8 @@ public:
     void setDAComplexityPolicy(const QString &dacomplexity); // See Q_PROPERTY labeled Property 14.
     void setDALengthPolicy(const QString &dalengthpolicy); // See Q_PROPERTY labeled Property 15.
     void setUserDN();
-
+    void Edit_Disable_Description(QString name);
+    void Edit_User_Status(QString name);
 
     QString da_template(); // See Q_PROPERTY labeled Property 1.
     QString da_fname(); // See Q_PROPERTY labeled Property 2.
@@ -80,6 +81,7 @@ protected:
 public slots:
     void automate();
     QString create_domain_account();
+    QString disable_domain_account();
 
 signals:
     void da_TemplateUserChanged(); // User selection in combobox changed.
@@ -134,6 +136,7 @@ private:
     QString List_ActiveSP_Complexity();
     QString List_ActiveSP_length();
     QString List_User_DN(QString name);
+    QString List_Mail(QString name);
 
 
     void List_Password_Policy(QString name);

@@ -1,7 +1,7 @@
 import QtQuick 2.5
 import QtQuick.Controls 2.5
 import QtQuick.Layouts 1.3
-import com.elysianproductions.psintegration 1.0
+import com.elysianproductions.domainintegration 1.0
 
 Window {
     id: disable_account_page
@@ -16,6 +16,11 @@ Window {
         id: load_page
     }
 
+    DomainIntegration
+    {
+        id: domain_integration
+
+    }
 
     ColumnLayout
     {
@@ -29,6 +34,8 @@ Window {
             id: da_template_combo
             Layout.preferredWidth: 400
             Layout.preferredHeight:  40
+            model: domain_integration.da_allupns
+
         }
 
         Button

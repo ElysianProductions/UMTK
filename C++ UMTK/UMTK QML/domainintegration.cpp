@@ -339,6 +339,21 @@ void DomainIntegration::Move_ADUser_Orgranizational_Unit(QString User_DN, QStrin
     Execute("Move-ADObject -Identity " + QString("\"") + User_DN + QString("\"") + " -TargetPath " + QString("\"") + Template_OU_Distinguished + QString("\""));
 }
 
+void DomainIntegration::Edit_User_Status(QString name)
+{
+    /* https://docs.microsoft.com/en-us/powershell/module/activedirectory/disable-adaccount?view=windowsserver2022-ps
+     *
+     *
+     */
+    QString identity = List_SamAccountName(name);
+    QString result = Execute("Disable-ADAccount -Identity " + identity);
+}
+
+void DomainIntegration::Edit_Disable_Description(QString name)
+{
+    Execute("$date = Get-Date; $var = " + QString("\"") + "Disabled: " + QString("\"") + " + $date; Set-ADUser -Identity ((Get-ADUser -Filter {Name -Like " + QString("\"") + name + QString("\"") + "} -Properties SamAccountName).SamAccountName) -Description $var");
+}
+
 bool DomainIntegration::Employee_Name_Exists(QStringList names, QString new_name)
 {
     QStringList tmp;
@@ -829,6 +844,26 @@ QString DomainIntegration::da_complexitypolicy()
 QString DomainIntegration::da_lengthpolicy()
 {
     return active_SP_MinLength;
+}
+
+QString DomainIntegration::List_Mail(QString name)
+{
+    return Clean_String(Execute("(Get-ADUser -Filter {Name -Like " + QString("\"") + name + QString("\"") + "} -Properties Mail).Mail"));
+}
+
+QString DomainIntegration::disable_domain_account()
+{
+    QStringList groups = List_User_Group_CNs(List_SamAccountName(da_template())); // Get the CNs for all groups the user is a member of.
+    Execute("$user = " + QString("\"") + da_template() + QString("\"") + "; Get-ADPrincipalGroupMembership $user | Foreach {Remove-ADGroupMember $_ -Members $user -Confirm:$false}"); // Strip the user from all groups.
+    Edit_Disable_Description(da_template()); // Append the desctipion of the account to say DISABLED: date & time
+    Edit_User_Status(da_template()); // Disable the user account.
+    Dump_User_Form("<html> <h1> <center> The following information pertains to the disable user request that you have submitted: </center> </h1> <br><br><br> <body> <strong> Employee name: </strong> " + da_template() +
+                            "<br> <strong> Username: </strong> " + List_SamAccountName(da_template()) + " <br> <strong> Email address: </strong> " + List_Mail(da_template()) +
+                            "<br> <strong> Groups: </strong> " + groups.join(" , ") +
+                            "</body> </html>", QUrl(""), da_template()
+                    );
+
+    return QString("The user " + da_template() + " has been disabled.");
 }
 
 int DomainIntegration::da_ouselect()
