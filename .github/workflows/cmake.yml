@@ -15,11 +15,50 @@ jobs:
     # The CMake configure and build commands are platform agnostic and should work equally well on Windows or Mac.
     # You can convert this to a matrix build if you need cross-platform coverage.
     # See: https://docs.github.com/en/free-pro-team@latest/actions/learn-github-actions/managing-complex-workflows#using-a-build-matrix
-    runs-on: ubuntu-latest
+    name: ${{ matrix.config.name }}
+    runs-on: ${{ matrix.config.name }}
+    strategy:
+      fail-fast: false
+      matrix:
+        config:
+        - {
+           name: "Windows Latest MSVC", WIN_ARCH: "x64"
+           , os: windows-latest
+           , QT_VERSION: 6.2.2, QT_INST_DIR: "C:\", QT_ARCH: win64_msvc2019_64
+           , releasePackage: "UMTK-Qt6.tar.xz"
+          }
+
 
     steps:
     - uses: actions/checkout@v2
+    
+    - name: Cache Qt
+      id: cache-qt
+      uses: actions/cache@v2
+      with:
+        path: ${{matrix.config.QT_INST_DIR}}/Qt
+        key: ${{ runner.os }}${{ matrix.config.WIN_ARCH }}-qt-${{ matrix.config.QT_VERSION }}-${{ env.Qt_Tools }}
+    
+    
+    - name: Install Qt
+      uses: jurplel/install-qt-action@v2.14.0
+      with:
+       aqtversion: ==2.0.0
+       py7zrversion: ==0.16.2
+       dir: ${{matrix.config.QT_INST_DIR}}
+       arch: ${{ matrix.config.QT_ARCH }}
+       version: ${{ matrix.config.QT_VERSION }}
+       modules: ${{ matrix.config.QT_MODULES }}
+       cached: ${{ steps.cache-qt.outputs.cache-hit }}
+       tools: 'desktop,tools_ifw,qt.tools.ifw.42'
+    
+      - name: Build ff7tk
+      id: main_build
+      run: |
+        cmake -S. -Bbuild -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DBUILD_DEMOS=ON -DCPACK_PACKAGE_VERSION=continuous ${{matrix.config.extraCmakeConfig}}
+        cmake --build build --config ${{env.BUILD_TYPE}} --target package
 
+    
     - name: Configure CMake
       # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
       # See https://cmake.org/cmake/help/latest/variable/CMAKE_BUILD_TYPE.html?highlight=cmake_build_type
