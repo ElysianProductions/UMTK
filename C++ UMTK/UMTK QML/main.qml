@@ -66,6 +66,21 @@ Window {
 
         }
 
+        Button
+        {
+            id: advanced_settings
+            text: "Advanced settings"
+            Layout.preferredWidth: 150
+            Layout.preferredHeight: 40
+            visible: false
+            onClicked:
+            {
+                start_page.close();
+                load_page.source = "AdvancedSettingsWidget.qml"
+            }
+
+        }
+
 
     }
 

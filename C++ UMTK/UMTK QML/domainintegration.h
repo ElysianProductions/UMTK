@@ -11,6 +11,9 @@
 #include <QUrl>
 #include <QTextDocument>
 #include <QPrinter>
+#include <QSettings>
+
+
 #include <QDebug>
 
 class DomainIntegration : public QObject
@@ -53,6 +56,7 @@ public:
     void setUserDN();
     void Edit_Disable_Description(QString name);
     void Edit_User_Status(QString name);
+
 
     QString da_template(); // See Q_PROPERTY labeled Property 1.
     QString da_fname(); // See Q_PROPERTY labeled Property 2.
@@ -146,11 +150,18 @@ private:
     void Set_APP_active(QString MinLength, QString Complexity);
     void Move_ADUser_Orgranizational_Unit(QString User_DN, QString Template_OU_Distinguished);
     void Dump_User_Form(QString data, QUrl image_path, QString name);
+    void Set_Company_Prefixes();
+    void Set_User_Prefixes();
 
     bool Employee_Name_Exists(QStringList names, QString new_name);
     bool Validate_Password(QString pword, QString MinPasswordLength, QString ComplexityEnabled);
     bool Get_Azure_Status();
     bool Validate_User_Status(QString template_name);
+    bool Is_Company_Prefix_Active();
+    bool Is_User_Prefix_Active();
+    bool company_prefix_active; // If a company prefix is in use, set this flag to true.
+    bool user_prefix_active; // If a user prefix is in use, set this flag to true.
+
 
     QStringList all_forests; // All forests found in the domain.
     QStringList all_upns; // All UPNs found in the domain.
@@ -163,6 +174,9 @@ private:
     QStringList all_users; // All users found in the domain.
     QStringList FGPP_Names;                 // Fine Grained Password Policy names
     QStringList FGPP_AppliesTo;          // Fine Grained Password Policy AppliesTo
+    QStringList all_company_prefixes; // IF there are company prefixes, they're stored here.
+    QStringList all_user_prefixes; // If there are user prefixes, they're stored here.
+    QStringList all_ini_ous; // If there are OUs defined in the ini file they will be stored here.
     QStringList List_All_Forests();
     QStringList List_All_UPNs();
     QStringList List_All_OU_CNs();
@@ -172,14 +186,14 @@ private:
     QStringList List_ALL_Group_DNs();
     QStringList List_User_Group_CNs(QString SamName);
     QStringList List_User_Group_DNs(QString SamName);
-
-
-
+    QStringList List_Company_prefixes();
+    QStringList List_User_Prefixes();
 
 
     int FGPP_MatchGrainPolicy;         // Fine Grained Password Policy index positon of matching policy name in FGPP_Names
     int ou_cn_selection; // The CN name to be the index of the ou cn combo box.
     int upn_selection; // The upn to be the index of the upn combo box
+
 };
 
 #endif // DOMAININTEGRATION_H

@@ -10,7 +10,7 @@ void PSIntegration::setLAUsername(const QString &laun)
     if(laun != la_uname)
     {
         la_uname = laun;
-        emit la_userNChanged();
+        Q_EMIT la_userNChanged();
     }
 }
 
@@ -19,7 +19,7 @@ void PSIntegration::setLAFullname(const QString &lafn)
     if(lafn != la_fname)
     {
         la_fname = lafn;
-        emit la_userFNChanged();
+        Q_EMIT la_userFNChanged();
     }
 }
 
@@ -28,7 +28,7 @@ void PSIntegration::setLAPassword(const QString &lapass)
     if(lapass != la_pass)
     {
         la_pass = lapass;
-        emit la_userPChanged();
+        Q_EMIT la_userPChanged();
     }
 }
 
@@ -37,7 +37,7 @@ void PSIntegration::setLAAdmin(const bool &laadmin)
     if(laadmin != la_admin)
     {
         la_admin = laadmin;
-        emit la_AdminStatusChanged();
+        Q_EMIT la_AdminStatusChanged();
     }
 }
 

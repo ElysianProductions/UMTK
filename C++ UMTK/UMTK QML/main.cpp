@@ -5,15 +5,23 @@
 #include <QQuickWindow>
 #include <QQuickView>
 #include <QUrl>
+#include <QSqlDatabase>
+#include <QString>
+
 #include "psintegration.h"
 #include "domainintegration.h"
+#include "advancedsettings.h"
+
+#include <QDebug>
 
 int main(int argc, char *argv[])
 {
     QGuiApplication app(argc, argv);
+
+
     qmlRegisterType<PSIntegration>("com.elysianproductions.psintegration", 1, 0, "PSIntegration");
     qmlRegisterType<DomainIntegration>("com.elysianproductions.domainintegration", 1, 0, "DomainIntegration");
-
+    qmlRegisterType<AdvancedSettings>("com.elysianproductions.advancedsettings", 1, 0, "AdvancedSettings");
 
     QQmlApplicationEngine engine;
     const QUrl url(u"qrc:/UMTKQML/main.qml"_qs);

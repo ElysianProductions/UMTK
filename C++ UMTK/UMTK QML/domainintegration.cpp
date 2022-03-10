@@ -3,15 +3,16 @@
 DomainIntegration::DomainIntegration()
 {
     load_domain_information();
-
 }
+
+
 
 void DomainIntegration::setDAUserTemplate(const QString &templateuser)
 {
     if(templateuser != template_user)
     {
         template_user = templateuser;
-        emit da_TemplateUserChanged();
+        Q_EMIT da_TemplateUserChanged();
     }
 }
 
@@ -20,7 +21,7 @@ void DomainIntegration::setDAFName(const QString &dafname)
     if(dafname != full_name)
     {
         full_name = dafname;
-        emit da_FNameChanged();
+        Q_EMIT da_FNameChanged();
     }
 }
 
@@ -29,7 +30,7 @@ void DomainIntegration::setDAUName(const QString &dauname)
     if(dauname != username)
     {
         username = dauname;
-        emit da_UNameChanged();
+        Q_EMIT da_UNameChanged();
     }
 }
 
@@ -38,7 +39,7 @@ void DomainIntegration::setDAEmail(const QString &daemail)
     if(daemail != email_address)
     {
         email_address = daemail;
-        emit da_EmailChanged();
+        Q_EMIT da_EmailChanged();
     }
 }
 
@@ -47,7 +48,7 @@ void DomainIntegration::setDADisplayName(const QString &dadpname)
     if(dadpname != display_name)
     {
         display_name = dadpname;
-        emit da_DisplayNameChanged();
+        Q_EMIT da_DisplayNameChanged();
     }
 }
 
@@ -56,7 +57,7 @@ void DomainIntegration::setDAPassword(const QString &dapassword)
     if(dapassword != password)
     {
         password = dapassword;
-        emit da_PasswordChanged();
+        Q_EMIT da_PasswordChanged();
     }
 }
 
@@ -65,7 +66,7 @@ void DomainIntegration::setDAPrimaryProxy(const QString &dapproxy)
     if(dapproxy != primary_proxy)
     {
         primary_proxy = dapproxy;
-        emit da_PrimaryProxyChanged();
+        Q_EMIT da_PrimaryProxyChanged();
     }
 }
 
@@ -74,7 +75,7 @@ void DomainIntegration::setDASecondaryProxy(const QString &dasproxy)
     if(dasproxy != secondary_proxy)
     {
         secondary_proxy = dasproxy;
-        emit da_SecondaryProxyChanged();
+        Q_EMIT da_SecondaryProxyChanged();
     }
 }
 
@@ -83,7 +84,7 @@ void DomainIntegration::setDAAllUsers(const QStringList &daallusers)
     if(daallusers != all_users)
     {
         all_users = daallusers;
-        emit da_AllUsersChanged();
+        Q_EMIT da_AllUsersChanged();
     }
 }
 
@@ -92,7 +93,7 @@ void DomainIntegration::setDAAllUPNs(const QStringList &daallupns)
     if(daallupns != all_upns)
     {
         all_upns = daallupns;
-        emit da_AllUPNsChanged();
+        Q_EMIT da_AllUPNsChanged();
     }
 }
 
@@ -101,7 +102,7 @@ void DomainIntegration::setDAAllOUCns(const QStringList &daalloucns)
     if(daalloucns != ou_names)
     {
         ou_names = daalloucns;
-        emit da_AllOUCNsChanged();
+        Q_EMIT da_AllOUCNsChanged();
     }
 }
 
@@ -110,7 +111,7 @@ void DomainIntegration::setOUComboIndex(const int &daouselection)
     if(daouselection != ou_cn_selection)
     {
         ou_cn_selection = daouselection;
-        emit da_OUComboIndexChanged();
+        Q_EMIT da_OUComboIndexChanged();
     }
 }
 
@@ -119,7 +120,7 @@ void DomainIntegration::setUPNComboIndex(const int &daupnselection)
     if(daupnselection != upn_selection)
     {
         upn_selection = daupnselection;
-        emit da_UPNComboIndexChanged();
+        Q_EMIT da_UPNComboIndexChanged();
     }
 }
 
@@ -128,7 +129,7 @@ void DomainIntegration::setDAComplexityPolicy(const QString &dacomplexity)
     if(dacomplexity != active_SP_Complexity)
     {
         active_SP_Complexity = dacomplexity;
-        emit da_ComplexityChanged();
+        Q_EMIT da_ComplexityChanged();
     }
 }
 
@@ -137,14 +138,15 @@ void DomainIntegration::setDALengthPolicy(const QString &dalengthpolicy)
     if(dalengthpolicy != active_SP_MinLength)
     {
         active_SP_MinLength = dalengthpolicy;
-        emit da_LengthPolicyChanged();
+        Q_EMIT da_LengthPolicyChanged();
     }
 }
 
 void DomainIntegration::load_domain_information()
 {
+    ou_dn_names = List_All_OU_DNs();
     all_forests = List_All_Forests();
-    all_upns = List_All_UPNs();  
+    all_upns = List_All_UPNs();
     if(all_upns.count() > 0)
     {
         setDAAllUPNs(all_upns);
@@ -154,7 +156,6 @@ void DomainIntegration::load_domain_information()
         setDAAllUPNs(all_forests);
     }
     setDAAllOUCns(List_All_OU_CNs());
-    ou_dn_names = List_All_OU_DNs();
     setDAAllUsers(List_All_Domain_Users());
 }
 
@@ -445,6 +446,30 @@ bool DomainIntegration::Validate_User_Status(QString template_name)
         return true;
     }
     else if(var == "False")
+    {
+        return false;
+    }
+}
+
+bool DomainIntegration::Is_Company_Prefix_Active()
+{
+    if(company_prefix_active)
+    {
+        return true;
+    }
+    else if(!company_prefix_active)
+    {
+        return false;
+    }
+}
+
+bool DomainIntegration::Is_User_Prefix_Active()
+{
+    if(user_prefix_active)
+    {
+        return true;
+    }
+    else if(!user_prefix_active)
     {
         return false;
     }
@@ -938,11 +963,16 @@ QStringList DomainIntegration::List_All_Domain_Users()
 {
     QStringList tmp = Execute_Commands("$tmp = (Get-ADUser -Filter * | Select-Object Name, GivenName, SurName | Sort-Object SurName, GivenName); return $tmp.Name");
     QStringList AD_Users;
+    qDebug() << "All ini ous count " << all_ini_ous.count() << "All company prefixes count" << all_company_prefixes.count();
+
+
+
     for(auto &i : tmp)
     {
         AD_Users << Clean_String(i);
     }
     return AD_Users;
+
 }
 
 QStringList DomainIntegration::List_All_Group_CNs()
@@ -1011,7 +1041,15 @@ QStringList DomainIntegration::da_alloucns()
     return ou_names;
 }
 
+QStringList DomainIntegration::List_Company_prefixes()
+{
+    return all_company_prefixes;
+}
 
+QStringList DomainIntegration::List_User_Prefixes()
+{
+    return all_user_prefixes;
+}
 
 
 //
