@@ -50,7 +50,8 @@ Section "UMTK QML(Required)"
   ; Put file there
   ;make menu entrys for main program else workpath is wrong?
   CreateDirectory "$SMPROGRAMS\UMTK-QML"
-  CreateShortCut "$SMPROGRAMS\UMTK-QML\UMTK-QML.lnk" "$INSTDIR\UMTK-QML.exe" "" "$INSTDIR\" 0  
+  CreateShortCut "$SMPROGRAMS\UMTK-QML\UMTK-QML.lnk" "$INSTDIR\UMTK-QML.exe" "" "$INSTDIR\A.ico" 0
+  CreateShortcut "$DESKTOP\UMTK-QML.lnk" "$INSTDIR\UMTK-QML.exe" "" "$INSTDIR\A.ico" 0
   CreateShortCut "$SMPROGRAMS\UMTK-QML\UMTK-QML Uninstall.lnk" "$INSTDIR\uninstall.exe" "" "$INSTDIR\uninstall.exe" 0 
   
   ; Write the installation path into the registry
@@ -83,6 +84,7 @@ Section "Uninstall"
   RMDir /r "$INSTDIR"
   ; Remove shortcuts, if any
   Delete "$SMPROGRAMS\UMTK-QML\*.*"
+  Delete "$DESKTOP\UMTK-QML.lnk"
 
   ; Remove directories used
 
