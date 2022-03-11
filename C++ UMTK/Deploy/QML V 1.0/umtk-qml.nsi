@@ -9,7 +9,7 @@
 
  
 ; The name of the installer
-Name "User Maintenance Tool Kit"
+Name "UMTK"
 
 ; The file to write
 OutFile "..\UMKT-QML Installer.exe"
@@ -50,7 +50,7 @@ Section "UMTK QML(Required)"
   ; Put file there
   ;make menu entrys for main program else workpath is wrong?
   CreateDirectory "$SMPROGRAMS\UMTK-QML"
-  CreateShortCut "$SMPROGRAMS\UMTK-QML\UMTK-QML.lnk" "$INSTDIR\UMTK-QML.exe" "" "$INSTDIR\bin\" 0  
+  CreateShortCut "$SMPROGRAMS\UMTK-QML\UMTK-QML.lnk" "$INSTDIR\UMTK-QML.exe" "" "$INSTDIR\" 0  
   CreateShortCut "$SMPROGRAMS\UMTK-QML\UMTK-QML Uninstall.lnk" "$INSTDIR\uninstall.exe" "" "$INSTDIR\uninstall.exe" 0 
   
   ; Write the installation path into the registry
