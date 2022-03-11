@@ -35,7 +35,7 @@ void AdvancedSettings::setUserPrefix(const QString &u_prefix)
 
 void AdvancedSettings::insert_data(const QString &ou, const QString &company, const QString &user)
 {
-    qDebug() << "Distinguished name - " + ou << "Company name - " + company << "User prefix - " + user;
+
 }
 
 void AdvancedSettings::create_database(QString path)

@@ -5,7 +5,6 @@
 #include <QQuickWindow>
 #include <QQuickView>
 #include <QUrl>
-#include <QSqlDatabase>
 #include <QString>
 #include "psintegration.h"
 #include "domainintegration.h"

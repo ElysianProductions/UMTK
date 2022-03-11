@@ -4,9 +4,9 @@
 #include <QObject>
 #include <QString>
 #include <QFile>
-#include <QSqlDatabase>
 
-#include <QDebug>
+
+
 
 class AdvancedSettings : public QObject
 {

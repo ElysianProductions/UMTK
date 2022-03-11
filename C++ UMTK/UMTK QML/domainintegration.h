@@ -11,10 +11,7 @@
 #include <QUrl>
 #include <QTextDocument>
 #include <QPrinter>
-#include <QSettings>
 
-
-#include <QDebug>
 
 class DomainIntegration : public QObject
 {

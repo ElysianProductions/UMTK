@@ -6,9 +6,6 @@
 #include <QString>
 #include <QStringList>
 
-
-#include <QDebug>
-
 class PSIntegration : public QObject
 {
     Q_OBJECT
