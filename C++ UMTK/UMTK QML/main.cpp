@@ -7,17 +7,18 @@
 #include <QUrl>
 #include <QSqlDatabase>
 #include <QString>
-
 #include "psintegration.h"
 #include "domainintegration.h"
 #include "advancedsettings.h"
+#include <QIcon>
 
-#include <QDebug>
 
 int main(int argc, char *argv[])
 {
     QGuiApplication app(argc, argv);
-    app.setWindowIcon(QIcon("qrc:/A.ico"));
+
+    app.setWindowIcon(QIcon(":/Images/A.png")); // Will not work with an actual .ico for some bizzare reason.
+
 
     qmlRegisterType<PSIntegration>("com.elysianproductions.psintegration", 1, 0, "PSIntegration");
     qmlRegisterType<DomainIntegration>("com.elysianproductions.domainintegration", 1, 0, "DomainIntegration");
