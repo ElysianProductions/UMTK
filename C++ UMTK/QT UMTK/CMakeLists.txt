@@ -32,6 +32,8 @@ set(PROJECT_SOURCES
         psintegration.h
         disablewidget.cpp
         disablewidget.h
+        configurationwidget.cpp
+        configurationwidget.h
         Images.qrc
 
 )

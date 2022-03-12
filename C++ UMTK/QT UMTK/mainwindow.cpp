@@ -18,6 +18,7 @@ MainWindow::MainWindow(QWidget *parent)
     key_widget->insertWidget(2, localwidget.get_widget());
     key_widget->insertWidget(3, editwidget.get_widget());
     key_widget->insertWidget(4, disableuser.get_widget());
+    key_widget->insertWidget(5, advanced_configuration.get_widget());
     initialize_main_window();
     initialize_actions();
     initialize_menus();
@@ -68,8 +69,10 @@ void MainWindow::initialize_connections()
       connect(editwidget.cancel_button, &QPushButton::clicked, this, &MainWindow::close_edit_user_widget);
       connect(editwidget.select_action, qOverload<int>(&QComboBox::currentIndexChanged), [=] (int var) { emit(Edit_User_Widget(var) );  } );
       connect(mainwidget.disable_user_button, &QPushButton::clicked, this, &MainWindow::launch_disable_user_widget);
+      connect(mainwidget.configuration_button, &QPushButton::clicked, this, &MainWindow::launch_configuration_widget);
       connect(disableuser.cancel_button, &QPushButton::clicked, this, &MainWindow::close_disable_user_widget);
       connect(disableuser.disable_button, &QPushButton::clicked, this, &MainWindow::disable_user);
+      connect(advanced_configuration.close_button, &QPushButton::clicked, this, &MainWindow::close_configuration_widget);
 
 }
 
@@ -153,6 +156,11 @@ void MainWindow::launch_disable_user_widget()
     key_widget->setCurrentIndex(4);
 }
 
+void MainWindow::launch_configuration_widget()
+{
+    key_widget->setCurrentIndex(5);
+}
+
 void MainWindow::close_local_widget()
  {
      key_widget->setCurrentIndex(0);
@@ -183,6 +191,11 @@ void MainWindow::close_edit_user_widget()
  }
 
 void MainWindow::close_disable_user_widget()
+{
+    key_widget->setCurrentIndex(0);
+}
+
+void MainWindow::close_configuration_widget()
 {
     key_widget->setCurrentIndex(0);
 }

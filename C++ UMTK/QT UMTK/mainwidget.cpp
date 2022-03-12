@@ -6,14 +6,15 @@ MainWidget::MainWidget()
     local_button = new QPushButton();
     edit_user_button = new QPushButton();
     disable_user_button = new QPushButton();
+    configuration_button = new QPushButton();
 }
 
 QWidget* MainWidget::get_widget()
 {
-    return initalize_widget(server_button, local_button, edit_user_button, disable_user_button);
+    return initalize_widget(server_button, local_button, edit_user_button, disable_user_button, configuration_button);
 }
 
-QWidget* MainWidget::initalize_widget(QPushButton *server_button, QPushButton *local_button, QPushButton *edit_user_button, QPushButton *disable_user_button)
+QWidget* MainWidget::initalize_widget(QPushButton *server_button, QPushButton *local_button, QPushButton *edit_user_button, QPushButton *disable_user_button, QPushButton *configuration_button)
 {
 
     server_button->setText("Create domain user");
@@ -30,12 +31,16 @@ QWidget* MainWidget::initalize_widget(QPushButton *server_button, QPushButton *l
     disable_user_button->setText("Disable user account");
     disable_user_button->setToolTip("Click to disable a domain user account.");
 
+    configuration_button->setText("Configuration");
+    configuration_button->setToolTip("Click to launch the configuration widget.");
+
     QVBoxLayout *primary_layout = new QVBoxLayout();
 
     primary_layout->addWidget(server_button);
     primary_layout->addWidget(local_button);
     primary_layout->addWidget(edit_user_button);
     primary_layout->addWidget(disable_user_button);
+    primary_layout->addWidget(configuration_button);
 
     QWidget *primary_widget = new QWidget();
     primary_widget->setLayout(primary_layout);
