@@ -134,8 +134,9 @@ QWidget* ConfigurationWidget::get_generation_custimization_widget()
     sam_account_four->setText("last name");
     sam_account_five->setText("first name last name");
     sam_account_six->setText("last name first name");
-    QLabel *sam_label = new QLabel("SamAccount Settings");
-    sam_label->setFrameStyle(QFrame::Panel | QFrame::Sunken);
+    QLabel *sam_label = new QLabel("SamAccountName Settings");
+    sam_label->setFrameShape(QFrame::Panel);
+    sam_label->setFrameShadow(QFrame::Sunken);
     sam_label->setStyleSheet("background-color:white");
     sam_label->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Maximum);
 
@@ -171,11 +172,45 @@ QWidget* ConfigurationWidget::get_generation_custimization_widget()
     ticket_layout_group->addButton(ticketing_top);
     ticket_layout_group->addButton(ticketing_bottom);
 
+    // SMTP settings
+    QLabel *smtp_settings_label = new QLabel("SMTP settings");
+    smtp_settings_label->setFrameShape(QFrame::Panel);
+    smtp_settings_label->setFrameShadow(QFrame::Sunken);
+    smtp_settings_label->setStyleSheet("background-color:white");
+    smtp_settings_label->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Maximum);
+
+    QLabel *smtp_email_label = new QLabel("SMTP Email");
+    QLineEdit *smtp_email_edit = new QLineEdit();
+    smtp_email_edit->setPlaceholderText("Enter email address");
+    smtp_email_edit->setToolTip("Enter the email address you will authenticate with.");
+    QLabel *smtp_credential_label = new QLabel("Credentials");
+    QLineEdit *smtp_credential_edit = new QLineEdit();
+    smtp_credential_edit->setPlaceholderText("Enter password");
+    smtp_credential_edit->setToolTip("Enter the password you will authenticate with.");
+    smtp_credential_edit->setEchoMode(QLineEdit::Password);
+    QStringList security_protocols = {"Security protocols", "SSL\\TLS", "STARTTLS", "Plain Text"};
+    QComboBox *smtp_protocol_combo = new QComboBox();
+    smtp_protocol_combo->addItems(security_protocols);
+    smtp_protocol_combo->setToolTip("Select the security protocol you will need for authentication.");
+    QLabel *smtp_incport_label = new QLabel("Incoming port");
+    QLineEdit *smtp_incport_edit = new QLineEdit();
+    smtp_incport_edit->setPlaceholderText("Enter mail servers incoming smtp port");
+    smtp_incport_edit->setToolTip("Enter your servers incoming smtp port here.");
+    QLabel *smtp_outport_label = new QLabel("Outgoing port");
+    QLineEdit *smtp_outport_edit = new QLineEdit();
+    smtp_outport_edit->setPlaceholderText("Enter mail servers outgoing smtp port");
+    smtp_outport_edit->setToolTip("Enter your servers outgoing smtp port here.");
+    QLabel *smtp_sub_label = new QLabel("Generic email subject");
+    QLineEdit *smtp_sub_edit = new QLineEdit();
+    smtp_sub_edit->setPlaceholderText("Enter generic subject");
+    smtp_sub_edit->setToolTip("Enter a generic subject for your email.\nNote: If you enable the ticketing feature, the ticket number will be prepended to the email subject.");
+    QSpacerItem *spacer_three = new QSpacerItem(40, 20, QSizePolicy::Minimum, QSizePolicy::Expanding);
+
     //
 
-    primary_layout->setSpacing(0);
+    primary_layout->setSpacing(1);
     primary_layout->setHorizontalSpacing(0);
-    primary_layout->setVerticalSpacing(0);
+    primary_layout->setVerticalSpacing(1);
     primary_layout->addWidget(sam_label, 0, 0);
     primary_layout->addWidget(sam_account_one, 1, 0);
     primary_layout->addWidget(sam_account_two, 1, 1);
@@ -190,7 +225,19 @@ QWidget* ConfigurationWidget::get_generation_custimization_widget()
     primary_layout->addWidget(ticketing_top, 6, 0);
     primary_layout->addWidget(ticketing_bottom, 6, 1);
     primary_layout->addItem(spacer_two, 7, 0);
-
+    primary_layout->addWidget(smtp_settings_label, 8, 0);
+    primary_layout->addWidget(smtp_email_label, 9, 0);
+    primary_layout->addWidget(smtp_email_edit, 9, 1);
+    primary_layout->addWidget(smtp_credential_label, 10, 0);
+    primary_layout->addWidget(smtp_credential_edit, 10, 1);
+    primary_layout->addWidget(smtp_incport_label, 11, 0);
+    primary_layout->addWidget(smtp_incport_edit, 11, 1);
+    primary_layout->addWidget(smtp_outport_label, 12, 0);
+    primary_layout->addWidget(smtp_outport_edit, 12, 1);
+    primary_layout->addWidget(smtp_sub_label, 13, 0);
+    primary_layout->addWidget(smtp_sub_edit, 13, 1);
+    primary_layout->addWidget(smtp_protocol_combo, 14, 0);
+    primary_layout->addItem(spacer_three, 15, 0);
 
 
     primary_display->setLayout(primary_layout);

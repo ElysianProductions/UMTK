@@ -15,6 +15,7 @@
 #include <QCheckBox>
 #include <QButtonGroup>
 #include <QSpacerItem>
+#include <QComboBox>
 
 class ConfigurationWidget : public QObject
 {
