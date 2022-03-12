@@ -12,7 +12,6 @@ ConfigurationWidget::ConfigurationWidget()
     db = QSqlDatabase::addDatabase("QSQLITE");
     db.setDatabaseName("C:\\Users\\Aaron\\Downloads\\UMTK.db");
     bool is_valid = db.open();
-    qDebug() << is_valid;
     query = new QSqlQuery(db);
     query->prepare("SELECT * FROM Clients");
     query->exec();
