@@ -6,9 +6,27 @@ ConfigurationWidget::ConfigurationWidget()
     user_creation_text_edit = new QLineEdit();
     user_disable_text_edit = new QLineEdit();
     image_path_edit = new QLineEdit();
+    company_table = new QTableView();
+
+
+    db = QSqlDatabase::addDatabase("QSQLITE");
+    db.setDatabaseName("C:\\Users\\Aaron\\Downloads\\UMTK.db");
+    bool is_valid = db.open();
+    qDebug() << is_valid;
+    query = new QSqlQuery(db);
+    query->prepare("SELECT * FROM Clients");
+    query->exec();
+    model = new QSqlQueryModel(this);
+    model->setQuery(*query);
+    company_table->setModel(model);
+
 }
 
-
+ConfigurationWidget::~ConfigurationWidget()
+{
+    delete model;
+    delete query;
+}
 
 QWidget* ConfigurationWidget::get_widget()
 {
@@ -75,10 +93,65 @@ QWidget* ConfigurationWidget::get_menu_widget(QPushButton *close_button)
 QWidget* ConfigurationWidget::get_company_custimization_widget()
 {
     QWidget *primary_display = new QWidget();
+    QGridLayout *primary_layout = new QGridLayout();
+
+    QLabel *company_label = new QLabel("Company settings");
+    company_label->setFrameShape(QFrame::Panel);
+    company_label->setFrameShadow(QFrame::Sunken);
+    company_label->setStyleSheet("background-color:white");
+    company_label->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Maximum);
 
 
 
+    QSpacerItem *spacer_one = new QSpacerItem(40, 20, QSizePolicy::Minimum, QSizePolicy::Expanding);
 
+
+    QCheckBox *sam_account_one = new QCheckBox(); // First initial last name
+    QCheckBox *sam_account_two = new QCheckBox(); // Last name first initial
+    QCheckBox *sam_account_three = new QCheckBox(); // First name
+    QCheckBox *sam_account_four = new QCheckBox(); // Last name
+    QCheckBox *sam_account_five = new QCheckBox(); // First name last name
+    QCheckBox *sam_account_six = new QCheckBox(); // Last name First name
+    QSpacerItem *spacer_two = new QSpacerItem(40, 20, QSizePolicy::Minimum, QSizePolicy::Expanding);
+
+    sam_account_one->setText("First initial last name");
+    sam_account_two->setText("last name first initial");
+    sam_account_three->setText("first name");
+    sam_account_four->setText("last name");
+    sam_account_five->setText("first name last name");
+    sam_account_six->setText("last name first name");
+    QLabel *sam_label = new QLabel("SamAccountName Settings");
+    sam_label->setFrameShape(QFrame::Panel);
+    sam_label->setFrameShadow(QFrame::Sunken);
+    sam_label->setStyleSheet("background-color:white");
+    sam_label->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Maximum);
+
+
+    QButtonGroup *sam_button_group = new QButtonGroup();
+    sam_button_group->addButton(sam_account_one);
+    sam_button_group->addButton(sam_account_two);
+    sam_button_group->addButton(sam_account_three);
+    sam_button_group->addButton(sam_account_four);
+    sam_button_group->addButton(sam_account_five);
+    sam_button_group->addButton(sam_account_six);
+
+
+    primary_layout->setSpacing(1);
+    primary_layout->setHorizontalSpacing(0);
+    primary_layout->setVerticalSpacing(1);
+    primary_layout->addWidget(company_label, 0, 0);
+    primary_layout->addWidget(company_table, 1, 0);
+    primary_layout->addItem(spacer_one, 2, 0);
+    primary_layout->addWidget(sam_label, 3, 0);
+    primary_layout->addWidget(sam_account_one, 4, 0);
+    primary_layout->addWidget(sam_account_two, 5, 0);
+    primary_layout->addWidget(sam_account_three, 6, 0);
+    primary_layout->addWidget(sam_account_four, 7, 0);
+    primary_layout->addWidget(sam_account_five, 8, 0);
+    primary_layout->addWidget(sam_account_six, 9, 0);
+    primary_layout->addItem(spacer_two , 10, 0);
+
+    primary_display->setLayout(primary_layout);
 
     return primary_display;
 }
@@ -111,7 +184,6 @@ QWidget* ConfigurationWidget::get_pdf_custimization_widget(QLineEdit *user_creat
     primary_display->setLayout(primary_layout);
     return primary_display;
 }
-
 
 QWidget* ConfigurationWidget::get_generation_custimization_widget()
 {
@@ -245,7 +317,6 @@ QWidget* ConfigurationWidget::get_generation_custimization_widget()
     return primary_display;
 }
 
-
 void ConfigurationWidget::swap_menu(QListWidgetItem *selected, QListWidgetItem *previous)
 {
   if(!selected)
@@ -254,6 +325,49 @@ void ConfigurationWidget::swap_menu(QListWidgetItem *selected, QListWidgetItem *
   }
   menus_widget->setCurrentIndex(menu_options_widget->row(selected));
 }
+
+void ConfigurationWidget::setCompanyName(const QString &company)
+{
+    if(company != _company)
+    {
+        _company = company;
+        Q_EMIT _CompanyChanged();
+    }
+}
+
+void ConfigurationWidget::setOUCNName(const QString &cn)
+{
+    if(cn != _oucn)
+    {
+        _oucn = cn;
+        Q_EMIT _OUChanged();
+    }
+}
+
+void ConfigurationWidget::setUserPRefix(const QString &prefix)
+{
+    if(prefix != _prefix)
+    {
+        _prefix = prefix;
+        Q_EMIT _PrefixChanged();
+    }
+}
+
+QString ConfigurationWidget::ou_name()
+{
+    return _oucn;
+}
+
+QString ConfigurationWidget::company_name()
+{
+    return _company;
+}
+
+QString ConfigurationWidget::prefix_name()
+{
+    return _prefix;
+}
+
 
 
 
