@@ -12,7 +12,7 @@
 Name "UMTK Classic"
 
 ; The file to write
-OutFile "..\UMKT-Classic Installer.exe"
+OutFile "UMKT-Classic Installer.exe"
 
 ; The default installation directory
 InstallDir "$PROGRAMFILES\UMTK-Classic"
@@ -63,6 +63,22 @@ Section "UMTK Classic(Required)"
   WriteRegStr HKLM "Software\Microsoft\UMTK-Classic\PDF Settings" "Creation_Text" ""
   WriteRegStr HKLM "Software\Microsoft\UMTK-Classic\PDF Settings" "Disable_Text" ""
   WriteRegStr HKLM "Software\Microsoft\UMTK-Classic\PDF Settings" "Image_Path" ""
+  WriteRegDWORD  HKLM "Software\Microsoft\UMTK-Classic\Generation Settings\SamAccount Settings" "Option_one" "0"
+  WriteRegDWORD  HKLM "Software\Microsoft\UMTK-Classic\Generation Settings\SamAccount Settings" "Option_two" "0"
+  WriteRegDWORD  HKLM "Software\Microsoft\UMTK-Classic\Generation Settings\SamAccount Settings" "Option_three" "0"
+  WriteRegDWORD  HKLM "Software\Microsoft\UMTK-Classic\Generation Settings\SamAccount Settings" "Option_four" "0"
+  WriteRegDWORD  HKLM "Software\Microsoft\UMTK-Classic\Generation Settings\SamAccount Settings" "Option_five" "0"
+  WriteRegDWORD  HKLM "Software\Microsoft\UMTK-Classic\Generation Settings\SamAccount Settings" "Option_six" "0"
+  WriteRegStr HKLM "Software\Microsoft\UMTK-Classic\Generation Settings\Ticket Settings" "Ticketing_on" "false"
+  WriteRegStr HKLM "Software\Microsoft\UMTK-Classic\Generation Settings\Ticket Settings" "Ticketing_off" "true"
+  WriteRegStr HKLM "Software\Microsoft\UMTK-Classic\Generation Settings\Ticket Settings" "Top_Position" "false"
+  WriteRegStr HKLM "Software\Microsoft\UMTK-Classic\Generation Settings\Ticket Settings" "Bottom_Position" "false"
+  WriteRegStr HKLM "Software\Microsoft\UMTK-Classic\Disable Settings\" "Cleanup_on" "false"
+  WriteRegStr HKLM "Software\Microsoft\UMTK-Classic\Disable Settings\" "Cleanup_off" "false"
+  WriteRegStr HKLM "Software\Microsoft\UMTK-Classic\Disable Settings\" "Redirection_share" ""
+  WriteRegStr HKLM "Software\Microsoft\UMTK-Classic\Disable Settings\" "Storage_location" ""
+
+	
   
   ; Write the uninstall keys for Windows
   WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\UMTK-Classic" "DisplayName" "UMTK Classic"
@@ -84,8 +100,8 @@ Section "Uninstall"
   
   ; Remove registry keys
   DeleteRegKey HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\UMTK-Classic"
-  DeleteRegKey HKLM "SOFTWARE\UMTK-Classic"
-  DeleteRegKey HKCU "Software\UMTK-Classic"
+  DeleteRegKey HKLM "SOFTWARE\Microsoft\UMTK-Classic"
+  DeleteRegKey HKCU "Software\Microsoft\UMTK-Classic"
 
   ; Remove files and uninstaller
   RMDir /r "$INSTDIR"
