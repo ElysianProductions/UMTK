@@ -8,6 +8,12 @@ ConfigurationWidget::ConfigurationWidget()
     image_path_edit = new QLineEdit();
     company_table = new QTableView();
 
+    c_insert_button = new QPushButton();
+    c_ou_edit = new QLineEdit();
+    c_company_edit = new QLineEdit();
+    c_prefix_edit = new QLineEdit();
+    c_sam_combo = new QComboBox();
+
 
     db = QSqlDatabase::addDatabase("QSQLITE");
     db.setDatabaseName("C:\\Users\\Aaron\\Downloads\\UMTK.db");
@@ -18,6 +24,8 @@ ConfigurationWidget::ConfigurationWidget()
     model = new QSqlQueryModel(this);
     model->setQuery(*query);
     company_table->setModel(model);
+
+
 
 }
 
@@ -31,7 +39,6 @@ QWidget* ConfigurationWidget::get_widget()
 {
     return get_menu_widget(close_button);
 }
-
 
 QWidget* ConfigurationWidget::get_menu_widget(QPushButton *close_button)
 {
@@ -64,9 +71,16 @@ QWidget* ConfigurationWidget::get_menu_widget(QPushButton *close_button)
     generation_item->setTextAlignment(Qt::AlignHCenter);
     generation_item->setFlags(Qt::ItemIsSelectable | Qt::ItemIsEnabled);
 
-    menus_widget->insertWidget(0, get_company_custimization_widget());
+    QListWidgetItem *disable_item = new QListWidgetItem(menu_options_widget);
+    disable_item->setText("Disable settings");
+    disable_item->setTextAlignment(Qt::AlignHCenter);
+    disable_item->setFlags(Qt::ItemIsSelectable | Qt::ItemIsEnabled);
+
+    menus_widget->insertWidget(0, get_company_custimization_widget(c_insert_button, c_ou_edit, c_company_edit, c_prefix_edit, c_sam_combo));
     menus_widget->insertWidget(1, get_pdf_custimization_widget(user_creation_text_edit, user_disable_text_edit, image_path_edit));
     menus_widget->insertWidget(2, get_generation_custimization_widget());
+    menus_widget->insertWidget(3, get_disable_custimation_widget());
+
 
     close_button->setText("Close configuration");
     close_button->setToolTip("Close the configuration page and return to the primary menu.");
@@ -89,7 +103,7 @@ QWidget* ConfigurationWidget::get_menu_widget(QPushButton *close_button)
     return primary_display;
 }
 
-QWidget* ConfigurationWidget::get_company_custimization_widget()
+QWidget* ConfigurationWidget::get_company_custimization_widget(QPushButton *c_insert_button, QLineEdit *c_ou_edit, QLineEdit *c_company_edit, QLineEdit *c_prefix_edit, QComboBox *c_sam_combo)
 {
     QWidget *primary_display = new QWidget();
     QGridLayout *primary_layout = new QGridLayout();
@@ -100,55 +114,30 @@ QWidget* ConfigurationWidget::get_company_custimization_widget()
     company_label->setStyleSheet("background-color:white");
     company_label->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Maximum);
 
-
+    c_insert_button->setText("Insert data");
+    c_insert_button->setToolTip("Fill in all fields and click this button to add the data to your sql db.");
+    c_ou_edit->setPlaceholderText("Enter OU CN");
+    c_company_edit->setPlaceholderText("Enter company name");
+    c_prefix_edit->setPlaceholderText("Enter user prefix");
+    QStringList sam_options = {"Select SamAccount style", "First name", "Last name", "First initial last name", "Last name first initial", "First name last name", "Last name first name"};
+    c_sam_combo->addItems(sam_options);
 
     QSpacerItem *spacer_one = new QSpacerItem(40, 20, QSizePolicy::Minimum, QSizePolicy::Expanding);
 
-
-    QCheckBox *sam_account_one = new QCheckBox(); // First initial last name
-    QCheckBox *sam_account_two = new QCheckBox(); // Last name first initial
-    QCheckBox *sam_account_three = new QCheckBox(); // First name
-    QCheckBox *sam_account_four = new QCheckBox(); // Last name
-    QCheckBox *sam_account_five = new QCheckBox(); // First name last name
-    QCheckBox *sam_account_six = new QCheckBox(); // Last name First name
-    QSpacerItem *spacer_two = new QSpacerItem(40, 20, QSizePolicy::Minimum, QSizePolicy::Expanding);
-
-    sam_account_one->setText("First initial last name");
-    sam_account_two->setText("last name first initial");
-    sam_account_three->setText("first name");
-    sam_account_four->setText("last name");
-    sam_account_five->setText("first name last name");
-    sam_account_six->setText("last name first name");
-    QLabel *sam_label = new QLabel("SamAccountName Settings");
-    sam_label->setFrameShape(QFrame::Panel);
-    sam_label->setFrameShadow(QFrame::Sunken);
-    sam_label->setStyleSheet("background-color:white");
-    sam_label->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Maximum);
-
-
-    QButtonGroup *sam_button_group = new QButtonGroup();
-    sam_button_group->addButton(sam_account_one);
-    sam_button_group->addButton(sam_account_two);
-    sam_button_group->addButton(sam_account_three);
-    sam_button_group->addButton(sam_account_four);
-    sam_button_group->addButton(sam_account_five);
-    sam_button_group->addButton(sam_account_six);
-
+    connect(c_sam_combo, qOverload<int>(&QComboBox::currentIndexChanged), [=] (int var) { emit(setSamSetting(var));});
+    connect(c_insert_button, &QPushButton::clicked, this, &ConfigurationWidget::setupQuery);
 
     primary_layout->setSpacing(1);
     primary_layout->setHorizontalSpacing(0);
     primary_layout->setVerticalSpacing(1);
     primary_layout->addWidget(company_label, 0, 0);
     primary_layout->addWidget(company_table, 1, 0);
-    primary_layout->addItem(spacer_one, 2, 0);
-    primary_layout->addWidget(sam_label, 3, 0);
-    primary_layout->addWidget(sam_account_one, 4, 0);
-    primary_layout->addWidget(sam_account_two, 5, 0);
-    primary_layout->addWidget(sam_account_three, 6, 0);
-    primary_layout->addWidget(sam_account_four, 7, 0);
-    primary_layout->addWidget(sam_account_five, 8, 0);
-    primary_layout->addWidget(sam_account_six, 9, 0);
-    primary_layout->addItem(spacer_two , 10, 0);
+    primary_layout->addWidget(c_ou_edit, 3, 0);
+    primary_layout->addWidget(c_company_edit, 4, 0);
+    primary_layout->addWidget(c_prefix_edit, 5, 0);
+    primary_layout->addWidget(c_sam_combo, 6, 0);
+    primary_layout->addWidget(c_insert_button, 7, 0);
+    primary_layout->addItem(spacer_one , 8, 0);
 
     primary_display->setLayout(primary_layout);
 
@@ -163,6 +152,13 @@ QWidget* ConfigurationWidget::get_pdf_custimization_widget(QLineEdit *user_creat
     QLabel *new_user_label = new QLabel("New user text:");
     QLabel *disable_user_label = new QLabel("Disable user text:");
     QLabel *image_path_label = new QLabel("Image path:");
+    QSpacerItem *spacer_one = new QSpacerItem(40, 20, QSizePolicy::Minimum, QSizePolicy::Expanding);
+    QLabel *pdf_settings_label = new QLabel("Customize PDF elements");
+
+    pdf_settings_label->setFrameShape(QFrame::Panel);
+    pdf_settings_label->setFrameShadow(QFrame::Sunken);
+    pdf_settings_label->setStyleSheet("background-color:white");
+    pdf_settings_label->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Maximum);
 
     user_creation_text_edit->setPlaceholderText("Enter text");
     user_creation_text_edit->setToolTip("Enter the text to be printed at the top of the new user PDF generated when a user has been created.");
@@ -173,12 +169,14 @@ QWidget* ConfigurationWidget::get_pdf_custimization_widget(QLineEdit *user_creat
     image_path_edit->setPlaceholderText("Enter path");
     image_path_edit->setToolTip("Enter the full path to the image yo uwant to be displayed at the bottom of the new user and disabled user PDFs.");
 
-    primary_layout->addWidget(new_user_label, 0, 0);
-    primary_layout->addWidget(user_creation_text_edit, 0, 1);
-    primary_layout->addWidget(disable_user_label, 1, 0);
-    primary_layout->addWidget(user_disable_text_edit, 1, 1);
-    primary_layout->addWidget(image_path_label, 2, 0);
-    primary_layout->addWidget(image_path_edit, 2, 1);
+    primary_layout->addWidget(pdf_settings_label, 0, 0);
+    primary_layout->addWidget(new_user_label, 1, 0);
+    primary_layout->addWidget(user_creation_text_edit, 1, 1);
+    primary_layout->addWidget(disable_user_label, 2, 0);
+    primary_layout->addWidget(user_disable_text_edit, 2, 1);
+    primary_layout->addWidget(image_path_label, 3, 0);
+    primary_layout->addWidget(image_path_edit, 3, 1);
+    primary_layout->addItem(spacer_one, 4, 0);
 
     primary_display->setLayout(primary_layout);
     return primary_display;
@@ -316,6 +314,136 @@ QWidget* ConfigurationWidget::get_generation_custimization_widget()
     return primary_display;
 }
 
+QWidget* ConfigurationWidget::get_disable_custimation_widget()
+{
+    QWidget *primary_display = new QWidget();
+    QGridLayout *primary_layout = new QGridLayout();
+    QButtonGroup *cleanup_group = new QButtonGroup();
+    QCheckBox *turn_on_cleanup = new QCheckBox();
+    QCheckBox *turn_off_cleanup = new QCheckBox();
+    QSpacerItem *spacer_one = new QSpacerItem(40, 20, QSizePolicy::Minimum, QSizePolicy::Expanding);
+    QLabel *cleanup_label = new QLabel("Disable User settings");
+    QLineEdit *folder_redirection_edit = new QLineEdit();
+    QLineEdit *profile_storage_edit = new QLineEdit();
+    QLabel *folder_redirection_label = new QLabel("Folder redirection share");
+    QLabel *profile_storage_label = new QLabel("Storage location for profiles");
+    QLabel *profile_cleanup_label = new QLabel("Profile settings");
+
+    turn_on_cleanup->setText("Turn on profile cleanup");
+    turn_off_cleanup->setText("Turn off profile cleanup");
+    cleanup_group->addButton(turn_on_cleanup);
+    cleanup_group->addButton(turn_off_cleanup);
+
+    cleanup_label->setFrameShape(QFrame::Panel);
+    cleanup_label->setFrameShadow(QFrame::Sunken);
+    cleanup_label->setStyleSheet("background-color:white");
+    cleanup_label->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Maximum);
+
+    profile_cleanup_label->setFrameShape(QFrame::Panel);
+    profile_cleanup_label->setFrameShadow(QFrame::Sunken);
+    profile_cleanup_label->setStyleSheet("background-color:white");
+    profile_cleanup_label->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Maximum);
+
+    folder_redirection_edit->setPlaceholderText("Enter folder redirection share");
+    folder_redirection_edit->setToolTip("Input the current path to your folder redirection share.");
+
+    profile_storage_edit->setPlaceholderText("Enter the path to the share where you store profiles.");
+    profile_storage_edit->setToolTip("Input the path to the share where you store old profiles of former employees.");
+
+    primary_layout->setSpacing(1);
+    primary_layout->setHorizontalSpacing(0);
+    primary_layout->setVerticalSpacing(1);
+    primary_layout->addWidget(cleanup_label, 0, 0);
+    primary_layout->addWidget(turn_on_cleanup, 1, 0);
+    primary_layout->addWidget(turn_off_cleanup, 2, 0);
+    primary_layout->addWidget(profile_cleanup_label, 3, 0);
+    primary_layout->addWidget(folder_redirection_label, 4, 0);
+    primary_layout->addWidget(folder_redirection_edit, 4, 1);
+    primary_layout->addWidget(profile_storage_label, 5, 0);
+    primary_layout->addWidget(profile_storage_edit, 5, 1);
+    primary_layout->addItem(spacer_one, 6, 0);
+
+
+    primary_display->setLayout(primary_layout);
+    return primary_display;
+}
+
+void ConfigurationWidget::setupQuery()
+{
+    setOUCNName(c_ou_edit->text());
+    setCompanyName(c_company_edit->text());
+    setUserPrefix(c_prefix_edit->text());
+    runQuery(ou_name(), company_name(), prefix_name(), sam_setting());
+}
+
+void ConfigurationWidget::runQuery(const QString &OU, const QString &company, const QString &prefix, const int &sam_selection)
+{
+    if(OU.length() > 0 && company.length() > 0 && prefix.length() > 0 && sam_selection > 0)
+    {
+        query->prepare("INSERT INTO Clients (OU, Company, Prefix, SamAccount)"
+                       "Values (:OU, :Company, :Prefix, :SamAccount)");
+        query->bindValue(":OU", ou_name());
+        query->bindValue(":Company", company_name());
+        query->bindValue(":Prefix", prefix_name());
+        query->bindValue(":SamAccount", sam_setting());
+        query->exec();
+        query->prepare("SELECT * FROM Clients");
+        query->exec();
+        model->clear();
+        model->setQuery(*query);
+
+    }
+    if(OU.length() > 0 && company.length() > 0 && prefix.length() > 0)
+    {
+        query->prepare("INSERT INTO Clients (OU, Company, Prefix)"
+                       "Values (:OU, :Company, :Prefix)");
+        query->bindValue(":OU", ou_name());
+        query->bindValue(":Company", company_name());
+        query->bindValue(":Prefix", prefix_name());
+        query->exec();
+        query->prepare("SELECT * FROM Clients");
+        query->exec();
+        model->clear();
+        model->setQuery(*query);
+
+    }
+    if(OU.length() > 0 && company.length() > 0 && sam_selection > 0)
+    {
+        query->prepare("INSERT INTO Clients (OU, Company, SamAccount)"
+                       "Values (:OU, :Company, :SamAccount)");
+        query->bindValue(":OU", ou_name());
+        query->bindValue(":Company", company_name());
+        query->bindValue(":SamAccount", sam_setting());
+        query->exec();
+        query->prepare("SELECT * FROM Clients");
+        query->exec();
+        model->clear();
+        model->setQuery(*query);
+
+    }
+    if(OU.length() <= 0 || company.length() <= 0)
+    {
+        if(OU.length() <= 0)
+        {
+            c_ou_edit->setStyleSheet("background-color:red");
+            c_ou_edit->setText("This parameter cannot be empty.");
+        }
+        if(company.length() <= 0)
+        {
+            c_company_edit->setStyleSheet("background-color:red");
+            c_company_edit->setText("This parameter cannot be empty.");
+        }
+    }
+}
+
+void ConfigurationWidget::setSamSetting(const int &samsetting)
+{
+    if(samsetting != _samsetting)
+    {
+        _samsetting = samsetting;
+    }
+}
+
 void ConfigurationWidget::swap_menu(QListWidgetItem *selected, QListWidgetItem *previous)
 {
   if(!selected)
@@ -330,7 +458,6 @@ void ConfigurationWidget::setCompanyName(const QString &company)
     if(company != _company)
     {
         _company = company;
-        Q_EMIT _CompanyChanged();
     }
 }
 
@@ -339,16 +466,14 @@ void ConfigurationWidget::setOUCNName(const QString &cn)
     if(cn != _oucn)
     {
         _oucn = cn;
-        Q_EMIT _OUChanged();
     }
 }
 
-void ConfigurationWidget::setUserPRefix(const QString &prefix)
+void ConfigurationWidget::setUserPrefix(const QString &prefix)
 {
     if(prefix != _prefix)
     {
         _prefix = prefix;
-        Q_EMIT _PrefixChanged();
     }
 }
 
@@ -367,7 +492,10 @@ QString ConfigurationWidget::prefix_name()
     return _prefix;
 }
 
-
+int ConfigurationWidget::sam_setting()
+{
+    return _samsetting;
+}
 
 
 //

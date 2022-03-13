@@ -40,15 +40,27 @@ public:
     QLineEdit *image_path_edit;
     QTableView *company_table;
 
+    // Company widget items
+    QPushButton *c_insert_button;
+    QLineEdit *c_ou_edit;
+    QLineEdit *c_company_edit;
+    QLineEdit *c_prefix_edit;
+    QComboBox *c_sam_combo;
+    //
+
     void setCompanyName(const QString &company);
     void setOUCNName(const QString &cn);
-    void setUserPRefix(const QString &prefix);
+    void setUserPrefix(const QString &prefix);
+    void setSamSetting(const int &samsetting);
 
+    void runQuery(const QString &OU, const QString &company, const QString &prefix, const int &sam_selection);
 
 
     QString ou_name();
     QString company_name();
     QString prefix_name();
+
+    int sam_setting();
 
 protected:
 
@@ -59,19 +71,24 @@ signals:
     void _OUChanged();
     void _CompanyChanged();
     void _PrefixChanged();
+    void _SamSettingChanged();
+    void _QueryRan();
 
 public slots:
     void swap_menu(QListWidgetItem *selected, QListWidgetItem *previous);
+    void setupQuery();
 
 private:
      QWidget* get_menu_widget(QPushButton *close_button);
-     QWidget* get_company_custimization_widget();
+     QWidget* get_company_custimization_widget(QPushButton *c_insert_button, QLineEdit *c_ou_edit, QLineEdit *c_company_edit, QLineEdit *c_prefix_edit, QComboBox *c_sam_combo);
      QWidget* get_pdf_custimization_widget(QLineEdit *user_creation_text_edit, QLineEdit *user_disable_text_edit, QLineEdit *image_path_edit);
      QWidget* get_generation_custimization_widget();
+     QWidget* get_disable_custimation_widget();
 
      QString _oucn;
      QString _company;
      QString _prefix;
+     int _samsetting;
 
      QSqlDatabase db;
      QSqlQuery *query;

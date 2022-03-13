@@ -1,7 +1,7 @@
 CREATE TABLE "Clients" (
-	"OU CN"	TEXT,
-	"Company name"	TEXT,
-	"User prefix"	TEXT,
-	"SamAccount Selection"	INTEGER,
-	PRIMARY KEY("OU CN")
-)
+	"OU"	TEXT,
+	"Company"	TEXT,
+	"Prefix"	TEXT,
+	"SamAccount"	INTEGER,
+	PRIMARY KEY("OU")
+);
