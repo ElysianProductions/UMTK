@@ -19,7 +19,9 @@ InstallDir "$PROGRAMFILES\UMTK-Classic"
 
 ; Registry key to check for directory (so if you install again, it will 
 ; overwrite the old one automatically)
-InstallDirRegKey HKLM "Software\UMTK-Classic" "Install_Dir"
+InstallDirRegKey HKLM "Software\Microsoft\UMTK-Classic" "Installation Directory"
+
+
 
 ; Request application privileges for Windows Vista
 RequestExecutionLevel admin
@@ -54,8 +56,13 @@ Section "UMTK Classic(Required)"
   CreateShortcut "$DESKTOP\UMTK-Classic.lnk" "$INSTDIR\UMTK-Classic.exe" "" "$INSTDIR\A.ico" 0
   CreateShortCut "$SMPROGRAMS\UMTK-Classic\UMTK-QML Classic.lnk" "$INSTDIR\uninstall.exe" "" "$INSTDIR\uninstall.exe" 0 
   
-  ; Write the installation path into the registry
-  WriteRegStr HKLM Software\UMTK-Classic "Install_Dir" "$INSTDIR"
+  ; Write the registry keys (WriteRegStr rootkey subkey entry_name new_value_string)
+
+  
+  WriteRegStr HKLM "Software\Microsoft\UMTK-Classic\Installation Directory" "Install_Dir" "$INSTDIR"
+  WriteRegStr HKLM "Software\Microsoft\UMTK-Classic\PDF Settings" "Creation_Text" ""
+  WriteRegStr HKLM "Software\Microsoft\UMTK-Classic\PDF Settings" "Disable_Text" ""
+  WriteRegStr HKLM "Software\Microsoft\UMTK-Classic\PDF Settings" "Image_Path" ""
   
   ; Write the uninstall keys for Windows
   WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\UMTK-Classic" "DisplayName" "UMTK Classic"
