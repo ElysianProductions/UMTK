@@ -224,17 +224,6 @@ void MainWindow::create_local_user()
          localwidget.fullname_edit->setStyleSheet("color: black; background-color: white");
          luser.employee_name = localwidget.fullname_edit->text();
      }
-     /*
-     if(localwidget.emailaddress_edit->text().length() <= 0)
-     {
-         localwidget.emailaddress_edit->setStyleSheet("color: black; background-color: red");
-         localwidget.emailaddress_edit->setPlaceholderText("VALUE CANNOT BE EMPTY");
-     }
-     else if(localwidget.emailaddress_edit->text().length() > 0)
-     {
-         localwidget.emailaddress_edit->setStyleSheet("color: black; background-color: white");
-         luser.email_address = localwidget.emailaddress_edit->text();
-     }*/
      if(localwidget.password_edit->text().length() <= 0)
      {
          localwidget.password_edit->setStyleSheet("color: black; background-color: red");

@@ -14,25 +14,35 @@ ConfigurationWidget::ConfigurationWidget()
     c_prefix_edit = new QLineEdit();
     c_sam_combo = new QComboBox();
 
+    if(initalize_database("C:\\Program Files (x86)\\UMTK-Classic\\Database\\UMTK.db"))
+    {
+        model = new QSqlQueryModel(this);
+        model->setQuery("SELECT * FROM Clients");
+        company_table->setModel(model);
+    }
+    else
+    {
 
-    db = QSqlDatabase::addDatabase("QSQLITE");
-    db.setDatabaseName("C:\\Users\\Aaron\\Downloads\\UMTK.db");
-    bool is_valid = db.open();
-    query = new QSqlQuery(db);
-    query->prepare("SELECT * FROM Clients");
-    query->exec();
-    model = new QSqlQueryModel(this);
-    model->setQuery(*query);
-    company_table->setModel(model);
-
-
-
+    }
 }
 
 ConfigurationWidget::~ConfigurationWidget()
 {
     delete model;
-    delete query;
+}
+
+bool ConfigurationWidget::initalize_database(const QString &db_path)
+{
+     database_name = db_path;
+     auto db = QSqlDatabase::addDatabase("QSQLITE");
+     db.setDatabaseName(database_name);
+     bool is_open = db.open();
+     return is_open;
+}
+
+QSqlDatabase ConfigurationWidget::get_database()
+{
+    return QSqlDatabase::database(database_name);
 }
 
 QWidget* ConfigurationWidget::get_widget()
@@ -376,50 +386,71 @@ void ConfigurationWidget::setupQuery()
     runQuery(ou_name(), company_name(), prefix_name(), sam_setting());
 }
 
+void ConfigurationWidget::refresh_model()
+{
+    if(initalize_database("C:\\Program Files (x86)\\UMTK-Classic\\Database\\UMTK.db"))
+    {
+        model->setQuery("SELECT * FROM Clients");
+    }
+}
+
 void ConfigurationWidget::runQuery(const QString &OU, const QString &company, const QString &prefix, const int &sam_selection)
 {
     if(OU.length() > 0 && company.length() > 0 && prefix.length() > 0 && sam_selection > 0)
     {
-        query->prepare("INSERT INTO Clients (OU, Company, Prefix, SamAccount)"
-                       "Values (:OU, :Company, :Prefix, :SamAccount)");
-        query->bindValue(":OU", ou_name());
-        query->bindValue(":Company", company_name());
-        query->bindValue(":Prefix", prefix_name());
-        query->bindValue(":SamAccount", sam_setting());
-        query->exec();
-        query->prepare("SELECT * FROM Clients");
-        query->exec();
-        model->clear();
-        model->setQuery(*query);
+        if(initalize_database("C:\\Program Files (x86)\\UMTK-Classic\\Database\\UMTK.db"))
+        {
+            QSqlQuery *query = new QSqlQuery(get_database());
+            query->prepare("INSERT INTO Clients (OU, Company, Prefix, SamAccount)"
+                           "Values (:OU, :Company, :Prefix, :SamAccount)");
+            query->bindValue(":OU", ou_name());
+            query->bindValue(":Company", company_name());
+            query->bindValue(":Prefix", prefix_name());
+            query->bindValue(":SamAccount", sam_setting());
+            query->exec();
+            refresh_model();
+        }
+        else
+        {
 
+        }
     }
     if(OU.length() > 0 && company.length() > 0 && prefix.length() > 0)
     {
-        query->prepare("INSERT INTO Clients (OU, Company, Prefix)"
-                       "Values (:OU, :Company, :Prefix)");
-        query->bindValue(":OU", ou_name());
-        query->bindValue(":Company", company_name());
-        query->bindValue(":Prefix", prefix_name());
-        query->exec();
-        query->prepare("SELECT * FROM Clients");
-        query->exec();
-        model->clear();
-        model->setQuery(*query);
+
+        if(initalize_database("C:\\Program Files (x86)\\UMTK-Classic\\Database\\UMTK.db"))
+        {
+            QSqlQuery *query = new QSqlQuery(get_database());
+            query->prepare("INSERT INTO Clients (OU, Company, Prefix)"
+                           "Values (:OU, :Company, :Prefix)");
+            query->bindValue(":OU", ou_name());
+            query->bindValue(":Company", company_name());
+            query->bindValue(":Prefix", prefix_name());
+            query->exec();
+        }
+        else
+        {
+
+        }
 
     }
     if(OU.length() > 0 && company.length() > 0 && sam_selection > 0)
     {
-        query->prepare("INSERT INTO Clients (OU, Company, SamAccount)"
-                       "Values (:OU, :Company, :SamAccount)");
-        query->bindValue(":OU", ou_name());
-        query->bindValue(":Company", company_name());
-        query->bindValue(":SamAccount", sam_setting());
-        query->exec();
-        query->prepare("SELECT * FROM Clients");
-        query->exec();
-        model->clear();
-        model->setQuery(*query);
 
+        if(initalize_database("C:\\Program Files (x86)\\UMTK-Classic\\Database\\UMTK.db"))
+        {
+            QSqlQuery *query = new QSqlQuery(get_database());
+            query->prepare("INSERT INTO Clients (OU, Company, SamAccount)"
+                           "Values (:OU, :Company, :SamAccount)");
+            query->bindValue(":OU", ou_name());
+            query->bindValue(":Company", company_name());
+            query->bindValue(":SamAccount", sam_setting());
+            query->exec();
+        }
+        else
+        {
+
+        }
     }
     if(OU.length() <= 0 || company.length() <= 0)
     {

@@ -39,11 +39,11 @@ set(PROJECT_SOURCES
 )
 
 if(Qt6_FOUND)
-    qt_add_executable(UMTK-Classic WIN32
+    qt_add_executable(UMTK-Classic
         ${PROJECT_SOURCES}
     )
 elseif(NOT Qt6_FOUND)
-    add_executable(UMTK-Classic WIN32
+    add_executable(UMTK-Classic
         ${PROJECT_SOURCES}
     )
 endif()

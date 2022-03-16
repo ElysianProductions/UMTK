@@ -158,9 +158,15 @@ QStringList PSIntegration::List_All_Domain_Users()
     QStringList AD_Users;
     for(auto &i : tmp)
     {
+        //AD_Users << prepend_company(i, List_User_OU_CN(i));
         AD_Users << Clean_String(i);
     }
     return AD_Users;
+}
+
+QSqlDatabase PSIntegration::get_database()
+{
+    return QSqlDatabase::database(database_name);
 }
 
 QString PSIntegration::Clean_String(QString str)
@@ -328,6 +334,15 @@ QString PSIntegration::List_User_UserPrincipalName(QString name)
 QString PSIntegration::List_User_DisplayName(QString name)
 {
     return Clean_String(Execute("(Get-ADUser -Filter {Name -Like " + QString("\"") + name + QString("\"") + "} -Properties displayName).displayName"));
+}
+
+bool PSIntegration::initalize_database(const QString &db_path)
+{
+    database_name = db_path;
+    auto db = QSqlDatabase::addDatabase("QSQLITE");
+    db.setDatabaseName(database_name);
+    bool is_open = db.open();
+    return is_open;
 }
 
 bool PSIntegration::Employee_Name_Exists(QStringList names, QString new_name)
@@ -715,7 +730,218 @@ void PSIntegration::Edit_Disable_Description(QString name)
 }
 
 
+// TEST
+/*QString PSIntegration::prepend_company(const QString &employee_name, const QString &ou_name)
+{
+    for(auto i = 0; i < ou_list.count(); ++i)
+    {
+        if(ou_name == ou_list.at(i))
+        {
+            QString tmp = company_names_list.at(i) + " - " + Clean_String(employee_name);
+            qDebug() << tmp;
+            return tmp;
+        }
+        if(ou_name != ou_list.at(i) && i == ou_list.count())
+        {
+            return Clean_String(employee_name);
+        }
+    }
 
+    //return Clean_String(employee_name);
+}*/
+
+void PSIntegration::set_db_lists()
+{
+    if(initalize_database("C:\\Program Files (x86)\\UMTK-Classic\\Database\\UMTK.db"))
+    {
+        QSqlQuery *query = new QSqlQuery(get_database());
+        query->prepare("SELECT OU, Company, Prefix, SamAccount FROM Clients");
+        query->exec();
+        while(query->next())
+        {
+            ou_list << query->value(0).toString();
+            company_names_list << query->value(1).toString();
+            user_prefix_list << query->value(2).toString();
+            sam_setting_list << query->value(3).toString();
+        }
+    }
+}
+
+void PSIntegration::mapOUToCompany()
+{
+    QSqlQuery *query = new QSqlQuery(get_database());
+    query->prepare("SELECT OU, Company FROM Clients");
+    query->exec();
+    while(query->next())
+    {
+        ou_to_company.insert(query->value(0).toString(), query->value(1).toString());
+    }
+}
+
+void PSIntegration::mapCompanyToPrefix()
+{
+    QSqlQuery *query = new QSqlQuery(get_database());
+    query->prepare("SELECT Company, Prefix FROM Clients");
+    query->exec();
+    while(query->next())
+    {
+        company_to_prefix.insert(query->value(0).toString(), query->value(1).toString());
+    }
+}
+
+void PSIntegration::mapUserToCompany()
+{
+
+    //user_to_ou
+    //ou_to_company;
+    QMap<QString, QString>::const_iterator i = user_to_ou.constBegin();
+    QMap<QString, QString>::const_iterator j = ou_to_company.constBegin();
+
+    while(i != user_to_ou.constEnd())
+    {
+        if(i.value() == j.key())
+        {
+            user_to_company.insert(i.key(), j.value());
+            ++i;
+        }
+        if(i.value() != j.key() && j == ou_to_company.constEnd())
+        {
+            j = ou_to_company.constBegin();
+            ++i;
+        }
+        ++j;
+     }
+
+    QMap<QString, QString>::const_iterator l = user_to_company.constBegin();
+    QStringList tmp;
+
+    int k = 0;
+    while(k < getAllADUsers().count())
+    {
+        if(l.key() == getAllADUsers().at(k))
+        {
+            tmp << l.value() + " - " + getAllADUsers().at(k);
+            ++k;
+        }
+        if(l.key() != getAllADUsers().at(k) && l == user_to_company.constEnd())
+        {
+            l = user_to_company.constBegin();
+            //++k;
+        }
+        ++l;
+    }
+    setAllADUsers(tmp);
+}
+
+void PSIntegration::mapUserToOU()
+{
+    QStringList list = getAllADUsers();
+
+    for(auto i = 0; i < list.count(); ++i)
+    {
+        user_to_ou.insert(list.at(i), Clean_String(Execute("$temp = (Get-ADUser -Filter {Name -Like " + QString("\"") + list.at(i) + QString("\"") + "}); $t = $temp.DistinguishedName; $garbage, $OU = $t.split(',', 2); $clean, $junk = $OU.split(','); return $clean")).remove(0, 3));
+    }
+}
+
+void PSIntegration::setAllADUsers(const QStringList &list)
+{
+    QStringList tmp;
+    for(auto &i : list)
+    {
+        tmp << Clean_String(i);
+    }
+
+    if(tmp != all_users)
+    {
+        all_users = tmp;
+        Q_EMIT _ADUsersChanged();
+    }
+}
+
+void PSIntegration::setAllADUPNs(const QStringList &list)
+{
+   QStringList tmp;
+   for(auto &i : list)
+   {
+       tmp << Clean_String(i);
+   }
+   if(tmp != all_upns)
+   {
+       all_upns = tmp;
+       Q_EMIT _UPNsChanged();
+   }
+}
+
+void PSIntegration::setAllADForests(const QStringList &list)
+{
+    QStringList tmp;
+    for(auto &i : list)
+    {
+        tmp << Clean_String(i);
+    }
+    if(tmp != all_forests)
+    {
+        all_forests = tmp;
+        Q_EMIT _ForestsChanged();
+    }
+}
+
+void PSIntegration::setAllOUNames(const QStringList &list)
+{
+    QStringList tmp;
+    for(auto &i : list)
+    {
+        tmp << Clean_String(i);
+    }
+    if(tmp != all_ou_names)
+    {
+        all_ou_names = tmp;
+
+        Q_EMIT _OUNamesChanged();
+    }
+}
+
+void PSIntegration::setAllOUDNs(const QStringList &list)
+{
+    QStringList tmp;
+    for(auto &i : list)
+    {
+        tmp << Clean_String(i);
+    }
+    if(tmp != all_ou_distinguished)
+    {
+        all_ou_distinguished = tmp;
+        Q_EMIT _OUDistinguishedNamesChanged();
+    }
+}
+
+QStringList PSIntegration::getAllADUsers()
+{
+    return all_users;
+}
+
+QStringList PSIntegration::getAllADUPNs()
+{
+    return all_upns;
+}
+
+QStringList PSIntegration::getAllADForests()
+{
+    return all_forests;
+}
+
+QStringList PSIntegration::getAllOUNames()
+{
+    return all_ou_names;
+}
+
+QStringList PSIntegration::getAllOUDNs()
+{
+    return all_ou_distinguished;
+}
+
+
+//TEST
 
 
 

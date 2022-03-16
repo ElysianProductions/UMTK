@@ -9,7 +9,6 @@
 #include <QGridLayout>
 #include <QString>
 #include <QStringList>
-#include <QProcess>
 #include <QTextBrowser>
 
 

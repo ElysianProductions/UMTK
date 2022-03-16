@@ -85,15 +85,21 @@ private:
      QWidget* get_generation_custimization_widget();
      QWidget* get_disable_custimation_widget();
 
+
+
      QString _oucn;
      QString _company;
      QString _prefix;
+
      int _samsetting;
 
-     QSqlDatabase db;
-     QSqlQuery *query;
+
      QSqlQueryModel *model;
 
+     bool initalize_database(const QString &db_path);
+     QSqlDatabase get_database();
+     void refresh_model();
+     QString database_name;
 };
 
 #endif // CONFIGURATIONWIDGET_H

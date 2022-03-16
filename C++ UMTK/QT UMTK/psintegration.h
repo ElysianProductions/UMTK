@@ -11,12 +11,22 @@
 #include <QPainter>
 #include <QTextDocument>
 #include <QPrinter>
+#include <QSqlDatabase>
+#include <QSqlQuery>
+#include <QSqlQueryModel>
+#include <QtConcurrent/QtConcurrent>
+#include <QtConcurrent/QtConcurrentRun>
+#include <QFuture>
 
-class PSIntegration
+class PSIntegration : public QObject
 {
+    Q_OBJECT
 public:
     PSIntegration();
 
+    // test
+        void set_db_lists();
+    //test
 
     void List_Password_Policy(QString name); // Detect the appropriate policy based on the template user. - done
     void Set_FGPP_active(QString MinLength, QString Complexity); // Configure the fine grain password policy as active for this specific user.
@@ -73,10 +83,50 @@ public:
     QStringList List_All_Domain_Users(); // List the names of all domain users
     QStringList Execute_Command(QString param); // Launch an elevated ps session and execute a command that returns a QStringList - Done
 
+
+//TEST
+void setAllADUsers(const QStringList &list); // Set all_users StringList.
+void setAllADUPNs(const QStringList &list); // Set all_upns StringList
+void setAllADForests(const QStringList &list); // Set all_forests StringList
+void setAllOUNames(const QStringList &list); // Set all_ou_names StringList;
+void setAllOUDNs(const QStringList &list); // Set all_ou_distinguished StringList;
+void mapOUToCompany(); // Create ou_to_company by querying OU, Company in UMTK.db
+void mapCompanyToPrefix(); // Create company_to_prefix by querying Company, Prefix in UMTK.db
+void mapUserToCompany();
+void mapUserToOU();
+
+QStringList getAllADUsers(); // Return all_users StringList
+QStringList getAllADUPNs(); // Return all_upns StringList
+QStringList getAllADForests(); // Return all_forests StringList
+QStringList getAllOUNames(); // Return all_ou_names StringList
+QStringList getAllOUDNs(); // Return all_ou_distingusihed StringList
+QStringList getStringListProcess(QString param);
+
+
+//TEST
+
+
 protected:
     QString image;
 
+signals:
+//test
+    void _ADUsersChanged();
+    void _UPNsChanged();
+    void _ForestsChanged();
+    void _OUNamesChanged();
+    void _OUDistinguishedNamesChanged();
+//
+
+public slots:
+// test
+
+//
+
 private:
+
+    bool initalize_database(const QString &db_path);
+    QSqlDatabase get_database();
 
     QString DDPP_ComplexityEnabled; // Default Domain Password Policy ComplexityEnabled
     QString DDPP_MinPasswordLength; // Default Domain Password Policy MinPasswordLength
@@ -94,6 +144,28 @@ private:
 
     QString active_SP_MinLength; // This is the active policy always. It pulls from one of the above variables.
     QString active_SP_Complexity; // This is the active policy always. It pulls from one of the above variables.
+
+
+    // Test functions
+    //QStringList prepend_company(const QString &employee_name, const QString &ou_name); // Pass the full name of the user and List_User_OU_CN(QString name);. Returns list of users with "Company - employee_name"
+    //QString prepend_company(const QString &employee_name, const QString &ou_name);
+
+    QMap<QString, QString> ou_to_company;
+    QMap<QString, QString> company_to_prefix;
+    QMap<QString, QString> user_to_company;
+    QMap<QString, QString> user_to_ou;
+
+    QStringList ou_list;
+    QStringList company_names_list;
+    QStringList user_prefix_list;
+    QStringList sam_setting_list;
+    QString database_name;
+
+    QStringList all_users;
+    QStringList all_ou_distinguished;
+    QStringList all_ou_names;
+    QStringList all_upns;
+    QStringList all_forests;
 
 };
 

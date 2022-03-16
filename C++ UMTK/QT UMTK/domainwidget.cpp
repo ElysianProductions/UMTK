@@ -33,20 +33,29 @@ QWidget* DomainWidget::initalize_widget(QComboBox *upn_combo, QComboBox *ou_comb
         QVBoxLayout *main_layout = new QVBoxLayout();
         QWidget *primary_display = new QWidget();
         load_domain_information();
+        mapOUToCompany();
+        mapCompanyToPrefix();
+        mapUserToOU();
+        mapUserToCompany();
+
 
         upn_combo->setToolTip("Please select the appropriate UPN from the window. If no UPNs are available use the domain name option");
-        upn_combo->addItems(Domain_UPNS);
+       // upn_combo->addItems(Domain_UPNS);
+        upn_combo->addItems(getAllADUPNs());
         upn_combo->hide();
 
         template_user_combo->setToolTip("Please select the appropriate template user.");
-        template_user_combo->addItems(AD_Users);
+        //template_user_combo->addItems(AD_Users);
+        template_user_combo->addItems(getAllADUsers());
 
         ou_combo->setToolTip("Please select the appropriate OU from the list.");
-        ou_combo->addItems(OU_Names);
+        //ou_combo->addItems(OU_Names);
+        ou_combo->addItems(getAllOUNames());
         ou_combo->hide();
 
         domain_name_combo->setToolTip("Select domain name if applicable.");
-        domain_name_combo->addItems(Domain_Name);
+        //domain_name_combo->addItems(Domain_Name);
+        domain_name_combo->addItems(getAllADForests());
         domain_name_combo->hide();
 
         employee_name_edit->setPlaceholderText("Type the new employees full name.");
@@ -106,15 +115,21 @@ QWidget* DomainWidget::initalize_widget(QComboBox *upn_combo, QComboBox *ou_comb
 
 void DomainWidget::load_domain_information()
 {
-    Domain_Name = List_All_Forests();
+    //set_db_lists();
 
-    Domain_UPNS = List_All_UPNs();
+    //Domain_Name = List_All_Forests(); //
+    setAllADForests(Execute_Command("Get-ADForest | Select -ExpandProperty Domains"));
 
-    OU_Names = List_All_OU_CNs();
+    //Domain_UPNS = List_All_UPNs(); //
+    setAllADUPNs(Execute_Command("Get-ADForest | Select -ExpandProperty UPNSuffixes"));
 
-    OU_DN_Names = List_All_OU_DNs();
+    //OU_Names = List_All_OU_CNs();
+    setAllOUNames(Execute_Command("Get-ADOrganizationalUnit -Filter * | Select -ExpandProperty Name"));
 
-    AD_Users = List_All_Domain_Users();
+    //OU_DN_Names = List_All_OU_DNs();
+    setAllOUDNs(Execute_Command("Get-ADOrganizationalUnit -Filter * | Select -ExpandProperty DistinguishedName"));
 
+    //AD_Users = List_All_Domain_Users(); //
+    setAllADUsers(Execute_Command("$tmp = (Get-ADUser -Filter * | Select-Object Name, GivenName, SurName | Sort-Object SurName, GivenName); return $tmp.Name"));
 }
 
