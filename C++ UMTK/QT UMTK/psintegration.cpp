@@ -336,6 +336,26 @@ QString PSIntegration::List_User_DisplayName(QString name)
     return Clean_String(Execute("(Get-ADUser -Filter {Name -Like " + QString("\"") + name + QString("\"") + "} -Properties displayName).displayName"));
 }
 
+QString PSIntegration::stripCompanyName(QString employee)
+{
+    /* Create a pattern to find the first `-`.
+     * Match it, if it's found return a substring of employee.
+     * The substring contains everything after the first instance of `-` + 1.
+     * The employee string before handed off to this function looks like so, `Company name - Employee name`.
+     * The string returned by this function looks like ` Employee name`.
+     */
+
+    QRegularExpression re;
+    QRegularExpressionMatch match;
+    re.setPattern("(^[^-]*-)");
+    match = re.match(employee);
+    bool matching = match.hasMatch();
+    if(matching == true)
+    {
+        return employee.remove(0, match.capturedLength() + 1);
+    }
+}
+
 bool PSIntegration::initalize_database(const QString &db_path)
 {
     database_name = db_path;
@@ -731,24 +751,6 @@ void PSIntegration::Edit_Disable_Description(QString name)
 
 
 // TEST
-/*QString PSIntegration::prepend_company(const QString &employee_name, const QString &ou_name)
-{
-    for(auto i = 0; i < ou_list.count(); ++i)
-    {
-        if(ou_name == ou_list.at(i))
-        {
-            QString tmp = company_names_list.at(i) + " - " + Clean_String(employee_name);
-            qDebug() << tmp;
-            return tmp;
-        }
-        if(ou_name != ou_list.at(i) && i == ou_list.count())
-        {
-            return Clean_String(employee_name);
-        }
-    }
-
-    //return Clean_String(employee_name);
-}*/
 
 void PSIntegration::set_db_lists()
 {
@@ -791,45 +793,22 @@ void PSIntegration::mapCompanyToPrefix()
 
 void PSIntegration::mapUserToCompany()
 {
-
-    //user_to_ou
-    //ou_to_company;
-    QMap<QString, QString>::const_iterator i = user_to_ou.constBegin();
-    QMap<QString, QString>::const_iterator j = ou_to_company.constBegin();
-
-    while(i != user_to_ou.constEnd())
-    {
-        if(i.value() == j.key())
-        {
-            user_to_company.insert(i.key(), j.value());
-            ++i;
-        }
-        if(i.value() != j.key() && j == ou_to_company.constEnd())
-        {
-            j = ou_to_company.constBegin();
-            ++i;
-        }
-        ++j;
-     }
-
-    QMap<QString, QString>::const_iterator l = user_to_company.constBegin();
-    QStringList tmp;
-
     int k = 0;
+    QStringList tmp;
     while(k < getAllADUsers().count())
     {
-        if(l.key() == getAllADUsers().at(k))
+        if(user_to_ou.contains(getAllADUsers().at(k)))
         {
-            tmp << l.value() + " - " + getAllADUsers().at(k);
-            ++k;
+            QMap<QString, QString>::iterator i = user_to_ou.find(getAllADUsers().at(k));
+            if(ou_to_company.contains(i.value()))
+            {
+                QMap<QString, QString>::iterator j = ou_to_company.find(i.value());
+                tmp << j.value() + " - " + i.key();
+            }
         }
-        if(l.key() != getAllADUsers().at(k) && l == user_to_company.constEnd())
-        {
-            l = user_to_company.constBegin();
-            //++k;
-        }
-        ++l;
+        ++k;
     }
+    tmp.sort();
     setAllADUsers(tmp);
 }
 
@@ -939,6 +918,7 @@ QStringList PSIntegration::getAllOUDNs()
 {
     return all_ou_distinguished;
 }
+
 
 
 //TEST

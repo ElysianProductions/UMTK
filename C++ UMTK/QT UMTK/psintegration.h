@@ -95,14 +95,16 @@ void mapCompanyToPrefix(); // Create company_to_prefix by querying Company, Pref
 void mapUserToCompany();
 void mapUserToOU();
 
+
+
 QStringList getAllADUsers(); // Return all_users StringList
 QStringList getAllADUPNs(); // Return all_upns StringList
 QStringList getAllADForests(); // Return all_forests StringList
 QStringList getAllOUNames(); // Return all_ou_names StringList
 QStringList getAllOUDNs(); // Return all_ou_distingusihed StringList
-QStringList getStringListProcess(QString param);
+//QStringList getStringListProcess(QString param);
 
-
+QString stripCompanyName(QString employee); // Remove X characters from the start of the string to the hypen + 1
 //TEST
 
 
@@ -154,6 +156,7 @@ private:
     QMap<QString, QString> company_to_prefix;
     QMap<QString, QString> user_to_company;
     QMap<QString, QString> user_to_ou;
+    QMultiMap<QString, QString> org_company, company_prefix, user_company, user_ou;
 
     QStringList ou_list;
     QStringList company_names_list;
