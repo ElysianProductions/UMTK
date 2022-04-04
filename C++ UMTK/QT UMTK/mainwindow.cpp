@@ -314,9 +314,9 @@ void MainWindow::create_domain_user()
          error = error + "\nWARNING: Your UPN appears to be empty. Please try again.\n";
          errorDetected = true;
      }
-     if(!user.Validate_User_Status(domainwidget.template_user_combo->currentText()))
+     if(!user.Validate_User_Status(user.stripCompanyName(domainwidget.template_user_combo->currentText())))
      {
-         error = error + "\nWARNING: The template user " + domainwidget.template_user_combo->currentText() + " is disabled. This means it likely has no groups. Please confirm that the user has the groups needed before creating this user.\n";
+         error = error + "\nWARNING: The template user " + user.stripCompanyName(domainwidget.template_user_combo->currentText()) + " is disabled. This means it likely has no groups. Please confirm that the user has the groups needed before creating this user.\n";
          errorDetected = true;
      }
      if(errorDetected == true)
@@ -370,7 +370,7 @@ void MainWindow::create_domain_user()
                  user.Dump_User_Form("<html> <h1> <center> The following information pertains to the new user request that you have submitted: </center> </h1> <br><br><br> <body> <strong> Employee name: </strong> " + user.get_Name() +
                                      "<br> <strong> Username: </strong> " + user.get_SamAccountName() + " <br> <strong> Email address: </strong> " + user.get_Mail() +
                                      "<br> <strong> Password: </strong> " + domainwidget.password_edit->text() + " <br> <strong> Groups: </strong> " + user.get_Groups().join(" , ") +
-                                     "<br> <strong> Template user provided: </strong> " + domainwidget.template_user_combo->currentText() +
+                                     "<br> <strong> Template user provided: </strong> " + user.stripCompanyName(domainwidget.template_user_combo->currentText()) +
                                      "</body> </html>", user.List_URL_Image_Path(), user.get_Name()
                              );
                  clear_ui();
@@ -407,7 +407,7 @@ void MainWindow::create_domain_user()
                  user.Dump_User_Form("<html> <h1> <center> The following information pertains to the new user request that you have submitted: </center> </h1> <br><br><br> <body> <strong> Employee name: </strong> " + user.get_Name() +
                                      "<br> <strong> Username: </strong> " + user.get_SamAccountName() + " <br> <strong> Email address: </strong> " + user.get_Mail() +
                                      "<br> <strong> Password: </strong> " + domainwidget.password_edit->text() + " <br> <strong> Groups: </strong> " + user.get_Groups().join(" , ") +
-                                     "<br> <strong> Template user provided: </strong> " + domainwidget.template_user_combo->currentText() +
+                                     "<br> <strong> Template user provided: </strong> " + user.stripCompanyName(domainwidget.template_user_combo->currentText()) +
                                      "</body> </html>", user.List_URL_Image_Path(), user.get_Name()
                              );
                  clear_ui();
@@ -439,7 +439,7 @@ void MainWindow::create_domain_user()
                  }
 
 
-                 user.Execute(user.Clean_String("$tmp = (Get-ADUser -Filter {Name -like \"" + domainwidget.template_user_combo->currentText() + "\"}); "
+                 user.Execute(user.Clean_String("$tmp = (Get-ADUser -Filter {Name -like \"" + user.stripCompanyName(domainwidget.template_user_combo->currentText()) + "\"}); "
                               "$groups = (Get-ADUser $tmp -Properties MemberOf).MemberOf; $usr = \"" + user.get_SamAccountName() + "\"; "
                               "Foreach ($group in $groups) {Add-ADGroupMember -Identity (Get-ADGroup $group).name -Members $usr}; exit "));
 
@@ -494,7 +494,7 @@ void MainWindow::create_domain_user()
                  user.Dump_User_Form("<html> <h1> <center> The following information pertains to the new user request that you have submitted: </center> </h1> <br><br><br> <body> <strong> Employee name: </strong> " + user.get_Name() +
                                      "<br> <strong> Username: </strong> " + user.get_SamAccountName() + " <br> <strong> Email address: </strong> " + user.get_Mail() +
                                      "<br> <strong> Password: </strong> " + domainwidget.password_edit->text() + " <br> <strong> Groups: </strong> " + user.get_Groups().join(" , ") +
-                                     "<br> <strong> Template user provided: </strong> " + domainwidget.template_user_combo->currentText() +
+                                     "<br> <strong> Template user provided: </strong> " + user.stripCompanyName(domainwidget.template_user_combo->currentText()) +
                                      "</body> </html>", user.List_URL_Image_Path(), user.get_Name()
                              );
                  clear_ui();
@@ -529,7 +529,7 @@ void MainWindow::create_domain_user()
                  user.Dump_User_Form("<html> <h1> <center> The following information pertains to the new user request that you have submitted: </center> </h1> <br><br><br> <body> <strong> Employee name: </strong> " + user.get_Name() +
                                      "<br> <strong> Username: </strong> " + user.get_SamAccountName() + " <br> <strong> Email address: </strong> " + user.get_Mail() +
                                      "<br> <strong> Password: </strong> " + domainwidget.password_edit->text() + " <br> <strong> Groups: </strong> " + user.get_Groups().join(" , ") +
-                                     "<br> <strong> Template user provided: </strong> " + domainwidget.template_user_combo->currentText() +
+                                     "<br> <strong> Template user provided: </strong> " + user.stripCompanyName(domainwidget.template_user_combo->currentText()) +
                                      "</body> </html>", user.List_URL_Image_Path(), user.get_Name()
                              );
                  clear_ui();
@@ -569,7 +569,7 @@ void MainWindow::create_domain_user()
                  user.Dump_User_Form("<html> <h1> <center> The following information pertains to the new user request that you have submitted: </center> </h1> <br><br><br> <body> <strong> Employee name: </strong> " + user.get_Name() +
                                      "<br> <strong> Username: </strong> " + user.get_SamAccountName() + " <br> <strong> Email address: </strong> " + user.get_Mail() +
                                      "<br> <strong> Password: </strong> " + domainwidget.password_edit->text() + " <br> <strong> Groups: </strong> " + user.get_Groups().join(" , ") +
-                                     "<br> <strong> Template user provided: </strong> " + domainwidget.template_user_combo->currentText() +
+                                     "<br> <strong> Template user provided: </strong> " + user.stripCompanyName(domainwidget.template_user_combo->currentText()) +
                                      "</body> </html>", user.List_URL_Image_Path(), user.get_Name()
                              );
                  clear_ui();
@@ -603,11 +603,38 @@ void MainWindow::clear_ui()
 
 void MainWindow::Automate()
 {
-    if(domainwidget.employee_name_edit->text().length() > 0)
+    /* If the employee name is not empty, take the text and use it to set:
+     *     Attribute - Name
+     *     Attribute - givenName
+     *     Attribute - surName
+     *     Attribute - displayName
+     *
+     * If the StringList count of Names is > 2 then there are three names, do something with the third name.
+     *
+     *
+     *
+     *
+     */
+
+
+    /*
+     * Validate if the employee name text edit is or isn't empty.
+     * If it is empty, do nothing. (add in error message)
+     * If it's not empty, take the text and set the new users name.
+     * Split the users name at each space and add to QStringList,
+     * use that list to generate First name, middle name (if middle name exists), and last name.
+     * Create the default display name using the new users full name.
+     *
+     */
+
+
+
+
+    // WORKING CODE
+    /*if(domainwidget.employee_name_edit->text().length() > 0)
     {
 
         user.set_Name(domainwidget.employee_name_edit->text());
-
         QStringList Names = domainwidget.employee_name_edit->text().split(" ");
         user.set_GivenName(Names.first());
         user.set_SurName(Names.last());
@@ -617,14 +644,23 @@ void MainWindow::Automate()
             user.set_OtherName(Names[1]);
         }
         user.set_SamAccountName(Names.first().at(0).toUpper() + Names.last().toLower());
+
         user.set_Identifier(user.List_User_Identifier(user.List_Name(domainwidget.template_user_combo->currentText())));
+
         user.set_UPN(user.get_SamAccountName() + "@" + user.get_Identifier());
+
         user.set_Mail(user.get_UPN());
+
         user.set_Groups(user.List_User_Group_CNs(user.List_SamAccountName(domainwidget.template_user_combo->currentText())));
+
         user.set_GroupDNs(user.List_User_Group_DNs(user.List_SamAccountName(domainwidget.template_user_combo->currentText())));
+
         user.set_OU_DN(user.List_User_OU_DN(domainwidget.template_user_combo->currentText()));
+
         user.set_OU_CN(user.List_User_OU_CN(domainwidget.template_user_combo->currentText()));
+
         user.List_Password_Policy(user.List_Name(domainwidget.template_user_combo->currentText()));
+
 
 
         domainwidget.ou_combo->show();
@@ -650,13 +686,21 @@ void MainWindow::Automate()
         }
 
         domainwidget.employee_name_edit->show();
+
         domainwidget.employee_name_edit->setText(user.get_Name());
+
         domainwidget.user_edit->show();
+
         domainwidget.user_edit->setText(user.get_SamAccountName());
+
         domainwidget.password_edit->setPlaceholderText("Minimum password length " + user.List_ActiveSP_length() + " Complexity on: " + user.List_ActiveSP_Complexity());
+
         domainwidget.password_edit->show();
+
         domainwidget.email_edit->show();
+
         domainwidget.email_edit->setText(user.get_Mail());
+
         domainwidget.create_button->show();
 
 
@@ -668,7 +712,170 @@ void MainWindow::Automate()
     {
         // throw error
 
+    }*/
+
+    // TEST CODE
+    if(domainwidget.employee_name_edit->text().length() > 0)
+    {
+        if(user.List_All_UPNs().count() > 1)
+        {
+            user.set_Name(domainwidget.employee_name_edit->text());
+            QStringList Names = domainwidget.employee_name_edit->text().split(" ");
+            user.set_GivenName(Names.first());
+            user.set_SurName(Names.last());
+            user.set_DisplayName(user.get_Name());
+            if(Names.count() >= 2)
+            {
+                user.set_OtherName(Names[1]);
+            }
+            user.set_SamAccountName(Names.first().at(0).toUpper() + Names.last().toLower());
+
+            user.set_Identifier(user.List_User_Identifier(user.getEmployeeName(user.stripCompanyName(domainwidget.template_user_combo->currentText()))));
+
+            user.set_UPN(user.get_SamAccountName() + "@" + user.get_Identifier());
+
+            user.set_Mail(user.get_UPN());
+
+            user.set_Groups(user.List_User_Group_CNs(user.List_SamAccountName(user.getEmployeeName(user.stripCompanyName(domainwidget.template_user_combo->currentText())))));
+
+            user.set_GroupDNs(user.List_User_Group_DNs(user.List_SamAccountName(user.getEmployeeName(user.stripCompanyName(domainwidget.template_user_combo->currentText())))));
+
+            user.set_OU_DN(user.List_User_OU_DN(user.getEmployeeName(user.stripCompanyName(domainwidget.template_user_combo->currentText()))));
+
+            user.set_OU_CN(user.List_User_OU_CN(user.getEmployeeName(user.stripCompanyName(domainwidget.template_user_combo->currentText()))));
+
+            user.List_Password_Policy(user.getEmployeeName(user.stripCompanyName(domainwidget.template_user_combo->currentText())));
+
+            domainwidget.ou_combo->show();
+            domainwidget.upn_combo->show();
+            QStringList tmp_upn = user.List_All_UPNs();
+
+            for(int i = 0; i < domainwidget.upn_combo->count(); ++i)
+            {
+                if(user.get_Identifier() == tmp_upn.at(i))
+                {
+                    domainwidget.upn_combo->setCurrentIndex(i);
+                }
+            }
+
+            QStringList tmp_ou_cn = user.List_All_OU_CNs();
+
+            for(int i = 0; i < domainwidget.ou_combo->count(); ++i)
+            {
+                if(user.get_OU_CN() == tmp_ou_cn.at(i))
+                {
+                    domainwidget.ou_combo->setCurrentIndex(i);
+                }
+            }
+
+            domainwidget.employee_name_edit->show();
+
+            domainwidget.employee_name_edit->setText(user.get_Name());
+
+            domainwidget.user_edit->show();
+
+            domainwidget.user_edit->setText(user.get_SamAccountName());
+
+            domainwidget.password_edit->setPlaceholderText("Minimum password length " + user.List_ActiveSP_length() + " Complexity on: " + user.List_ActiveSP_Complexity());
+
+            domainwidget.password_edit->show();
+
+            domainwidget.email_edit->show();
+
+            domainwidget.email_edit->setText(user.get_Mail());
+
+            domainwidget.create_button->show();
+
+
+
+            domainwidget.informational->setText("Employee name: " + user.get_Name() +"\nUsername: " + user.get_SamAccountName() + "\nEmail address: " + user.get_Mail() + "\nDisplay name: " + user.get_DisplayName() +
+                                                "\nOrganizational unit: " + user.get_OU_CN() + "\nUser Principal Name: " + user.get_UPN());
+
+
+        }
+        else if(user.List_All_UPNs().count() <= 1)
+        {
+            user.set_Name(domainwidget.employee_name_edit->text());
+            QStringList Names = domainwidget.employee_name_edit->text().split(" ");
+            user.set_GivenName(Names.first());
+            user.set_SurName(Names.last());
+            user.set_DisplayName(user.get_Name());
+            if(Names.count() >= 2)
+            {
+                user.set_OtherName(Names[1]);
+            }
+            user.set_SamAccountName(Names.first().at(0).toUpper() + Names.last().toLower());
+
+            user.set_Identifier(user.List_User_Identifier(user.List_Name(domainwidget.template_user_combo->currentText())));
+
+            user.set_UPN(user.get_SamAccountName() + "@" + user.get_Identifier());
+
+            user.set_Mail(user.get_UPN());
+
+            user.set_Groups(user.List_User_Group_CNs(user.List_SamAccountName(domainwidget.template_user_combo->currentText())));
+
+            user.set_GroupDNs(user.List_User_Group_DNs(user.List_SamAccountName(domainwidget.template_user_combo->currentText())));
+
+            user.set_OU_DN(user.List_User_OU_DN(domainwidget.template_user_combo->currentText()));
+
+            user.set_OU_CN(user.List_User_OU_CN(domainwidget.template_user_combo->currentText()));
+
+            user.List_Password_Policy(user.List_Name(domainwidget.template_user_combo->currentText()));
+
+
+
+            domainwidget.ou_combo->show();
+            domainwidget.upn_combo->show();
+            QStringList tmp_upn = user.List_All_UPNs();
+
+            for(int i = 0; i < domainwidget.upn_combo->count(); ++i)
+            {
+                if(user.get_Identifier() == tmp_upn.at(i))
+                {
+                    domainwidget.upn_combo->setCurrentIndex(i);
+                }
+            }
+
+            QStringList tmp_ou_cn = user.List_All_OU_CNs();
+
+            for(int i = 0; i < domainwidget.ou_combo->count(); ++i)
+            {
+                if(user.get_OU_CN() == tmp_ou_cn.at(i))
+                {
+                    domainwidget.ou_combo->setCurrentIndex(i);
+                }
+            }
+
+            domainwidget.employee_name_edit->show();
+
+            domainwidget.employee_name_edit->setText(user.get_Name());
+
+            domainwidget.user_edit->show();
+
+            domainwidget.user_edit->setText(user.get_SamAccountName());
+
+            domainwidget.password_edit->setPlaceholderText("Minimum password length " + user.List_ActiveSP_length() + " Complexity on: " + user.List_ActiveSP_Complexity());
+
+            domainwidget.password_edit->show();
+
+            domainwidget.email_edit->show();
+
+            domainwidget.email_edit->setText(user.get_Mail());
+
+            domainwidget.create_button->show();
+
+
+
+            domainwidget.informational->setText("Employee name: " + user.get_Name() +"\nUsername: " + user.get_SamAccountName() + "\nEmail address: " + user.get_Mail() + "\nDisplay name: " + user.get_DisplayName() +
+                                                "\nOrganizational unit: " + user.get_OU_CN() + "\nUser Principal Name: " + user.get_UPN());
+        }
     }
+    else if(domainwidget.employee_name_edit->text().length() <= 0)
+    {
+
+    }
+
+    // TEST CODE
 }
 
 /*void MainWindow::Automate_Edit_User()

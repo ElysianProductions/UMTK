@@ -172,9 +172,10 @@ QSqlDatabase PSIntegration::get_database()
 QString PSIntegration::Clean_String(QString str)
 {
     /*
-     *
-     *
-     *
+     * Strips any carriage returns
+     * and new lines if they exist.
+     * When pulling them from PS they usually exist.
+     * So this functions needs to get called a lot.
      */
 
     bool bad_chars = true;
@@ -334,26 +335,6 @@ QString PSIntegration::List_User_UserPrincipalName(QString name)
 QString PSIntegration::List_User_DisplayName(QString name)
 {
     return Clean_String(Execute("(Get-ADUser -Filter {Name -Like " + QString("\"") + name + QString("\"") + "} -Properties displayName).displayName"));
-}
-
-QString PSIntegration::stripCompanyName(QString employee)
-{
-    /* Create a pattern to find the first `-`.
-     * Match it, if it's found return a substring of employee.
-     * The substring contains everything after the first instance of `-` + 1.
-     * The employee string before handed off to this function looks like so, `Company name - Employee name`.
-     * The string returned by this function looks like ` Employee name`.
-     */
-
-    QRegularExpression re;
-    QRegularExpressionMatch match;
-    re.setPattern("(^[^-]*-)");
-    match = re.match(employee);
-    bool matching = match.hasMatch();
-    if(matching == true)
-    {
-        return employee.remove(0, match.capturedLength() + 1);
-    }
 }
 
 bool PSIntegration::initalize_database(const QString &db_path)
@@ -919,7 +900,67 @@ QStringList PSIntegration::getAllOUDNs()
     return all_ou_distinguished;
 }
 
+QString PSIntegration::stripCompanyName(QString employee)
+{
+    /* Create a pattern to find the first `-`.
+     * Match it, if it's found return a substring of employee.
+     * The substring contains everything after the first instance of `-` + 1.
+     * The employee string before handed off to this function looks like so, `Company name - Employee name`.
+     * The string returned by this function looks like ` Employee name`.
+     */
+    QRegularExpression re("(^[^-]*-)");
+    QRegularExpressionMatch match = re.match(employee);
+    if(match.hasMatch())
+    {
+        employee = employee.remove(0, match.capturedLength() + 1);
+        return employee;
+    }
+    else if(!match.hasMatch())
+    {
+        return employee;
+    }
+}
 
+QString PSIntegration::getEmployeeIdentifier(QString name)
+{
+
+    /* Iterate through all UPNs, "Clean" each one and add it to the StringList.
+     * Iterate through any and all forests, "Clean" each one and add it to the StringList.
+     * If the UPN count is greater than 0, search the users name, pull the appropriate UPN, split it within PS, return PS result and then return the string.
+     * If the UPN count is equal to zero just return the forest name. Right now it does NOT support multi forests.
+     *
+     */
+    QStringList cleaned_upns;
+    QStringList cleaned_domains;
+    QStringList UPNs = getAllADUPNs();
+    QStringList Domains = getAllADForests();
+    for(auto &i : UPNs)
+    {
+        cleaned_upns << Clean_String(i);
+    }
+    for(auto &i : Domains)
+    {
+        cleaned_domains << Clean_String(i);
+    }
+
+    if(cleaned_upns.count() > 0)
+    {
+        return Clean_String(Execute("$temp = (Get-ADUser -Filter {Name -like " + QString("\"") + name + QString("\"") + " } -Properties UserPrincipalName).UserPrincipalName; $garbage, $upn = $temp.Split('@'); return $upn "));
+    }
+    else if(cleaned_upns.count() == 0)
+    {
+        return cleaned_domains.first(); // Needs to be fixed to work in multi-domain environments.
+    }
+}
+
+QString PSIntegration::getEmployeeName(QString name)
+{
+    /*
+     * Return the "cleaned" employee name.
+     * See Clean_String to find out what "Cleaned" means.
+     */
+    return Clean_String(name);
+}
 
 //TEST
 

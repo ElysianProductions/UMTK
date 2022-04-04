@@ -102,9 +102,12 @@ QStringList getAllADUPNs(); // Return all_upns StringList
 QStringList getAllADForests(); // Return all_forests StringList
 QStringList getAllOUNames(); // Return all_ou_names StringList
 QStringList getAllOUDNs(); // Return all_ou_distingusihed StringList
-//QStringList getStringListProcess(QString param);
+
+
 
 QString stripCompanyName(QString employee); // Remove X characters from the start of the string to the hypen + 1
+QString getEmployeeName(QString name); // Pass the full name of your user, function returns Clean_String(name).
+QString getEmployeeIdentifier(QString name); // Pass the full name of your user.
 //TEST
 
 
