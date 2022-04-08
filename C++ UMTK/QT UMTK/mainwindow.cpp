@@ -963,18 +963,39 @@ void MainWindow::Edit_User_Widget(int choice)
 
 void MainWindow::disable_user()
 {
-    QString name = disableuser.user_selection->currentText();
-    QString username = user.List_SamAccountName(name);
-    QString email = user.List_Mail(name);
-    QString OU_Clean = user.List_User_OU_CN(name);
-    QStringList Groups_Clean = user.List_User_Group_CNs(user.List_SamAccountName(name));
-    user.Execute("$user = " + QString("\"") + user.List_SamAccountName(name) + QString("\"") + "; Get-ADPrincipalGroupMembership $user | Foreach {Remove-ADGroupMember $_ -Members $user -Confirm:$false}");
-    user.Edit_Disable_Description(name);
-    user.Edit_User_Status(name);
-    disableuser.informational->setText("The user " + name + " has been disabled.");
-    user.Dump_User_Form("<html> <h1> <center> The following information pertains to the disable user request that you have submitted: </center> </h1> <br><br><br> <body> <strong> Employee name: </strong> " + name +
-                        "<br> <strong> Username: </strong> " + username + " <br> <strong> Email address: </strong> " + email +
-                        "<br> <strong> Groups: </strong> " + Groups_Clean.join(" , ") +
-                        "</body> </html>", QUrl(""), name
-                );
+
+    if(user.List_All_UPNs().count() > 1)
+    {
+        QString name = user.getEmployeeName(user.stripCompanyName(disableuser.user_selection->currentText()));
+        QString username = user.List_SamAccountName(name);
+        QString email = user.List_Mail(name);
+        QString OU_Clean = user.List_User_OU_CN(name);
+        QStringList Groups_Clean = user.List_User_Group_CNs(user.List_SamAccountName(name));
+        user.Execute("$user = " + QString("\"") + user.List_SamAccountName(name) + QString("\"") + "; Get-ADPrincipalGroupMembership $user | Foreach {Remove-ADGroupMember $_ -Members $user -Confirm:$false}");
+        user.Edit_Disable_Description(name);
+        user.Edit_User_Status(name);
+        disableuser.informational->setText("The user " + name + " has been disabled.");
+        user.Dump_User_Form("<html> <h1> <center> The following information pertains to the disable user request that you have submitted: </center> </h1> <br><br><br> <body> <strong> Employee name: </strong> " + name +
+                            "<br> <strong> Username: </strong> " + username + " <br> <strong> Email address: </strong> " + email +
+                            "<br> <strong> Groups: </strong> " + Groups_Clean.join(" , ") +
+                            "</body> </html>", QUrl(""), name
+                    );
+    }
+    else if(user.List_All_UPNs().count() <= 1)
+    {
+        QString name = disableuser.user_selection->currentText();
+        QString username = user.List_SamAccountName(name);
+        QString email = user.List_Mail(name);
+        QString OU_Clean = user.List_User_OU_CN(name);
+        QStringList Groups_Clean = user.List_User_Group_CNs(user.List_SamAccountName(name));
+        user.Execute("$user = " + QString("\"") + user.List_SamAccountName(name) + QString("\"") + "; Get-ADPrincipalGroupMembership $user | Foreach {Remove-ADGroupMember $_ -Members $user -Confirm:$false}");
+        user.Edit_Disable_Description(name);
+        user.Edit_User_Status(name);
+        disableuser.informational->setText("The user " + name + " has been disabled.");
+        user.Dump_User_Form("<html> <h1> <center> The following information pertains to the disable user request that you have submitted: </center> </h1> <br><br><br> <body> <strong> Employee name: </strong> " + name +
+                            "<br> <strong> Username: </strong> " + username + " <br> <strong> Email address: </strong> " + email +
+                            "<br> <strong> Groups: </strong> " + Groups_Clean.join(" , ") +
+                            "</body> </html>", QUrl(""), name
+                    );
+    }
 }
