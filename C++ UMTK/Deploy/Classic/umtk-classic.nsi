@@ -19,7 +19,7 @@ InstallDir "$PROGRAMFILES\UMTK-Classic"
 
 ; Registry key to check for directory (so if you install again, it will 
 ; overwrite the old one automatically)
-InstallDirRegKey HKLM "Software\Microsoft\UMTK-Classic" "Installation Directory"
+InstallDirRegKey HKLM "Software\Elysian Productions\UMTK-Classic" "Installation Directory"
 
 
 
@@ -59,24 +59,25 @@ Section "UMTK Classic(Required)"
   ; Write the registry keys (WriteRegStr rootkey subkey entry_name new_value_string)
 
   
-  WriteRegStr HKLM "Software\Microsoft\UMTK-Classic\Installation Directory" "Install_Dir" "$INSTDIR"
-  WriteRegStr HKLM "Software\Microsoft\UMTK-Classic\PDF Settings" "Creation_Text" ""
-  WriteRegStr HKLM "Software\Microsoft\UMTK-Classic\PDF Settings" "Disable_Text" ""
-  WriteRegStr HKLM "Software\Microsoft\UMTK-Classic\PDF Settings" "Image_Path" ""
-  WriteRegDWORD  HKLM "Software\Microsoft\UMTK-Classic\Generation Settings\SamAccount Settings" "Option_one" "0"
-  WriteRegDWORD  HKLM "Software\Microsoft\UMTK-Classic\Generation Settings\SamAccount Settings" "Option_two" "0"
-  WriteRegDWORD  HKLM "Software\Microsoft\UMTK-Classic\Generation Settings\SamAccount Settings" "Option_three" "0"
-  WriteRegDWORD  HKLM "Software\Microsoft\UMTK-Classic\Generation Settings\SamAccount Settings" "Option_four" "0"
-  WriteRegDWORD  HKLM "Software\Microsoft\UMTK-Classic\Generation Settings\SamAccount Settings" "Option_five" "0"
-  WriteRegDWORD  HKLM "Software\Microsoft\UMTK-Classic\Generation Settings\SamAccount Settings" "Option_six" "0"
-  WriteRegStr HKLM "Software\Microsoft\UMTK-Classic\Generation Settings\Ticket Settings" "Ticketing_on" ""
-  WriteRegStr HKLM "Software\Microsoft\UMTK-Classic\Generation Settings\Ticket Settings" "Ticketing_off" ""
-  WriteRegStr HKLM "Software\Microsoft\UMTK-Classic\Generation Settings\Ticket Settings" "Top_Position" ""
-  WriteRegStr HKLM "Software\Microsoft\UMTK-Classic\Generation Settings\Ticket Settings" "Bottom_Position" ""
-  WriteRegStr HKLM "Software\Microsoft\UMTK-Classic\Disable Settings\" "Cleanup_on" ""
-  WriteRegStr HKLM "Software\Microsoft\UMTK-Classic\Disable Settings\" "Cleanup_off" ""
-  WriteRegStr HKLM "Software\Microsoft\UMTK-Classic\Disable Settings\" "Redirection_share" ""
-  WriteRegStr HKLM "Software\Microsoft\UMTK-Classic\Disable Settings\" "Storage_location" ""
+  WriteRegStr HKLM "Software\Elysian Productions\UMTK-Classic\Installation Directory" "Install_Dir" "$INSTDIR"
+  WriteRegStr HKLM "Software\Elysian Productions\UMTK-Classic\PDF Settings" "Creation_Text" ""
+  WriteRegStr HKLM "Software\Elysian Productions\UMTK-Classic\PDF Settings" "Disable_Text" ""
+  WriteRegStr HKLM "Software\Elysian Productions\UMTK-Classic\PDF Settings" "Image_Path" ""
+  WriteRegDWORD  HKLM "Software\Elysian Productions\UMTK-Classic\Generation Settings\SamAccount Settings" "Option_one" "0"
+  WriteRegDWORD  HKLM "Software\Elysian Productions\UMTK-Classic\Generation Settings\SamAccount Settings" "Option_two" "0"
+  WriteRegDWORD  HKLM "Software\Elysian Productions\UMTK-Classic\Generation Settings\SamAccount Settings" "Option_three" "0"
+  WriteRegDWORD  HKLM "Software\Elysian Productions\UMTK-Classic\Generation Settings\SamAccount Settings" "Option_four" "0"
+  WriteRegDWORD  HKLM "Software\Elysian Productions\UMTK-Classic\Generation Settings\SamAccount Settings" "Option_five" "0"
+  WriteRegDWORD  HKLM "Software\Elysian Productions\UMTK-Classic\Generation Settings\SamAccount Settings" "Option_six" "0"
+  WriteRegStr HKLM "Software\Elysian Productions\UMTK-Classic\Generation Settings\Ticket Settings" "Ticketing_on" ""
+  WriteRegStr HKLM "Software\Elysian Productions\UMTK-Classic\Generation Settings\Ticket Settings" "Ticketing_off" ""
+  WriteRegStr HKLM "Software\Elysian Productions\UMTK-Classic\Generation Settings\Ticket Settings" "Top_Position" ""
+  WriteRegStr HKLM "Software\Elysian Productions\UMTK-Classic\Generation Settings\Ticket Settings" "Bottom_Position" ""
+  WriteRegStr HKLM "Software\Elysian Productions\UMTK-Classic\Disable Settings\" "Cleanup_on" ""
+  WriteRegStr HKLM "Software\Elysian Productions\UMTK-Classic\Disable Settings\" "Cleanup_off" ""
+  WriteRegStr HKLM "Software\Elysian Productions\UMTK-Classic\Disable Settings\" "Redirection_share" ""
+  WriteRegStr HKLM "Software\Elysian Productions\UMTK-Classic\Disable Settings\" "Storage_location" ""
+  WriteRegDWORD HKLM "Software\Elysian Productions\UMTK-Classic\Company Settings\" "MultiCompanyEnabled" "0"
 
 	
   
