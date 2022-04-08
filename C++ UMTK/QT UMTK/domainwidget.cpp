@@ -32,15 +32,19 @@ QWidget* DomainWidget::initalize_widget(QComboBox *upn_combo, QComboBox *ou_comb
 {
         QVBoxLayout *main_layout = new QVBoxLayout();
         QWidget *primary_display = new QWidget();
+        QSettings *MultiCompanyEnabled = new QSettings("HKEY_LOCAL_MACHINE\\SOFTWARE\\WOW6432Node\\Elysian Productions\\UMTK-Classic\\Company Settings\\", QSettings::Registry64Format);
         load_domain_information();
-        mapOUToCompany();
-        mapCompanyToPrefix();
-        mapUserToOU();
-        mapUserToCompany();
+        if(MultiCompanyEnabled->value("MultiCompanyEnabled").toBool())
+        {
+            mapOUToCompany();
+            mapCompanyToPrefix();
+            mapUserToOU();
+            mapUserToCompany();
+        }
 
 
         upn_combo->setToolTip("Please select the appropriate UPN from the window. If no UPNs are available use the domain name option");
-       // upn_combo->addItems(Domain_UPNS);
+        // upn_combo->addItems(Domain_UPNS);
         upn_combo->addItems(getAllADUPNs());
         upn_combo->hide();
 
@@ -111,11 +115,12 @@ QWidget* DomainWidget::initalize_widget(QComboBox *upn_combo, QComboBox *ou_comb
         main_layout->setAlignment(Qt::AlignHCenter);
 
         return primary_display;
+
 }
 
 void DomainWidget::load_domain_information()
 {
-    //set_db_lists();
+
 
     //Domain_Name = List_All_Forests(); //
     setAllADForests(Execute_Command("Get-ADForest | Select -ExpandProperty Domains"));

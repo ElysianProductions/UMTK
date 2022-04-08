@@ -138,12 +138,12 @@ void MainWindow::initialize_menus()
 
 void MainWindow::launch_local_widget()
  {
-     key_widget->setCurrentIndex(2);
+    key_widget->setCurrentIndex(2);
  }
 
 void MainWindow::launch_server_widget()
  {
-     key_widget->setCurrentIndex(1);
+    key_widget->setCurrentIndex(1);
  }
 
 void MainWindow::launch_edit_user_widget()
@@ -163,7 +163,8 @@ void MainWindow::launch_configuration_widget()
 
 void MainWindow::close_local_widget()
  {
-     key_widget->setCurrentIndex(0);
+
+    key_widget->setCurrentIndex(0);
  }
 
 void MainWindow::close_server_widget()

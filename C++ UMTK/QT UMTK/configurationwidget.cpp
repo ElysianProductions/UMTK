@@ -13,6 +13,9 @@ ConfigurationWidget::ConfigurationWidget()
     c_company_edit = new QLineEdit();
     c_prefix_edit = new QLineEdit();
     c_sam_combo = new QComboBox();
+    c_enable_button = new QCheckBox();
+
+    MultiCompanySettings = new QSettings("HKEY_LOCAL_MACHINE\\SOFTWARE\\WOW6432Node\\Elysian Productions\\UMTK-Classic\\Company Settings\\", QSettings::Registry64Format);
 
     if(initalize_database("C:\\Program Files (x86)\\UMTK-Classic\\Database\\UMTK.db"))
     {
@@ -29,6 +32,7 @@ ConfigurationWidget::ConfigurationWidget()
 ConfigurationWidget::~ConfigurationWidget()
 {
     delete model;
+    delete MultiCompanySettings;
 }
 
 bool ConfigurationWidget::initalize_database(const QString &db_path)
@@ -115,6 +119,7 @@ QWidget* ConfigurationWidget::get_menu_widget(QPushButton *close_button)
 
 QWidget* ConfigurationWidget::get_company_custimization_widget(QPushButton *c_insert_button, QLineEdit *c_ou_edit, QLineEdit *c_company_edit, QLineEdit *c_prefix_edit, QComboBox *c_sam_combo)
 {
+
     QWidget *primary_display = new QWidget();
     QGridLayout *primary_layout = new QGridLayout();
 
@@ -124,6 +129,13 @@ QWidget* ConfigurationWidget::get_company_custimization_widget(QPushButton *c_in
     company_label->setStyleSheet("background-color:white");
     company_label->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Maximum);
 
+    QLabel *info_label = new QLabel("In order to enable multi-company support you must check the 'Enable Multi-Company mode'.\nOnce the box has been checked you will be able to create and insert data into the database.");
+    info_label->setFrameShape(QFrame::Panel);
+    info_label->setFrameShadow(QFrame::Sunken);
+    info_label->setStyleSheet("background-color:white");
+    info_label->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Maximum);
+
+
     c_insert_button->setText("Insert data");
     c_insert_button->setToolTip("Fill in all fields and click this button to add the data to your sql db.");
     c_ou_edit->setPlaceholderText("Enter OU CN");
@@ -131,11 +143,16 @@ QWidget* ConfigurationWidget::get_company_custimization_widget(QPushButton *c_in
     c_prefix_edit->setPlaceholderText("Enter user prefix");
     QStringList sam_options = {"Select SamAccount style", "First name", "Last name", "First initial last name", "Last name first initial", "First name last name", "Last name first name"};
     c_sam_combo->addItems(sam_options);
+    c_enable_button->setText("Enable Multi-Company mode");
+    c_enable_button->setToolTip("Enabling multiple companies will result in the domain dropdown being empty\nuntill you fill in the database.");
+
 
     QSpacerItem *spacer_one = new QSpacerItem(40, 20, QSizePolicy::Minimum, QSizePolicy::Expanding);
 
     connect(c_sam_combo, qOverload<int>(&QComboBox::currentIndexChanged), [=] (int var) { emit(setSamSetting(var));});
     connect(c_insert_button, &QPushButton::clicked, this, &ConfigurationWidget::setupQuery);
+    connect(c_enable_button, &QCheckBox::toggled, this, &ConfigurationWidget::setMultiCompanyStatus);
+    connect(c_enable_button, &QCheckBox::toggled, [=] (bool var) {Q_EMIT(setMultiCompanyStatus(var));});
 
     primary_layout->setSpacing(1);
     primary_layout->setHorizontalSpacing(0);
@@ -147,9 +164,22 @@ QWidget* ConfigurationWidget::get_company_custimization_widget(QPushButton *c_in
     primary_layout->addWidget(c_prefix_edit, 5, 0);
     primary_layout->addWidget(c_sam_combo, 6, 0);
     primary_layout->addWidget(c_insert_button, 7, 0);
-    primary_layout->addItem(spacer_one , 8, 0);
+    primary_layout->addWidget(c_enable_button, 8, 0);
+    primary_layout->addItem(spacer_one , 9, 0);
+    primary_layout->addWidget(info_label, 10, 0);
 
     primary_display->setLayout(primary_layout);
+
+    if(MultiCompanySettings->value("MultiCompanyEnabled").toBool())
+    {
+        c_enable_button->setChecked(true);
+        c_insert_button->setVisible(true);
+    }
+    else if(!MultiCompanySettings->value("MultiCompanyEnabled").toBool())
+    {
+        c_enable_button->setChecked(false);
+        c_insert_button->setVisible(false);
+    }
 
     return primary_display;
 }
@@ -508,6 +538,26 @@ void ConfigurationWidget::setUserPrefix(const QString &prefix)
     }
 }
 
+void ConfigurationWidget::setMultiCompanyStatus(const bool &status)
+{
+    // By default the MultiCompanyEnabled DWORD is disabled (0)
+    qDebug() << status;
+    if(status)
+    {
+        // Enable multi company support
+        MultiCompanySettings->setValue("MultiCompanyEnabled", 1);
+        // Write to RegKey HKLM "Software\Elysian Productions\UMTK-Classic\Company Settings\" "MultiCompanyEnabled" "0" (DWORD) -> 1
+        c_insert_button->setVisible(true);
+    }
+    else if(!status)
+    {
+        // Disable multi company support
+        MultiCompanySettings->setValue("MultiCompanyEnabled", 0);
+        // Write to RegKey HKLM "Software\Elysian Productions\UMTK-Classic\Company Settings\" "MultiCompanyEnabled" "0" (DWORD) -> 0
+        c_insert_button->setVisible(false);
+    }
+}
+
 QString ConfigurationWidget::ou_name()
 {
     return _oucn;
@@ -527,6 +577,5 @@ int ConfigurationWidget::sam_setting()
 {
     return _samsetting;
 }
-
 
 //

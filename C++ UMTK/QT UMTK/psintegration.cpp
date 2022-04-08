@@ -731,7 +731,8 @@ void PSIntegration::Edit_Disable_Description(QString name)
 }
 
 
-// TEST
+
+
 
 void PSIntegration::set_db_lists()
 {
@@ -810,12 +811,8 @@ void PSIntegration::setAllADUsers(const QStringList &list)
     {
         tmp << Clean_String(i);
     }
-
-    if(tmp != all_users)
-    {
-        all_users = tmp;
-        Q_EMIT _ADUsersChanged();
-    }
+    all_users = tmp;
+    //Q_EMIT _ADUsersChanged();
 }
 
 void PSIntegration::setAllADUPNs(const QStringList &list)
@@ -825,11 +822,8 @@ void PSIntegration::setAllADUPNs(const QStringList &list)
    {
        tmp << Clean_String(i);
    }
-   if(tmp != all_upns)
-   {
-       all_upns = tmp;
-       Q_EMIT _UPNsChanged();
-   }
+   all_upns = tmp;
+   //Q_EMIT _UPNsChanged();
 }
 
 void PSIntegration::setAllADForests(const QStringList &list)
@@ -839,11 +833,8 @@ void PSIntegration::setAllADForests(const QStringList &list)
     {
         tmp << Clean_String(i);
     }
-    if(tmp != all_forests)
-    {
-        all_forests = tmp;
-        Q_EMIT _ForestsChanged();
-    }
+    all_forests = tmp;
+    //Q_EMIT _ForestsChanged();
 }
 
 void PSIntegration::setAllOUNames(const QStringList &list)
@@ -853,12 +844,8 @@ void PSIntegration::setAllOUNames(const QStringList &list)
     {
         tmp << Clean_String(i);
     }
-    if(tmp != all_ou_names)
-    {
-        all_ou_names = tmp;
-
-        Q_EMIT _OUNamesChanged();
-    }
+    all_ou_names = tmp;
+    //Q_EMIT _OUNamesChanged();
 }
 
 void PSIntegration::setAllOUDNs(const QStringList &list)
@@ -868,11 +855,8 @@ void PSIntegration::setAllOUDNs(const QStringList &list)
     {
         tmp << Clean_String(i);
     }
-    if(tmp != all_ou_distinguished)
-    {
-        all_ou_distinguished = tmp;
-        Q_EMIT _OUDistinguishedNamesChanged();
-    }
+    all_ou_distinguished = tmp;
+    //Q_EMIT _OUDistinguishedNamesChanged();
 }
 
 QStringList PSIntegration::getAllADUsers()
@@ -962,9 +946,19 @@ QString PSIntegration::getEmployeeName(QString name)
     return Clean_String(name);
 }
 
-//TEST
 
+bool PSIntegration::getMultiCompanyStatus()
+{
+    return multi_company_enabled;
+}
 
+void PSIntegration::reMapConnections()
+{
+    mapOUToCompany();
+    mapCompanyToPrefix();
+    mapUserToOU();
+    mapUserToCompany();
+}
 
 
 

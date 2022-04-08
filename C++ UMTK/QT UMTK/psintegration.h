@@ -14,9 +14,7 @@
 #include <QSqlDatabase>
 #include <QSqlQuery>
 #include <QSqlQueryModel>
-#include <QtConcurrent/QtConcurrent>
-#include <QtConcurrent/QtConcurrentRun>
-#include <QFuture>
+#include <QSettings>
 
 class PSIntegration : public QObject
 {
@@ -24,9 +22,9 @@ class PSIntegration : public QObject
 public:
     PSIntegration();
 
-    // test
-        void set_db_lists();
-    //test
+
+void set_db_lists();
+
 
     void List_Password_Policy(QString name); // Detect the appropriate policy based on the template user. - done
     void Set_FGPP_active(QString MinLength, QString Complexity); // Configure the fine grain password policy as active for this specific user.
@@ -84,7 +82,7 @@ public:
     QStringList Execute_Command(QString param); // Launch an elevated ps session and execute a command that returns a QStringList - Done
 
 
-//TEST
+
 void setAllADUsers(const QStringList &list); // Set all_users StringList.
 void setAllADUPNs(const QStringList &list); // Set all_upns StringList
 void setAllADForests(const QStringList &list); // Set all_forests StringList
@@ -94,7 +92,7 @@ void mapOUToCompany(); // Create ou_to_company by querying OU, Company in UMTK.d
 void mapCompanyToPrefix(); // Create company_to_prefix by querying Company, Prefix in UMTK.db
 void mapUserToCompany();
 void mapUserToOU();
-
+void reMapConnections();
 
 
 QStringList getAllADUsers(); // Return all_users StringList
@@ -108,25 +106,26 @@ QStringList getAllOUDNs(); // Return all_ou_distingusihed StringList
 QString stripCompanyName(QString employee); // Remove X characters from the start of the string to the hypen + 1
 QString getEmployeeName(QString name); // Pass the full name of your user, function returns Clean_String(name).
 QString getEmployeeIdentifier(QString name); // Pass the full name of your user.
-//TEST
 
+
+bool multi_company_enabled;
+bool getMultiCompanyStatus();
 
 protected:
     QString image;
 
+
 signals:
-//test
+
     void _ADUsersChanged();
     void _UPNsChanged();
     void _ForestsChanged();
     void _OUNamesChanged();
     void _OUDistinguishedNamesChanged();
-//
+
 
 public slots:
-// test
 
-//
 
 private:
 

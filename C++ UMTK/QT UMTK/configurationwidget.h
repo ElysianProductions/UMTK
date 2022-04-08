@@ -21,10 +21,12 @@
 #include <QSqlQuery>
 #include <QSqlQueryModel>
 #include <QHeaderView>
+#include <QSettings>
 
 #include <QDebug>
+#include "psintegration.h"
 
-class ConfigurationWidget : public QObject
+class ConfigurationWidget : public PSIntegration
 {
     Q_OBJECT
 public:
@@ -46,12 +48,14 @@ public:
     QLineEdit *c_company_edit;
     QLineEdit *c_prefix_edit;
     QComboBox *c_sam_combo;
+    QCheckBox *c_enable_button;
     //
 
     void setCompanyName(const QString &company);
     void setOUCNName(const QString &cn);
     void setUserPrefix(const QString &prefix);
     void setSamSetting(const int &samsetting);
+    void setMultiCompanyStatus(const bool &status);
 
     void runQuery(const QString &OU, const QString &company, const QString &prefix, const int &sam_selection);
 
@@ -100,6 +104,11 @@ private:
      QSqlDatabase get_database();
      void refresh_model();
      QString database_name;
+
+     // Settings
+    // QSettings MultiCompanySettings("HKEY_LOCAL_MACHINE\\SOFTWARE\\WOW6432Node\\Elysian Productions\\UMTK-Classic\\Company Settings\\", QSettings::Registry64Format);
+     //qDebug() << MultiCompanySettings.value("MultiCompanyEnabled").toBool();
+     QSettings *MultiCompanySettings;
 };
 
 #endif // CONFIGURATIONWIDGET_H
