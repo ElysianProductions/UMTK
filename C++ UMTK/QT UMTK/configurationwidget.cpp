@@ -90,10 +90,17 @@ QWidget* ConfigurationWidget::get_menu_widget(QPushButton *close_button)
     disable_item->setTextAlignment(Qt::AlignHCenter);
     disable_item->setFlags(Qt::ItemIsSelectable | Qt::ItemIsEnabled);
 
+    QListWidgetItem *help_item = new QListWidgetItem(menu_options_widget);
+    help_item->setText("Help");
+    help_item->setTextAlignment(Qt::AlignHCenter);
+    help_item->setFlags(Qt::ItemIsSelectable | Qt::ItemIsEnabled);
+
+
     menus_widget->insertWidget(0, get_company_custimization_widget(c_insert_button, c_ou_edit, c_company_edit, c_prefix_edit, c_sam_combo));
     menus_widget->insertWidget(1, get_pdf_custimization_widget(user_creation_text_edit, user_disable_text_edit, image_path_edit));
     menus_widget->insertWidget(2, get_generation_custimization_widget());
     menus_widget->insertWidget(3, get_disable_custimation_widget());
+    menus_widget->insertWidget(4, getHelpWidget());
 
 
     close_button->setText("Close configuration");
@@ -406,6 +413,75 @@ QWidget* ConfigurationWidget::get_disable_custimation_widget()
 
     primary_display->setLayout(primary_layout);
     return primary_display;
+}
+
+QWidget* ConfigurationWidget::getHelpWidget()
+{
+    QWidget *primary_display = new QWidget();
+    QGridLayout *primary_layout = new QGridLayout();
+    QStandardItemModel *model = new QStandardItemModel();
+    QStandardItem *company_setup = new QStandardItem("Multi-Company Setup");
+    QStandardItem *database_child = new QStandardItem("Database help");
+    QStandardItem *samaccountstyle_child = new QStandardItem("SamAccount_styles");
+    database_child->setEditable(false);
+    samaccountstyle_child->setEditable(false);
+    company_setup->setChild(0, 0, database_child);
+    company_setup->setChild(1, 0, samaccountstyle_child);
+
+    QStandardItem *pdf_custimization = new QStandardItem("PDF Custimization");
+    QStandardItem *newuser_child = new QStandardItem("New user text");
+    QStandardItem *disableuser_child = new QStandardItem("Disable user text");
+    QStandardItem *imagepath_child = new QStandardItem("Image path");
+    newuser_child->setEditable(false);
+    disableuser_child->setEditable(false);
+    imagepath_child->setEditable(false);
+    pdf_custimization->setChild(0, 0, newuser_child);
+    pdf_custimization->setChild(1, 0, disableuser_child);
+    pdf_custimization->setChild(1, 0, imagepath_child);
+
+    QStandardItem *generation_settings = new QStandardItem("Generation Settings");
+    QStandardItem *samaccount_child = new QStandardItem("SamAccountName settings");
+    QStandardItem *ticketing_child = new QStandardItem("Ticketing settings");
+    QStandardItem *smtp_child = new QStandardItem("SMTP settings");
+    samaccount_child->setEditable(false);
+    ticketing_child->setEditable(false);
+    smtp_child->setEditable(false);
+    generation_settings->setChild(0, 0, samaccount_child);
+    generation_settings->setChild(1, 0, ticketing_child);
+    generation_settings->setChild(2, 0, smtp_child);
+    //generation_settings->setChild(2, 0, new QStandardItem("SMTP settings"));
+
+
+    QStandardItem *disable_settings = new QStandardItem("Disable Settings");
+    QStandardItem *profile_cleanup_child = new QStandardItem("Disable user settings");
+    QStandardItem *profile_settings_child = new QStandardItem("Profile settings");
+    profile_cleanup_child->setEditable(false);
+    profile_settings_child->setEditable(false);
+    disable_settings->setChild(0, 0, profile_cleanup_child);
+    disable_settings->setChild(1, 0, profile_settings_child);
+
+
+
+
+    model->setColumnCount(1);
+    model->setRowCount(4);
+    model->setHorizontalHeaderItem(0, new QStandardItem("Select option"));
+    model->setItem(0, 0, company_setup);
+    model->setItem(1, 0, pdf_custimization);
+    model->setItem(2, 0, generation_settings);
+    model->setItem(3, 0, disable_settings);
+
+    //model->setHorizontalHeaderItem(0, new QStandardItem("Company Setup Help"));
+    //model->setHorizontalHeaderItem(0, new QStandardItem("PDF Custimization Help"));
+    //model->setHorizontalHeaderItem(0, new QStandardItem("Auto-Generation Help"));
+    //model->setHorizontalHeaderItem(0, new QStandardItem("Disable Settings Help"));
+    QTreeView *help_tree = new QTreeView();
+    help_tree->setModel(model);
+
+    primary_layout->addWidget(help_tree, 0, 0);
+    primary_display->setLayout(primary_layout);
+    return primary_display;
+    //QTreeView
 }
 
 void ConfigurationWidget::setupQuery()

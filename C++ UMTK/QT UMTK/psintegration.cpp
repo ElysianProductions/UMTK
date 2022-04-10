@@ -794,6 +794,18 @@ void PSIntegration::mapUserToCompany()
     setAllADUsers(tmp);
 }
 
+void PSIntegration::mapCompanyToSam()
+{
+    QSqlQuery *query = new QSqlQuery(get_database());
+    query->prepare("SELECT DISTINCT Company, SamAccount FROM Clients;");
+    query->exec();
+    while(query->next())
+    {
+        company_to_sam.insert(query->value(0).toString(), query->value(1).toInt());
+    }
+}
+
+
 void PSIntegration::mapUserToOU()
 {
     QStringList list = getAllADUsers();
@@ -857,6 +869,14 @@ void PSIntegration::setAllOUDNs(const QStringList &list)
     }
     all_ou_distinguished = tmp;
     //Q_EMIT _OUDistinguishedNamesChanged();
+}
+
+void PSIntegration::reMapConnections()
+{
+    mapOUToCompany();
+    mapCompanyToPrefix();
+    mapUserToOU();
+    mapUserToCompany();
 }
 
 QStringList PSIntegration::getAllADUsers()
@@ -946,19 +966,55 @@ QString PSIntegration::getEmployeeName(QString name)
     return Clean_String(name);
 }
 
+QString PSIntegration::validateSamOption(QString template_name, QString new_user)
+{
+    QRegularExpression re("(^[^-]*-)");
+    QRegularExpressionMatch match = re.match(template_name);
+    int k = 0;
+    if(match.hasMatch())
+    {
+        template_name = template_name.remove(match.capturedLength() - 2 , template_name.length());
+        QMap<QString, int>::const_iterator i = company_to_sam.constBegin();
+        while(i != company_to_sam.constEnd())
+        {
+            if(i.key() == template_name)
+            {
+                k = i.value();
+            }
+            ++i;
+        }
+        if(k > 0)
+         {
+             switch(k)
+                 {
+                     case 1: { QStringList Names = new_user.split(" "); return Names.first(); }
+                     case 2: { QStringList Names = new_user.split(" "); return Names.last(); }
+                     case 3: { QStringList Names = new_user.split(" "); return Names.first().at(0).toUpper() + Names.last().toLower(); }
+                     case 4: { QStringList Names = new_user.split(" "); return Names.last().at(0).toUpper() + Names.first().toLower(); }
+                     case 5: { QStringList Names = new_user.split(" "); return Names.first() + Names.last(); }
+                     case 6: { QStringList Names = new_user.split(" "); return Names.last() + Names.first(); }
+                 }
+         }
+         else if(k <= 0)
+         {
+             QStringList Names = new_user.split(" ");
+             return Names.first().at(0).toUpper() + Names.last().toLower();
+         }
+    }
+
+
+    else if(!match.hasMatch())
+    {
+        QStringList Names = new_user.split(" ");
+        return Names.first().at(0).toUpper() + Names.last().toLower();
+    }
+}
 
 bool PSIntegration::getMultiCompanyStatus()
 {
     return multi_company_enabled;
 }
 
-void PSIntegration::reMapConnections()
-{
-    mapOUToCompany();
-    mapCompanyToPrefix();
-    mapUserToOU();
-    mapUserToCompany();
-}
 
 
 

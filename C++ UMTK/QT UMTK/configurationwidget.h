@@ -24,6 +24,8 @@
 #include <QSettings>
 
 #include <QDebug>
+#include <QStandardItemModel>
+#include <QTreeView>
 #include "psintegration.h"
 
 class ConfigurationWidget : public PSIntegration
@@ -88,7 +90,7 @@ private:
      QWidget* get_pdf_custimization_widget(QLineEdit *user_creation_text_edit, QLineEdit *user_disable_text_edit, QLineEdit *image_path_edit);
      QWidget* get_generation_custimization_widget();
      QWidget* get_disable_custimation_widget();
-
+     QWidget* getHelpWidget();
 
 
      QString _oucn;
@@ -105,9 +107,7 @@ private:
      void refresh_model();
      QString database_name;
 
-     // Settings
-    // QSettings MultiCompanySettings("HKEY_LOCAL_MACHINE\\SOFTWARE\\WOW6432Node\\Elysian Productions\\UMTK-Classic\\Company Settings\\", QSettings::Registry64Format);
-     //qDebug() << MultiCompanySettings.value("MultiCompanyEnabled").toBool();
+
      QSettings *MultiCompanySettings;
 };
 

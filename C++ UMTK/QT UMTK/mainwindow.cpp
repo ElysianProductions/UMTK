@@ -632,6 +632,7 @@ void MainWindow::Automate()
     {
         if(user.List_All_UPNs().count() > 1)
         {
+            user.mapCompanyToSam();
             user.set_Name(domainwidget.employee_name_edit->text());
             QStringList Names = domainwidget.employee_name_edit->text().split(" ");
             user.set_GivenName(Names.first());
@@ -641,7 +642,8 @@ void MainWindow::Automate()
             {
                 user.set_OtherName(Names[1]);
             }
-            user.set_SamAccountName(Names.first().at(0).toUpper() + Names.last().toLower());
+            //user.set_SamAccountName(Names.first().at(0).toUpper() + Names.last().toLower());
+            user.set_SamAccountName(user.validateSamOption(domainwidget.template_user_combo->currentText(), domainwidget.employee_name_edit->text()));
 
             user.set_Identifier(user.List_User_Identifier(user.getEmployeeName(user.stripCompanyName(domainwidget.template_user_combo->currentText()))));
 

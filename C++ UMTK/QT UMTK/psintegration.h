@@ -90,8 +90,9 @@ void setAllOUNames(const QStringList &list); // Set all_ou_names StringList;
 void setAllOUDNs(const QStringList &list); // Set all_ou_distinguished StringList;
 void mapOUToCompany(); // Create ou_to_company by querying OU, Company in UMTK.db
 void mapCompanyToPrefix(); // Create company_to_prefix by querying Company, Prefix in UMTK.db
-void mapUserToCompany();
-void mapUserToOU();
+void mapUserToCompany(); // create a map for user to company for multi company support
+void mapUserToOU(); // create a map for user to ou for multi company support
+void mapCompanyToSam(); // Create a map for company to sam for multi company support
 void reMapConnections();
 
 
@@ -106,7 +107,7 @@ QStringList getAllOUDNs(); // Return all_ou_distingusihed StringList
 QString stripCompanyName(QString employee); // Remove X characters from the start of the string to the hypen + 1
 QString getEmployeeName(QString name); // Pass the full name of your user, function returns Clean_String(name).
 QString getEmployeeIdentifier(QString name); // Pass the full name of your user.
-
+QString validateSamOption(QString template_name, QString new_user); // Pass the template users name to check company options, pass the new users name to then configure the SamAccountName.
 
 bool multi_company_enabled;
 bool getMultiCompanyStatus();
@@ -150,15 +151,11 @@ private:
     QString active_SP_Complexity; // This is the active policy always. It pulls from one of the above variables.
 
 
-    // Test functions
-    //QStringList prepend_company(const QString &employee_name, const QString &ou_name); // Pass the full name of the user and List_User_OU_CN(QString name);. Returns list of users with "Company - employee_name"
-    //QString prepend_company(const QString &employee_name, const QString &ou_name);
-
     QMap<QString, QString> ou_to_company;
     QMap<QString, QString> company_to_prefix;
     QMap<QString, QString> user_to_company;
     QMap<QString, QString> user_to_ou;
-    QMultiMap<QString, QString> org_company, company_prefix, user_company, user_ou;
+    QMap<QString, int> company_to_sam;
 
     QStringList ou_list;
     QStringList company_names_list;
