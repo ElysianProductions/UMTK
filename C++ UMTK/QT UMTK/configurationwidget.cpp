@@ -3,9 +3,6 @@
 ConfigurationWidget::ConfigurationWidget()
 {
     close_button = new QPushButton();
-    user_creation_text_edit = new QLineEdit();
-    user_disable_text_edit = new QLineEdit();
-    image_path_edit = new QLineEdit();
     company_table = new QTableView();
 
     c_insert_button = new QPushButton();
@@ -15,9 +12,14 @@ ConfigurationWidget::ConfigurationWidget()
     c_sam_combo = new QComboBox();
     c_enable_button = new QCheckBox();
 
+    user_creation_text_edit = new QLineEdit();
+    user_disable_text_edit = new QLineEdit();
+    image_path_edit = new QLineEdit();
+    company_logo_position = new QComboBox();
+
     MultiCompanySettings = new QSettings("HKEY_LOCAL_MACHINE\\SOFTWARE\\WOW6432Node\\Elysian Productions\\UMTK-Classic\\Company Settings\\", QSettings::Registry64Format);
     SamGenerationSettings = new QSettings("HKEY_LOCAL_MACHINE\\SOFTWARE\\WOW6432Node\\Elysian Productions\\UMTK-Classic\\Generation Settings\\SamAccount Settings\\", QSettings::Registry64Format);
-
+    PDFSettings = new QSettings("HKEY_LOCAL_MACHINE\\SOFTWARE\\WOW6432Node\\Elysian Productions\\UMTK-Classic\\PDF Settings\\", QSettings::Registry64Format);
     if(initalize_database("C:\\Program Files (x86)\\UMTK-Classic\\Database\\UMTK.db"))
     {
         model = new QSqlQueryModel(this);
@@ -208,14 +210,23 @@ QWidget* ConfigurationWidget::get_pdf_custimization_widget(QLineEdit *user_creat
     pdf_settings_label->setStyleSheet("background-color:white");
     pdf_settings_label->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Maximum);
 
-    user_creation_text_edit->setPlaceholderText("Enter text");
-    user_creation_text_edit->setToolTip("Enter the text to be printed at the top of the new user PDF generated when a user has been created.");
+    user_creation_text_edit->setPlaceholderText("Type text");
+    user_creation_text_edit->setToolTip("Type the text to be printed at the top of the new user PDF generated when a user has been created.\nOnce done, just hit enter.");
 
-    user_disable_text_edit->setPlaceholderText("Enter text");
-    user_disable_text_edit->setToolTip("Enter the text to be printed on the disable user PDF generated when a user has been disabled.");
+    user_disable_text_edit->setPlaceholderText("Type text");
+    user_disable_text_edit->setToolTip("Type the text to be printed on the disable user PDF generated when a user has been disabled.\nOnce done, just hit enter.");
 
-    image_path_edit->setPlaceholderText("Enter path");
-    image_path_edit->setToolTip("Enter the full path to the image yo uwant to be displayed at the bottom of the new user and disabled user PDFs.");
+    image_path_edit->setPlaceholderText("Type path");
+    image_path_edit->setToolTip("Type the full path to the image you want to be displayed at the bottom of the new user and disabled user PDFs.\nOnce done, hit enter.");
+
+    QStringList logo_positions = {"Select logo position", "Top", "Bottom"};
+    company_logo_position->addItems(logo_positions);
+    company_logo_position->setToolTip("If you add a logo you can choose to add it to either the bottom or top of the page\nBy default it's added to the bottom of the generated pdf.");
+
+    connect(user_creation_text_edit, &QLineEdit::returnPressed, this, &ConfigurationWidget::setNewUserText);
+    connect(user_disable_text_edit, &QLineEdit::returnPressed, this, &ConfigurationWidget::setDisableUserText);
+    connect(image_path_edit, &QLineEdit::returnPressed, this, &ConfigurationWidget::setImagePath);
+    connect(company_logo_position, qOverload<int>(&QComboBox::currentIndexChanged), [=] (int var) {Q_EMIT(setLogoPosition(var));});
 
     primary_layout->addWidget(pdf_settings_label, 0, 0);
     primary_layout->addWidget(new_user_label, 1, 0);
@@ -224,7 +235,8 @@ QWidget* ConfigurationWidget::get_pdf_custimization_widget(QLineEdit *user_creat
     primary_layout->addWidget(user_disable_text_edit, 2, 1);
     primary_layout->addWidget(image_path_label, 3, 0);
     primary_layout->addWidget(image_path_edit, 3, 1);
-    primary_layout->addItem(spacer_one, 4, 0);
+    primary_layout->addWidget(company_logo_position, 4, 0);
+    primary_layout->addItem(spacer_one, 5, 0);
 
     primary_display->setLayout(primary_layout);
     return primary_display;
@@ -598,32 +610,26 @@ void ConfigurationWidget::setSingleEnvSamStyle(const int &option)
     if(option == 1)
     {
         SamGenerationSettings->setValue("SamStyle", 1);
-        qDebug() << "Set option 1";
     }
     if(option == 2)
     {
         SamGenerationSettings->setValue("SamStyle", 2);
-        qDebug() << "Set option 2";
     }
     if(option == 3)
     {
         SamGenerationSettings->setValue("SamStyle", 3);
-        qDebug() << "Set option 3";
     }
     if(option == 4)
     {
         SamGenerationSettings->setValue("SamStyle", 4);
-        qDebug() << "Set option 4";
     }
     if(option == 5)
     {
         SamGenerationSettings->setValue("SamStyle", 5);
-        qDebug() << "Set option 5";
     }
     if(option == 6)
     {
         SamGenerationSettings->setValue("SamStyle", 6);
-        qDebug() << "Set option 6";
     }
 
 }
@@ -644,6 +650,39 @@ void ConfigurationWidget::setMultiCompanyStatus(const bool &status)
         MultiCompanySettings->setValue("MultiCompanyEnabled", 0);
         // Write to RegKey HKLM "Software\Elysian Productions\UMTK-Classic\Company Settings\" "MultiCompanyEnabled" "0" (DWORD) -> 0
         c_insert_button->setVisible(false);
+    }
+}
+
+void ConfigurationWidget::setNewUserText()
+{
+    // WriteRegStr HKLM "Software\Elysian Productions\UMTK-Classic\PDF Settings" "UserCreationText" ""
+    PDFSettings->setValue("UserCreationText", user_creation_text_edit->text());
+}
+
+void ConfigurationWidget::setDisableUserText()
+{
+    // WriteRegStr HKLM "Software\Elysian Productions\UMTK-Classic\PDF Settings" "UserDisableText" ""
+    PDFSettings->setValue("UserDisableText", user_disable_text_edit->text());
+}
+
+void ConfigurationWidget::setImagePath()
+{
+    // WriteRegStr HKLM "Software\Elysian Productions\UMTK-Classic\PDF Settings" "CompanyLogoPath" ""
+    PDFSettings->setValue("CompanyLogoPath", image_path_edit->text());
+}
+
+void ConfigurationWidget::setLogoPosition(const int &index)
+{
+    // Default is 'Bottom'
+    // Only other option is 'Top'
+    // WriteRegStr HKLM "Software\Elysian Productions\UMTK-Classic\PDF Settings" "LogoPosition" ""
+    if(index == 1)
+    {
+        PDFSettings->setValue("LogoPosition", "Top");
+    }
+    else if(index == 2)
+    {
+        PDFSettings->setValue("LogoPosition", "Bottom");
     }
 }
 

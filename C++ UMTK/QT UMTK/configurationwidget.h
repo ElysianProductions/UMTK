@@ -39,9 +39,6 @@ public:
     QStackedWidget *menus_widget;
     QListWidget *menu_options_widget;
     QPushButton *close_button;
-    QLineEdit *user_creation_text_edit;
-    QLineEdit *user_disable_text_edit;
-    QLineEdit *image_path_edit;
     QTableView *company_table;
 
     // Company widget items
@@ -53,13 +50,17 @@ public:
     QCheckBox *c_enable_button;
     //
 
+    //PDF Widgets
+    QLineEdit *user_creation_text_edit;
+    QLineEdit *user_disable_text_edit;
+    QLineEdit *image_path_edit;
+    QComboBox *company_logo_position;
+    //
+
     void setCompanyName(const QString &company);
     void setOUCNName(const QString &cn);
     void setUserPrefix(const QString &prefix);
     void setSamSetting(const int &samsetting);
-    void setMultiCompanyStatus(const bool &status);
-
-
     void runQuery(const QString &OU, const QString &company, const QString &prefix, const int &sam_selection);
 
 
@@ -93,7 +94,7 @@ private:
      QWidget* get_disable_custimation_widget();
      QWidget* getHelpWidget();
 
-
+     QString database_name;
      QString _oucn;
      QString _company;
      QString _prefix;
@@ -102,16 +103,23 @@ private:
 
 
      QSqlQueryModel *model;
+     QSqlDatabase get_database();
 
      bool initalize_database(const QString &db_path);
-     QSqlDatabase get_database();
+
      void refresh_model();
      void setSingleEnvSamStyle(const int &option);
-     QString database_name;
-
+     void setMultiCompanyStatus(const bool &status);
+     void setNewUserText();
+     void setDisableUserText();
+     void setImagePath();
+     void setLogoPosition(const int &index);
 
      QSettings *MultiCompanySettings;
      QSettings *SamGenerationSettings;
+     QSettings *PDFSettings;
+
+
 };
 
 #endif // CONFIGURATIONWIDGET_H
