@@ -164,6 +164,31 @@ QStringList PSIntegration::List_All_Domain_Users()
     return AD_Users;
 }
 
+QStringList PSIntegration::getAllADUsers()
+{
+    return all_users;
+}
+
+QStringList PSIntegration::getAllADUPNs()
+{
+    return all_upns;
+}
+
+QStringList PSIntegration::getAllADForests()
+{
+    return all_forests;
+}
+
+QStringList PSIntegration::getAllOUNames()
+{
+    return all_ou_names;
+}
+
+QStringList PSIntegration::getAllOUDNs()
+{
+    return all_ou_distinguished;
+}
+
 QSqlDatabase PSIntegration::get_database()
 {
     return QSqlDatabase::database(database_name);
@@ -337,6 +362,137 @@ QString PSIntegration::List_User_DisplayName(QString name)
     return Clean_String(Execute("(Get-ADUser -Filter {Name -Like " + QString("\"") + name + QString("\"") + "} -Properties displayName).displayName"));
 }
 
+QString PSIntegration::stripCompanyName(QString employee)
+{
+    /* Create a pattern to find the first `-`.
+     * Match it, if it's found return a substring of employee.
+     * The substring contains everything after the first instance of `-` + 1.
+     * The employee string before handed off to this function looks like so, `Company name - Employee name`.
+     * The string returned by this function looks like ` Employee name`.
+     */
+    QRegularExpression re("(^[^-]*-)");
+    QRegularExpressionMatch match = re.match(employee);
+    if(match.hasMatch())
+    {
+        employee = employee.remove(0, match.capturedLength() + 1);
+        return employee;
+    }
+    else if(!match.hasMatch())
+    {
+        return employee;
+    }
+}
+
+QString PSIntegration::getEmployeeIdentifier(QString name)
+{
+
+    /* Iterate through all UPNs, "Clean" each one and add it to the StringList.
+     * Iterate through any and all forests, "Clean" each one and add it to the StringList.
+     * If the UPN count is greater than 0, search the users name, pull the appropriate UPN, split it within PS, return PS result and then return the string.
+     * If the UPN count is equal to zero just return the forest name. Right now it does NOT support multi forests.
+     *
+     */
+    QStringList cleaned_upns;
+    QStringList cleaned_domains;
+    QStringList UPNs = getAllADUPNs();
+    QStringList Domains = getAllADForests();
+    for(auto &i : UPNs)
+    {
+        cleaned_upns << Clean_String(i);
+    }
+    for(auto &i : Domains)
+    {
+        cleaned_domains << Clean_String(i);
+    }
+
+    if(cleaned_upns.count() > 0)
+    {
+        return Clean_String(Execute("$temp = (Get-ADUser -Filter {Name -like " + QString("\"") + name + QString("\"") + " } -Properties UserPrincipalName).UserPrincipalName; $garbage, $upn = $temp.Split('@'); return $upn "));
+    }
+    else if(cleaned_upns.count() == 0)
+    {
+        return cleaned_domains.first(); // Needs to be fixed to work in multi-domain environments.
+    }
+}
+
+QString PSIntegration::getEmployeeName(QString name)
+{
+    /*
+     * Return the "cleaned" employee name.
+     * See Clean_String to find out what "Cleaned" means.
+     */
+    return Clean_String(name);
+}
+
+QString PSIntegration::validateSamOption(QString template_name, QString new_user)
+{
+    if(List_All_UPNs().count() > 1)
+    {
+        QRegularExpression re("(^[^-]*-)");
+        QRegularExpressionMatch match = re.match(template_name);
+        int k = 0;
+        if(match.hasMatch())
+        {
+            template_name = template_name.remove(match.capturedLength() - 2 , template_name.length());
+            QMap<QString, int>::const_iterator i = company_to_sam.constBegin();
+            while(i != company_to_sam.constEnd())
+            {
+                if(i.key() == template_name)
+                {
+                    k = i.value();
+                }
+                ++i;
+            }
+            if(k > 0)
+             {
+                 switch(k)
+                     {
+                         case 1: { QStringList Names = new_user.split(" "); return Names.first(); }
+                         case 2: { QStringList Names = new_user.split(" "); return Names.last(); }
+                         case 3: { QStringList Names = new_user.split(" "); return Names.first().at(0).toUpper() + Names.last().toLower(); }
+                         case 4: { QStringList Names = new_user.split(" "); return Names.last() + Names.first().at(0).toUpper(); }
+                         case 5: { QStringList Names = new_user.split(" "); return Names.first() + Names.last(); }
+                         case 6: { QStringList Names = new_user.split(" "); return Names.last() + Names.first(); }
+                     }
+             }
+             else if(k <= 0)
+             {
+                 QStringList Names = new_user.split(" ");
+                 return Names.first().at(0).toUpper() + Names.last().toLower();
+             }
+        }
+
+
+        else if(!match.hasMatch())
+        {
+            QStringList Names = new_user.split(" ");
+            return Names.first().at(0).toUpper() + Names.last().toLower();
+        }
+    }
+    else if(List_All_UPNs().count() <= 1)
+    {
+        QSettings *GenerationSettings = new QSettings("HKEY_LOCAL_MACHINE\\SOFTWARE\\WOW6432Node\\Elysian Productions\\UMTK-Classic\\Generation Settings\\SamAccount Settings\\", QSettings::Registry64Format);
+        int k = GenerationSettings->value("SamStyle").toInt();
+        if(k > 0)
+        {
+            switch(k)
+            {
+                case 1: { QStringList Names = new_user.split(" "); return Names.first(); }
+                case 2: { QStringList Names = new_user.split(" "); return Names.last(); }
+                case 3: { QStringList Names = new_user.split(" "); return Names.first().at(0).toUpper() + Names.last().toLower(); }
+                case 4: { QStringList Names = new_user.split(" "); return Names.last() + Names.first().at(0).toUpper(); }
+                case 5: { QStringList Names = new_user.split(" "); return Names.first() + Names.last(); }
+                case 6: { QStringList Names = new_user.split(" "); return Names.last() + Names.first(); }
+            }
+        }
+        else if(k <= 0)
+        {
+            QStringList Names = new_user.split(" ");
+            return Names.first().at(0).toUpper() + Names.last().toLower();
+        }
+    }
+}
+
 bool PSIntegration::initalize_database(const QString &db_path)
 {
     database_name = db_path;
@@ -448,6 +604,11 @@ bool PSIntegration::Validate_User_Status(QString template_name)
 bool PSIntegration::Validate_Email_Address(QString email_address)
 {
     return false;
+}
+
+bool PSIntegration::getMultiCompanyStatus()
+{
+    return multi_company_enabled;
 }
 
 void PSIntegration::List_Password_Policy(QString name)
@@ -730,10 +891,6 @@ void PSIntegration::Edit_Disable_Description(QString name)
     Execute("$date = Get-Date; $var = " + QString("\"") + "Disabled: " + QString("\"") + " + $date; Set-ADUser -Identity ((Get-ADUser -Filter {Name -Like " + QString("\"") + name + QString("\"") + "} -Properties SamAccountName).SamAccountName) -Description $var");
 }
 
-
-
-
-
 void PSIntegration::set_db_lists()
 {
     if(initalize_database("C:\\Program Files (x86)\\UMTK-Classic\\Database\\UMTK.db"))
@@ -804,7 +961,6 @@ void PSIntegration::mapCompanyToSam()
         company_to_sam.insert(query->value(0).toString(), query->value(1).toInt());
     }
 }
-
 
 void PSIntegration::mapUserToOU()
 {
@@ -879,144 +1035,9 @@ void PSIntegration::reMapConnections()
     mapUserToCompany();
 }
 
-QStringList PSIntegration::getAllADUsers()
-{
-    return all_users;
-}
-
-QStringList PSIntegration::getAllADUPNs()
-{
-    return all_upns;
-}
-
-QStringList PSIntegration::getAllADForests()
-{
-    return all_forests;
-}
-
-QStringList PSIntegration::getAllOUNames()
-{
-    return all_ou_names;
-}
-
-QStringList PSIntegration::getAllOUDNs()
-{
-    return all_ou_distinguished;
-}
-
-QString PSIntegration::stripCompanyName(QString employee)
-{
-    /* Create a pattern to find the first `-`.
-     * Match it, if it's found return a substring of employee.
-     * The substring contains everything after the first instance of `-` + 1.
-     * The employee string before handed off to this function looks like so, `Company name - Employee name`.
-     * The string returned by this function looks like ` Employee name`.
-     */
-    QRegularExpression re("(^[^-]*-)");
-    QRegularExpressionMatch match = re.match(employee);
-    if(match.hasMatch())
-    {
-        employee = employee.remove(0, match.capturedLength() + 1);
-        return employee;
-    }
-    else if(!match.hasMatch())
-    {
-        return employee;
-    }
-}
-
-QString PSIntegration::getEmployeeIdentifier(QString name)
-{
-
-    /* Iterate through all UPNs, "Clean" each one and add it to the StringList.
-     * Iterate through any and all forests, "Clean" each one and add it to the StringList.
-     * If the UPN count is greater than 0, search the users name, pull the appropriate UPN, split it within PS, return PS result and then return the string.
-     * If the UPN count is equal to zero just return the forest name. Right now it does NOT support multi forests.
-     *
-     */
-    QStringList cleaned_upns;
-    QStringList cleaned_domains;
-    QStringList UPNs = getAllADUPNs();
-    QStringList Domains = getAllADForests();
-    for(auto &i : UPNs)
-    {
-        cleaned_upns << Clean_String(i);
-    }
-    for(auto &i : Domains)
-    {
-        cleaned_domains << Clean_String(i);
-    }
-
-    if(cleaned_upns.count() > 0)
-    {
-        return Clean_String(Execute("$temp = (Get-ADUser -Filter {Name -like " + QString("\"") + name + QString("\"") + " } -Properties UserPrincipalName).UserPrincipalName; $garbage, $upn = $temp.Split('@'); return $upn "));
-    }
-    else if(cleaned_upns.count() == 0)
-    {
-        return cleaned_domains.first(); // Needs to be fixed to work in multi-domain environments.
-    }
-}
-
-QString PSIntegration::getEmployeeName(QString name)
-{
-    /*
-     * Return the "cleaned" employee name.
-     * See Clean_String to find out what "Cleaned" means.
-     */
-    return Clean_String(name);
-}
-
-QString PSIntegration::validateSamOption(QString template_name, QString new_user)
-{
-    QRegularExpression re("(^[^-]*-)");
-    QRegularExpressionMatch match = re.match(template_name);
-    int k = 0;
-    if(match.hasMatch())
-    {
-        template_name = template_name.remove(match.capturedLength() - 2 , template_name.length());
-        QMap<QString, int>::const_iterator i = company_to_sam.constBegin();
-        while(i != company_to_sam.constEnd())
-        {
-            if(i.key() == template_name)
-            {
-                k = i.value();
-            }
-            ++i;
-        }
-        if(k > 0)
-         {
-             switch(k)
-                 {
-                     case 1: { QStringList Names = new_user.split(" "); return Names.first(); }
-                     case 2: { QStringList Names = new_user.split(" "); return Names.last(); }
-                     case 3: { QStringList Names = new_user.split(" "); return Names.first().at(0).toUpper() + Names.last().toLower(); }
-                     case 4: { QStringList Names = new_user.split(" "); return Names.last().at(0).toUpper() + Names.first().toLower(); }
-                     case 5: { QStringList Names = new_user.split(" "); return Names.first() + Names.last(); }
-                     case 6: { QStringList Names = new_user.split(" "); return Names.last() + Names.first(); }
-                 }
-         }
-         else if(k <= 0)
-         {
-             QStringList Names = new_user.split(" ");
-             return Names.first().at(0).toUpper() + Names.last().toLower();
-         }
-    }
 
 
-    else if(!match.hasMatch())
-    {
-        QStringList Names = new_user.split(" ");
-        return Names.first().at(0).toUpper() + Names.last().toLower();
-    }
-}
-
-bool PSIntegration::getMultiCompanyStatus()
-{
-    return multi_company_enabled;
-}
-
-
-
+//
 
 
 

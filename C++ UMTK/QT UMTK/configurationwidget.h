@@ -59,6 +59,7 @@ public:
     void setSamSetting(const int &samsetting);
     void setMultiCompanyStatus(const bool &status);
 
+
     void runQuery(const QString &OU, const QString &company, const QString &prefix, const int &sam_selection);
 
 
@@ -105,10 +106,12 @@ private:
      bool initalize_database(const QString &db_path);
      QSqlDatabase get_database();
      void refresh_model();
+     void setSingleEnvSamStyle(const int &option);
      QString database_name;
 
 
      QSettings *MultiCompanySettings;
+     QSettings *SamGenerationSettings;
 };
 
 #endif // CONFIGURATIONWIDGET_H

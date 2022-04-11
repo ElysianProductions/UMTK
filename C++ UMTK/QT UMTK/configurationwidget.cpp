@@ -16,6 +16,7 @@ ConfigurationWidget::ConfigurationWidget()
     c_enable_button = new QCheckBox();
 
     MultiCompanySettings = new QSettings("HKEY_LOCAL_MACHINE\\SOFTWARE\\WOW6432Node\\Elysian Productions\\UMTK-Classic\\Company Settings\\", QSettings::Registry64Format);
+    SamGenerationSettings = new QSettings("HKEY_LOCAL_MACHINE\\SOFTWARE\\WOW6432Node\\Elysian Productions\\UMTK-Classic\\Generation Settings\\SamAccount Settings\\", QSettings::Registry64Format);
 
     if(initalize_database("C:\\Program Files (x86)\\UMTK-Classic\\Database\\UMTK.db"))
     {
@@ -156,7 +157,7 @@ QWidget* ConfigurationWidget::get_company_custimization_widget(QPushButton *c_in
 
     QSpacerItem *spacer_one = new QSpacerItem(40, 20, QSizePolicy::Minimum, QSizePolicy::Expanding);
 
-    connect(c_sam_combo, qOverload<int>(&QComboBox::currentIndexChanged), [=] (int var) { emit(setSamSetting(var));});
+    connect(c_sam_combo, qOverload<int>(&QComboBox::currentIndexChanged), [=] (int var) { Q_EMIT(setSamSetting(var));});
     connect(c_insert_button, &QPushButton::clicked, this, &ConfigurationWidget::setupQuery);
     connect(c_enable_button, &QCheckBox::toggled, this, &ConfigurationWidget::setMultiCompanyStatus);
     connect(c_enable_button, &QCheckBox::toggled, [=] (bool var) {Q_EMIT(setMultiCompanyStatus(var));});
@@ -235,35 +236,17 @@ QWidget* ConfigurationWidget::get_generation_custimization_widget()
     QGridLayout *primary_layout = new QGridLayout();
 
     // SamAccountSettings
-
-    QCheckBox *sam_account_one = new QCheckBox(); // First initial last name
-    QCheckBox *sam_account_two = new QCheckBox(); // Last name first initial
-    QCheckBox *sam_account_three = new QCheckBox(); // First name
-    QCheckBox *sam_account_four = new QCheckBox(); // Last name
-    QCheckBox *sam_account_five = new QCheckBox(); // First name last name
-    QCheckBox *sam_account_six = new QCheckBox(); // Last name First name
     QSpacerItem *spacer_one = new QSpacerItem(40, 20, QSizePolicy::Minimum, QSizePolicy::Expanding);
-
-    sam_account_one->setText("First initial last name");
-    sam_account_two->setText("last name first initial");
-    sam_account_three->setText("first name");
-    sam_account_four->setText("last name");
-    sam_account_five->setText("first name last name");
-    sam_account_six->setText("last name first name");
     QLabel *sam_label = new QLabel("SamAccountName Settings");
     sam_label->setFrameShape(QFrame::Panel);
     sam_label->setFrameShadow(QFrame::Sunken);
     sam_label->setStyleSheet("background-color:white");
     sam_label->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Maximum);
 
-
-    QButtonGroup *sam_button_group = new QButtonGroup();
-    sam_button_group->addButton(sam_account_one);
-    sam_button_group->addButton(sam_account_two);
-    sam_button_group->addButton(sam_account_three);
-    sam_button_group->addButton(sam_account_four);
-    sam_button_group->addButton(sam_account_five);
-    sam_button_group->addButton(sam_account_six);
+    QStringList sam_options {"SamAccountName Styles", "First name (Example)", "Last name (Name)", "First initial, Last name (eName)",
+                            "Last initial, First name (nExample)", "FirstName, LastName (ExampleName)", "Last name, First name (NameExample)"};
+    QComboBox *sam_styles = new QComboBox();
+    sam_styles->addItems(sam_options);
 
     // Ticketing settings
     QLabel *ticketing_label = new QLabel("Ticketing settings");
@@ -328,12 +311,7 @@ QWidget* ConfigurationWidget::get_generation_custimization_widget()
     primary_layout->setHorizontalSpacing(0);
     primary_layout->setVerticalSpacing(1);
     primary_layout->addWidget(sam_label, 0, 0);
-    primary_layout->addWidget(sam_account_one, 1, 0);
-    primary_layout->addWidget(sam_account_two, 1, 1);
-    primary_layout->addWidget(sam_account_three, 1, 2);
-    primary_layout->addWidget(sam_account_four, 2, 0);
-    primary_layout->addWidget(sam_account_five, 2, 1);
-    primary_layout->addWidget(sam_account_six, 2, 2);
+    primary_layout->addWidget(sam_styles, 1, 0);
     primary_layout->addItem(spacer_one , 3, 0);
     primary_layout->addWidget(ticketing_label, 4, 0);
     primary_layout->addWidget(ticketing_button_on, 5, 0);
@@ -357,7 +335,7 @@ QWidget* ConfigurationWidget::get_generation_custimization_widget()
 
 
     primary_display->setLayout(primary_layout);
-
+    connect(sam_styles, qOverload<int>(&QComboBox::currentIndexChanged), [=] (int var) {Q_EMIT(setSingleEnvSamStyle(var));});
     return primary_display;
 }
 
@@ -614,10 +592,45 @@ void ConfigurationWidget::setUserPrefix(const QString &prefix)
     }
 }
 
+void ConfigurationWidget::setSingleEnvSamStyle(const int &option)
+{
+    // Write to RegKey HKLM "Software\Elysian Productions\UMTK-Classic\Generation Settings\SamAccount Settings\" "SamStyle" "option" (DWORD)
+    if(option == 1)
+    {
+        SamGenerationSettings->setValue("SamStyle", 1);
+        qDebug() << "Set option 1";
+    }
+    if(option == 2)
+    {
+        SamGenerationSettings->setValue("SamStyle", 2);
+        qDebug() << "Set option 2";
+    }
+    if(option == 3)
+    {
+        SamGenerationSettings->setValue("SamStyle", 3);
+        qDebug() << "Set option 3";
+    }
+    if(option == 4)
+    {
+        SamGenerationSettings->setValue("SamStyle", 4);
+        qDebug() << "Set option 4";
+    }
+    if(option == 5)
+    {
+        SamGenerationSettings->setValue("SamStyle", 5);
+        qDebug() << "Set option 5";
+    }
+    if(option == 6)
+    {
+        SamGenerationSettings->setValue("SamStyle", 6);
+        qDebug() << "Set option 6";
+    }
+
+}
+
 void ConfigurationWidget::setMultiCompanyStatus(const bool &status)
 {
     // By default the MultiCompanyEnabled DWORD is disabled (0)
-    qDebug() << status;
     if(status)
     {
         // Enable multi company support

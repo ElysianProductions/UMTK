@@ -350,7 +350,7 @@ void MainWindow::create_domain_user()
                               "\"" + user.get_SamAccountName() + "\"" + " -Enabled 1; exit");
 
 
-                 user.Execute("$tmp = (Get-ADUser -Filter {Name -like \"" + domainwidget.template_user_combo->currentText() + "\"}); "
+                 user.Execute("$tmp = (Get-ADUser -Filter {Name -like \"" + user.stripCompanyName(domainwidget.template_user_combo->currentText()) + "\"}); "
                               "$groups = (Get-ADUser $tmp -Properties MemberOf).MemberOf; $usr = \"" + user.get_SamAccountName() + "\"; "
                               "Foreach ($group in $groups) {Add-ADGroupMember -Identity (Get-ADGroup $group).name -Members $usr}; exit ");
 
@@ -387,7 +387,7 @@ void MainWindow::create_domain_user()
                               "\"" + user.get_SamAccountName() + "\"" + " -Enabled 1; exit");
 
 
-                 user.Execute("$tmp = (Get-ADUser -Filter {Name -like \"" + domainwidget.template_user_combo->currentText() + "\"}); "
+                 user.Execute("$tmp = (Get-ADUser -Filter {Name -like \"" + user.stripCompanyName(domainwidget.template_user_combo->currentText()) + "\"}); "
                               "$groups = (Get-ADUser $tmp -Properties MemberOf).MemberOf; $usr = \"" + user.get_SamAccountName() + "\"; "
                               "Foreach ($group in $groups) {Add-ADGroupMember -Identity (Get-ADGroup $group).name -Members $usr}; exit ");
 
@@ -460,7 +460,7 @@ void MainWindow::create_domain_user()
                  user.Dump_User_Form("<html> <h1> <center> The following information pertains to the new user request that you have submitted: </center> </h1> <br><br><br> <body> <strong> Employee name: </strong> " + user.get_Name() +
                                      "<br> <strong> Username: </strong> " + user.get_SamAccountName() + " <br> <strong> Email address: </strong> " + user.get_Mail() +
                                      "<br> <strong> Password: </strong> " + domainwidget.password_edit->text() + " <br> <strong> Groups: </strong> " + user.get_Groups().join(" , ") +
-                                     "<br> <strong> Template user provided: </strong> " + domainwidget.template_user_combo->currentText() +
+                                     "<br> <strong> Template user provided: </strong> " + user.stripCompanyName(domainwidget.template_user_combo->currentText()) +
                                      "</body> </html>", user.List_URL_Image_Path(), user.get_Name()
                              );
                  clear_ui();
@@ -475,7 +475,7 @@ void MainWindow::create_domain_user()
                               "\"" + user.get_SamAccountName() + "\"" + " -Enabled 1; exit");
 
 
-                 user.Execute("$tmp = (Get-ADUser -Filter {Name -like \"" + domainwidget.template_user_combo->currentText() + "\"}); "
+                 user.Execute("$tmp = (Get-ADUser -Filter {Name -like \"" + user.stripCompanyName(domainwidget.template_user_combo->currentText()) + "\"}); "
                               "$groups = (Get-ADUser $tmp -Properties MemberOf).MemberOf; $usr = \"" + user.get_SamAccountName() + "\"; "
                               "Foreach ($group in $groups) {Add-ADGroupMember -Identity (Get-ADGroup $group).name -Members $usr}; exit ");
 
@@ -510,7 +510,7 @@ void MainWindow::create_domain_user()
                               " -DisplayName " + "\"" + domainwidget.display_name_edit->text() + "\"" + " -EmailAddress " + "\"" + user.get_Mail() + "\"" + " -SamAccountName " +
                               "\"" + user.get_SamAccountName() + "\"" + " -Enabled 1; exit");
 
-                 user.Execute("$tmp = (Get-ADUser -Filter {Name -like \"" + domainwidget.template_user_combo->currentText() + "\"}); "
+                 user.Execute("$tmp = (Get-ADUser -Filter {Name -like \"" + user.stripCompanyName(domainwidget.template_user_combo->currentText()) + "\"}); "
                               "$groups = (Get-ADUser $tmp -Properties MemberOf).MemberOf; $usr = \"" + user.get_SamAccountName() + "\"; "
                               "Foreach ($group in $groups) {Add-ADGroupMember -Identity (Get-ADGroup $group).name -Members $usr}; exit ");
 
@@ -547,7 +547,7 @@ void MainWindow::create_domain_user()
                               " -DisplayName " + "\"" + user.get_DisplayName() + "\"" + " -EmailAddress " + "\"" + user.get_Mail() + "\"" + " -SamAccountName " +
                               "\"" + user.get_SamAccountName() + "\"" + " -Enabled 1; exit");
 
-                 user.Execute("$tmp = (Get-ADUser -Filter {Name -like \"" + domainwidget.template_user_combo->currentText() + "\"}); "
+                 user.Execute("$tmp = (Get-ADUser -Filter {Name -like \"" + user.stripCompanyName(domainwidget.template_user_combo->currentText()) + "\"}); "
                               "$groups = (Get-ADUser $tmp -Properties MemberOf).MemberOf; $usr = \"" + user.get_SamAccountName() + "\"; "
                               "Foreach ($group in $groups) {Add-ADGroupMember -Identity (Get-ADGroup $group).name -Members $usr}; exit ");
 
@@ -600,6 +600,8 @@ void MainWindow::clear_ui()
      domainwidget.display_name_edit->setText("");
      domainwidget.primary_proxy_edit->setText("");
      domainwidget.secondary_proxy_edit->setText("");
+     domainwidget.create_button->hide();
+     domainwidget.upn_combo->hide();
  }
 
 void MainWindow::Automate()
@@ -642,7 +644,7 @@ void MainWindow::Automate()
             {
                 user.set_OtherName(Names[1]);
             }
-            //user.set_SamAccountName(Names.first().at(0).toUpper() + Names.last().toLower());
+            QString tmp_template = user.stripCompanyName(domainwidget.template_user_combo->currentText());
             user.set_SamAccountName(user.validateSamOption(domainwidget.template_user_combo->currentText(), domainwidget.employee_name_edit->text()));
 
             user.set_Identifier(user.List_User_Identifier(user.getEmployeeName(user.stripCompanyName(domainwidget.template_user_combo->currentText()))));
@@ -651,9 +653,9 @@ void MainWindow::Automate()
 
             user.set_Mail(user.get_UPN());
 
-            user.set_Groups(user.List_User_Group_CNs(user.List_SamAccountName(user.getEmployeeName(user.stripCompanyName(domainwidget.template_user_combo->currentText())))));
+            user.set_Groups(user.List_User_Group_CNs(user.List_SamAccountName(tmp_template)));
 
-            user.set_GroupDNs(user.List_User_Group_DNs(user.List_SamAccountName(user.getEmployeeName(user.stripCompanyName(domainwidget.template_user_combo->currentText())))));
+            user.set_GroupDNs(user.List_User_Group_DNs(user.List_SamAccountName(tmp_template)));
 
             user.set_OU_DN(user.List_User_OU_DN(user.getEmployeeName(user.stripCompanyName(domainwidget.template_user_combo->currentText()))));
 
@@ -719,8 +721,8 @@ void MainWindow::Automate()
             {
                 user.set_OtherName(Names[1]);
             }
-            user.set_SamAccountName(Names.first().at(0).toUpper() + Names.last().toLower());
-
+            //user.set_SamAccountName(Names.first().at(0).toUpper() + Names.last().toLower());
+            user.set_SamAccountName(user.validateSamOption(domainwidget.template_user_combo->currentText(), domainwidget.employee_name_edit->text()));
             user.set_Identifier(user.List_User_Identifier(user.List_Name(domainwidget.template_user_combo->currentText())));
 
             user.set_UPN(user.get_SamAccountName() + "@" + user.get_Identifier());
