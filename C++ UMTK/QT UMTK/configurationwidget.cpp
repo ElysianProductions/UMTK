@@ -221,7 +221,7 @@ QWidget* ConfigurationWidget::get_pdf_custimization_widget(QLineEdit *user_creat
 
     QStringList logo_positions = {"Select logo position", "Top", "Bottom"};
     company_logo_position->addItems(logo_positions);
-    company_logo_position->setToolTip("If you add a logo you can choose to add it to either the bottom or top of the page\nBy default it's added to the bottom of the generated pdf.");
+    company_logo_position->setToolTip("If you add a logo you can choose to add it to either the bottom or top of the page.");
 
     connect(user_creation_text_edit, &QLineEdit::returnPressed, this, &ConfigurationWidget::setNewUserText);
     connect(user_disable_text_edit, &QLineEdit::returnPressed, this, &ConfigurationWidget::setDisableUserText);

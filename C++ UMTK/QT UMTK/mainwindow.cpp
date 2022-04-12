@@ -254,21 +254,19 @@ void MainWindow::create_local_user()
          {
              QString tmp = "net localgroup Administrators " + luser.username + " /add";
              user.Execute(tmp);
-             user.Set_URL_Image_Path("");
              user.Dump_User_Form("<html> <h1> <center> The following information pertains to the new user request that you have submitted: </center> </h1> <br><br><br> <body> <strong> Employee name: </strong> " + luser.employee_name +
                                  "<br> <strong> Username: </strong> " + luser.username +
                                  "<br> <strong> Password: </strong> " + localwidget.password_edit->text() + " <br> <strong> Groups: Administrators</strong> " +
-                                 "</body> </html>", user.List_URL_Image_Path(), luser.employee_name
+                                 "</body> </html>", QUrl(""), luser.employee_name
                          );
 
          }
          else if(luser.is_administrator == "0")
          {
-             user.Set_URL_Image_Path("");
              user.Dump_User_Form("<html> <h1> <center> The following information pertains to the new user request that you have submitted: </center> </h1> <br><br><br> <body> <strong> Employee name: </strong> " + luser.employee_name +
                                  "<br> <strong> Username: </strong> " + luser.username +
                                  "<br> <strong> Password: </strong> " + localwidget.password_edit->text() + " <br> <strong> Groups: None</strong> " +
-                                 "</body> </html>", user.List_URL_Image_Path(), luser.employee_name
+                                 "</body> </html>", QUrl(""), luser.employee_name
                          );
          }
      }
@@ -276,8 +274,26 @@ void MainWindow::create_local_user()
 
 void MainWindow::create_domain_user()
  {
+
+     QSettings *PDFSettings = new QSettings("HKEY_LOCAL_MACHINE\\SOFTWARE\\WOW6432Node\\Elysian Productions\\UMTK-Classic\\PDF Settings\\", QSettings::Registry64Format);
+     QString custom_creation_text;
+     QString your_logo_path;
+     QString your_logo_position;
      QString error = "";
      bool errorDetected = false;
+     if(PDFSettings->value("UserCreationText").toString().length() > 0)
+     {
+         custom_creation_text = PDFSettings->value("UserCreationText").toString();
+     }
+     if(PDFSettings->value("CompanyLogoPath").toString().length() > 0)
+     {
+         your_logo_path = PDFSettings->value("CompanyLogoPath").toString();
+     }
+     if(PDFSettings->value("LogoPosition").toString().length() > 0 && PDFSettings->value("").toString() == "Top" || PDFSettings->value("").toString() == "Bottom")
+     {
+         your_logo_position = PDFSettings->value("LogoPosition").toString();
+     }
+
 
      if(user.User_Exists(user.get_SamAccountName()) == "Yes")
      {
@@ -366,16 +382,39 @@ void MainWindow::create_domain_user()
                  domainwidget.informational->setText("SUCCESS - The following user has been created and a PDF named " + user.get_SamAccountName() + ".pdf has been generated and saved on your desktop.\nPresent it via encrypted email to the end user.\n\n\nEmployee name: " + user.get_Name() +"\nUsername: " + user.get_SamAccountName() + "\nEmail address: " + user.get_Mail() + "\nDisplay name: " + domainwidget.display_name_edit->text() +
                                                      "\nOrganizational unit: " + user.get_OU_CN() + "\nUser Principal Name: " + user.get_UPN() + "\nGroups: " + user.get_Groups().join(" , ") + "\nPassword: " + domainwidget.password_edit->text() + "\n\n" + azure);
 
-
-                 user.Set_URL_Image_Path("");
-                 user.Dump_User_Form("<html> <h1> <center> The following information pertains to the new user request that you have submitted: </center> </h1> <br><br><br> <body> <strong> Employee name: </strong> " + user.get_Name() +
-                                     "<br> <strong> Username: </strong> " + user.get_SamAccountName() + " <br> <strong> Email address: </strong> " + user.get_Mail() +
-                                     "<br> <strong> Password: </strong> " + domainwidget.password_edit->text() + " <br> <strong> Groups: </strong> " + user.get_Groups().join(" , ") +
-                                     "<br> <strong> Template user provided: </strong> " + user.stripCompanyName(domainwidget.template_user_combo->currentText()) +
-                                     "</body> </html>", user.List_URL_Image_Path(), user.get_Name()
-                             );
-                 clear_ui();
-
+                 if(custom_creation_text.length() > 0)
+                 {
+                     if(your_logo_path.length() > 0 && your_logo_position.length() > 0)
+                     {
+                         user.Dump_User_Form("<html> <h1> <center> " + custom_creation_text + ": </center> </h1> <br><br><br> <body> <strong> Employee name: </strong> " + user.get_Name() +
+                                             "<br> <strong> Username: </strong> " + user.get_SamAccountName() + " <br> <strong> Email address: </strong> " + user.get_Mail() +
+                                             "<br> <strong> Password: </strong> " + domainwidget.password_edit->text() + " <br> <strong> Groups: </strong> " + user.get_Groups().join(" , ") +
+                                             "<br> <strong> Template user provided: </strong> " + user.stripCompanyName(domainwidget.template_user_combo->currentText()) +
+                                             "</body> </html>", QUrl(your_logo_path), user.get_Name()
+                                     );
+                         clear_ui();
+                     }
+                     else if(your_logo_path.length() <= 0)
+                     {
+                         user.Dump_User_Form("<html> <h1> <center>" + custom_creation_text + ": </center> </h1> <br><br><br> <body> <strong> Employee name: </strong> " + user.get_Name() +
+                                             "<br> <strong> Username: </strong> " + user.get_SamAccountName() + " <br> <strong> Email address: </strong> " + user.get_Mail() +
+                                             "<br> <strong> Password: </strong> " + domainwidget.password_edit->text() + " <br> <strong> Groups: </strong> " + user.get_Groups().join(" , ") +
+                                             "<br> <strong> Template user provided: </strong> " + user.stripCompanyName(domainwidget.template_user_combo->currentText()) +
+                                             "</body> </html>", QUrl("") , user.get_Name()
+                                     );
+                         clear_ui();
+                     }
+                 }
+                 else if(custom_creation_text.length() <= 0)
+                 {
+                     user.Dump_User_Form("<html> <h1> <center> The following information pertains to the new user request that you have submitted: </center> </h1> <br><br><br> <body> <strong> Employee name: </strong> " + user.get_Name() +
+                                         "<br> <strong> Username: </strong> " + user.get_SamAccountName() + " <br> <strong> Email address: </strong> " + user.get_Mail() +
+                                         "<br> <strong> Password: </strong> " + domainwidget.password_edit->text() + " <br> <strong> Groups: </strong> " + user.get_Groups().join(" , ") +
+                                         "<br> <strong> Template user provided: </strong> " + user.stripCompanyName(domainwidget.template_user_combo->currentText()) +
+                                         "</body> </html>", QUrl(""), user.get_Name()
+                                 );
+                     clear_ui();
+                 }
              }
              if(domainwidget.primary_proxy_edit->text().length() > 0 && domainwidget.secondary_proxy_edit->text().length() > 0 && domainwidget.display_name_edit->text().length() <= 0)
              {
@@ -404,25 +443,46 @@ void MainWindow::create_domain_user()
                                                      "\nOrganizational unit: " + user.get_OU_CN() + "\nUser Principal Name: " + user.get_UPN() + "\nGroups: " + user.get_Groups().join(" , ") + "\nPassword: " + domainwidget.password_edit->text() + "\n\n" + azure);
 
 
-                 user.Set_URL_Image_Path("");
-                 user.Dump_User_Form("<html> <h1> <center> The following information pertains to the new user request that you have submitted: </center> </h1> <br><br><br> <body> <strong> Employee name: </strong> " + user.get_Name() +
-                                     "<br> <strong> Username: </strong> " + user.get_SamAccountName() + " <br> <strong> Email address: </strong> " + user.get_Mail() +
-                                     "<br> <strong> Password: </strong> " + domainwidget.password_edit->text() + " <br> <strong> Groups: </strong> " + user.get_Groups().join(" , ") +
-                                     "<br> <strong> Template user provided: </strong> " + user.stripCompanyName(domainwidget.template_user_combo->currentText()) +
-                                     "</body> </html>", user.List_URL_Image_Path(), user.get_Name()
-                             );
-                 clear_ui();
+
+                 if(custom_creation_text.length() > 0)
+                 {
+                     if(your_logo_path.length() > 0 && your_logo_position.length() > 0)
+                     {
+                         user.Dump_User_Form("<html> <h1> <center>" + custom_creation_text + ": </center> </h1> <br><br><br> <body> <strong> Employee name: </strong> " + user.get_Name() +
+                                             "<br> <strong> Username: </strong> " + user.get_SamAccountName() + " <br> <strong> Email address: </strong> " + user.get_Mail() +
+                                             "<br> <strong> Password: </strong> " + domainwidget.password_edit->text() + " <br> <strong> Groups: </strong> " + user.get_Groups().join(" , ") +
+                                             "<br> <strong> Template user provided: </strong> " + user.stripCompanyName(domainwidget.template_user_combo->currentText()) +
+                                             "</body> </html>", QUrl(your_logo_path), user.get_Name()
+                                     );
+                         clear_ui();
+                     }
+                     if(your_logo_path.length() <= 0)
+                     {
+                         user.Dump_User_Form("<html> <h1> <center> The following information pertains to the new user request that you have submitted: </center> </h1> <br><br><br> <body> <strong> Employee name: </strong> " + user.get_Name() +
+                                             "<br> <strong> Username: </strong> " + user.get_SamAccountName() + " <br> <strong> Email address: </strong> " + user.get_Mail() +
+                                             "<br> <strong> Password: </strong> " + domainwidget.password_edit->text() + " <br> <strong> Groups: </strong> " + user.get_Groups().join(" , ") +
+                                             "<br> <strong> Template user provided: </strong> " + user.stripCompanyName(domainwidget.template_user_combo->currentText()) +
+                                             "</body> </html>", QUrl(""), user.get_Name()
+                                     );
+                         clear_ui();
+                     }
+                 }
+                 else if(custom_creation_text.length() <= 0)
+                 {
+
+                     user.Dump_User_Form("<html> <h1> <center> The following information pertains to the new user request that you have submitted: </center> </h1> <br><br><br> <body> <strong> Employee name: </strong> " + user.get_Name() +
+                                         "<br> <strong> Username: </strong> " + user.get_SamAccountName() + " <br> <strong> Email address: </strong> " + user.get_Mail() +
+                                         "<br> <strong> Password: </strong> " + domainwidget.password_edit->text() + " <br> <strong> Groups: </strong> " + user.get_Groups().join(" , ") +
+                                         "<br> <strong> Template user provided: </strong> " + user.stripCompanyName(domainwidget.template_user_combo->currentText()) +
+                                         "</body> </html>", QUrl(""), user.get_Name()
+                                 );
+                     clear_ui();
+                 }
+
              }
              if(domainwidget.primary_proxy_edit->text().length() > 0 && domainwidget.secondary_proxy_edit->text().length() <= 0 && domainwidget.display_name_edit->text().length() > 0)
              {
                  QString p = "$p = " + QString("\"") + domainwidget.password_edit->text() + QString("\"") + "; $sec = $p | ConvertTo-SecureString -AsPlainText -Force; ";
-
-                 /*user.Execute(p + "New-ADUser -Name " + "\"" + user.get_Name() + "\"" + " -GivenName " + "\"" + user.get_GivenName() + "\"" +
-                              " -Surname " + "\"" + user.get_SurName() + "\"" + " -AccountPassword $sec -UserPrincipalName " + "\"" + user.get_UPN() + "\"" +
-                              " -DisplayName " + "\"" + domainwidget.display_name_edit->text() + "\"" + " -EmailAddress " + "\"" + user.get_Mail() + "\"" + " -SamAccountName " +
-                              "\"" + user.get_SamAccountName() + "\"" + " -Enabled 1; exit");*/
-
-
 
                  if(user.get_OtherName().length() > 0)
                  {
@@ -455,15 +515,40 @@ void MainWindow::create_domain_user()
                  domainwidget.informational->setText("SUCCESS - The following user has been created and a PDF named " + user.get_SamAccountName() + ".pdf has been generated and saved on your desktop.\nPresent it via encrypted email to the end user.\n\n\nEmployee name: " + user.get_Name() +"\nUsername: " + user.get_SamAccountName() + "\nEmail address: " + user.get_Mail() + "\nDisplay name: " + domainwidget.display_name_edit->text() +
                                                      "\nOrganizational unit: " + user.get_OU_CN() + "\nUser Principal Name: " + user.get_UPN() + "\nGroups: " + user.get_Groups().join(" , ") + "\nPassword: " + domainwidget.password_edit->text() + "\n\n" + azure);
 
+                 if(custom_creation_text.length() > 0)
+                 {
+                     if(your_logo_path.length() > 0 && your_logo_position.length() > 0)
+                     {
+                         user.Dump_User_Form("<html> <h1> <center>" + custom_creation_text + ": </center> </h1> <br><br><br> <body> <strong> Employee name: </strong> " + user.get_Name() +
+                                             "<br> <strong> Username: </strong> " + user.get_SamAccountName() + " <br> <strong> Email address: </strong> " + user.get_Mail() +
+                                             "<br> <strong> Password: </strong> " + domainwidget.password_edit->text() + " <br> <strong> Groups: </strong> " + user.get_Groups().join(" , ") +
+                                             "<br> <strong> Template user provided: </strong> " + user.stripCompanyName(domainwidget.template_user_combo->currentText()) +
+                                             "</body> </html>", QUrl(your_logo_path), user.get_Name()
+                                     );
+                         clear_ui();
+                     }
+                     else if(your_logo_path.length() <= 0)
+                     {
+                         user.Dump_User_Form("<html> <h1> <center>" + custom_creation_text + ": </center> </h1> <br><br><br> <body> <strong> Employee name: </strong> " + user.get_Name() +
+                                             "<br> <strong> Username: </strong> " + user.get_SamAccountName() + " <br> <strong> Email address: </strong> " + user.get_Mail() +
+                                             "<br> <strong> Password: </strong> " + domainwidget.password_edit->text() + " <br> <strong> Groups: </strong> " + user.get_Groups().join(" , ") +
+                                             "<br> <strong> Template user provided: </strong> " + user.stripCompanyName(domainwidget.template_user_combo->currentText()) +
+                                             "</body> </html>", QUrl(""), user.get_Name()
+                                     );
+                         clear_ui();
+                     }
+                 }
+                 else if(custom_creation_text.length() <= 0)
+                 {
+                     user.Dump_User_Form("<html> <h1> <center> The following information pertains to the new user request that you have submitted: </center> </h1> <br><br><br> <body> <strong> Employee name: </strong> " + user.get_Name() +
+                                         "<br> <strong> Username: </strong> " + user.get_SamAccountName() + " <br> <strong> Email address: </strong> " + user.get_Mail() +
+                                         "<br> <strong> Password: </strong> " + domainwidget.password_edit->text() + " <br> <strong> Groups: </strong> " + user.get_Groups().join(" , ") +
+                                         "<br> <strong> Template user provided: </strong> " + user.stripCompanyName(domainwidget.template_user_combo->currentText()) +
+                                         "</body> </html>", QUrl(""), user.get_Name()
+                                 );
+                     clear_ui();
+                 }
 
-                 user.Set_URL_Image_Path("");
-                 user.Dump_User_Form("<html> <h1> <center> The following information pertains to the new user request that you have submitted: </center> </h1> <br><br><br> <body> <strong> Employee name: </strong> " + user.get_Name() +
-                                     "<br> <strong> Username: </strong> " + user.get_SamAccountName() + " <br> <strong> Email address: </strong> " + user.get_Mail() +
-                                     "<br> <strong> Password: </strong> " + domainwidget.password_edit->text() + " <br> <strong> Groups: </strong> " + user.get_Groups().join(" , ") +
-                                     "<br> <strong> Template user provided: </strong> " + user.stripCompanyName(domainwidget.template_user_combo->currentText()) +
-                                     "</body> </html>", user.List_URL_Image_Path(), user.get_Name()
-                             );
-                 clear_ui();
              }
              if(domainwidget.primary_proxy_edit->text().length() <= 0 && domainwidget.secondary_proxy_edit->text().length() > 0 && domainwidget.display_name_edit->text().length() > 0)
              {
@@ -490,15 +575,39 @@ void MainWindow::create_domain_user()
                  domainwidget.informational->setText("SUCCESS - The following user has been created and a PDF named " + user.get_SamAccountName() + ".pdf has been generated and saved on your desktop.\nPresent it via encrypted email to the end user.\n\n\nEmployee name: " + user.get_Name() +"\nUsername: " + user.get_SamAccountName() + "\nEmail address: " + user.get_Mail() + "\nDisplay name: " + domainwidget.display_name_edit->text() +
                                                      "\nOrganizational unit: " + user.get_OU_CN() + "\nUser Principal Name: " + user.get_UPN() + "\nGroups: " + user.get_Groups().join(" , ") + "\nPassword: " + domainwidget.password_edit->text() + "\n\n" + azure);
 
-
-                 user.Set_URL_Image_Path("");
-                 user.Dump_User_Form("<html> <h1> <center> The following information pertains to the new user request that you have submitted: </center> </h1> <br><br><br> <body> <strong> Employee name: </strong> " + user.get_Name() +
-                                     "<br> <strong> Username: </strong> " + user.get_SamAccountName() + " <br> <strong> Email address: </strong> " + user.get_Mail() +
-                                     "<br> <strong> Password: </strong> " + domainwidget.password_edit->text() + " <br> <strong> Groups: </strong> " + user.get_Groups().join(" , ") +
-                                     "<br> <strong> Template user provided: </strong> " + user.stripCompanyName(domainwidget.template_user_combo->currentText()) +
-                                     "</body> </html>", user.List_URL_Image_Path(), user.get_Name()
-                             );
-                 clear_ui();
+                 if(custom_creation_text.length() > 0)
+                 {
+                     if(your_logo_path.length() > 0 && your_logo_position.length() > 0)
+                     {
+                         user.Dump_User_Form("<html> <h1> <center>" + custom_creation_text + ": </center> </h1> <br><br><br> <body> <strong> Employee name: </strong> " + user.get_Name() +
+                                             "<br> <strong> Username: </strong> " + user.get_SamAccountName() + " <br> <strong> Email address: </strong> " + user.get_Mail() +
+                                             "<br> <strong> Password: </strong> " + domainwidget.password_edit->text() + " <br> <strong> Groups: </strong> " + user.get_Groups().join(" , ") +
+                                             "<br> <strong> Template user provided: </strong> " + user.stripCompanyName(domainwidget.template_user_combo->currentText()) +
+                                             "</body> </html>", QUrl(your_logo_path), user.get_Name()
+                                     );
+                         clear_ui();
+                     }
+                     else if(your_logo_path.length() <= 0)
+                     {
+                         user.Dump_User_Form("<html> <h1> <center>" + custom_creation_text + ": </center> </h1> <br><br><br> <body> <strong> Employee name: </strong> " + user.get_Name() +
+                                             "<br> <strong> Username: </strong> " + user.get_SamAccountName() + " <br> <strong> Email address: </strong> " + user.get_Mail() +
+                                             "<br> <strong> Password: </strong> " + domainwidget.password_edit->text() + " <br> <strong> Groups: </strong> " + user.get_Groups().join(" , ") +
+                                             "<br> <strong> Template user provided: </strong> " + user.stripCompanyName(domainwidget.template_user_combo->currentText()) +
+                                             "</body> </html>", QUrl(""), user.get_Name()
+                                     );
+                         clear_ui();
+                     }
+                 }
+                 else if(custom_creation_text.length() <= 0)
+                 {
+                     user.Dump_User_Form("<html> <h1> <center> The following information pertains to the new user request that you have submitted: </center> </h1> <br><br><br> <body> <strong> Employee name: </strong> " + user.get_Name() +
+                                         "<br> <strong> Username: </strong> " + user.get_SamAccountName() + " <br> <strong> Email address: </strong> " + user.get_Mail() +
+                                         "<br> <strong> Password: </strong> " + domainwidget.password_edit->text() + " <br> <strong> Groups: </strong> " + user.get_Groups().join(" , ") +
+                                         "<br> <strong> Template user provided: </strong> " + user.stripCompanyName(domainwidget.template_user_combo->currentText()) +
+                                         "</body> </html>", user.List_URL_Image_Path(), user.get_Name()
+                                 );
+                     clear_ui();
+                 }
 
              }
              if(domainwidget.primary_proxy_edit->text().length() <= 0 && domainwidget.secondary_proxy_edit->text().length() <= 0 && domainwidget.display_name_edit->text().length() > 0)
@@ -526,15 +635,39 @@ void MainWindow::create_domain_user()
                                                      "\nOrganizational unit: " + user.get_OU_CN() + "\nUser Principal Name: " + user.get_UPN() + "\nGroups: " + user.get_Groups().join(" , ") + "\nPassword: " + domainwidget.password_edit->text() + "\n\n" + azure);
 
 
-                 user.Set_URL_Image_Path("");
-                 user.Dump_User_Form("<html> <h1> <center> The following information pertains to the new user request that you have submitted: </center> </h1> <br><br><br> <body> <strong> Employee name: </strong> " + user.get_Name() +
-                                     "<br> <strong> Username: </strong> " + user.get_SamAccountName() + " <br> <strong> Email address: </strong> " + user.get_Mail() +
-                                     "<br> <strong> Password: </strong> " + domainwidget.password_edit->text() + " <br> <strong> Groups: </strong> " + user.get_Groups().join(" , ") +
-                                     "<br> <strong> Template user provided: </strong> " + user.stripCompanyName(domainwidget.template_user_combo->currentText()) +
-                                     "</body> </html>", user.List_URL_Image_Path(), user.get_Name()
-                             );
-                 clear_ui();
-
+                 if(custom_creation_text.length() > 0)
+                 {
+                     if(your_logo_path.length() > 0 && your_logo_position.length() > 0)
+                     {
+                         user.Dump_User_Form("<html> <h1> <center>" + custom_creation_text + ": </center> </h1> <br><br><br> <body> <strong> Employee name: </strong> " + user.get_Name() +
+                                             "<br> <strong> Username: </strong> " + user.get_SamAccountName() + " <br> <strong> Email address: </strong> " + user.get_Mail() +
+                                             "<br> <strong> Password: </strong> " + domainwidget.password_edit->text() + " <br> <strong> Groups: </strong> " + user.get_Groups().join(" , ") +
+                                             "<br> <strong> Template user provided: </strong> " + user.stripCompanyName(domainwidget.template_user_combo->currentText()) +
+                                             "</body> </html>", QUrl(your_logo_path), user.get_Name()
+                                     );
+                         clear_ui();
+                     }
+                     else if(your_logo_path.length() <= 0)
+                     {
+                         user.Dump_User_Form("<html> <h1> <center>" + custom_creation_text + ": </center> </h1> <br><br><br> <body> <strong> Employee name: </strong> " + user.get_Name() +
+                                             "<br> <strong> Username: </strong> " + user.get_SamAccountName() + " <br> <strong> Email address: </strong> " + user.get_Mail() +
+                                             "<br> <strong> Password: </strong> " + domainwidget.password_edit->text() + " <br> <strong> Groups: </strong> " + user.get_Groups().join(" , ") +
+                                             "<br> <strong> Template user provided: </strong> " + user.stripCompanyName(domainwidget.template_user_combo->currentText()) +
+                                             "</body> </html>", QUrl(""), user.get_Name()
+                                     );
+                         clear_ui();
+                     }
+                 }
+                 else if(custom_creation_text.length() <= 0)
+                 {
+                     user.Dump_User_Form("<html> <h1> <center> The following information pertains to the new user request that you have submitted: </center> </h1> <br><br><br> <body> <strong> Employee name: </strong> " + user.get_Name() +
+                                         "<br> <strong> Username: </strong> " + user.get_SamAccountName() + " <br> <strong> Email address: </strong> " + user.get_Mail() +
+                                         "<br> <strong> Password: </strong> " + domainwidget.password_edit->text() + " <br> <strong> Groups: </strong> " + user.get_Groups().join(" , ") +
+                                         "<br> <strong> Template user provided: </strong> " + user.stripCompanyName(domainwidget.template_user_combo->currentText()) +
+                                         "</body> </html>", QUrl(""), user.get_Name()
+                                 );
+                     clear_ui();
+                 }
 
              }
              if(domainwidget.primary_proxy_edit->text().length() <= 0 && domainwidget.secondary_proxy_edit->text().length() <= 0 && domainwidget.display_name_edit->text().length() <= 0)
@@ -563,18 +696,39 @@ void MainWindow::create_domain_user()
                  domainwidget.informational->setText("SUCCESS - The following user has been created and a PDF named " + user.get_SamAccountName() + ".pdf has been generated and saved on your desktop.\nPresent it via encrypted email to the end user.\n\n\nEmployee name: " + user.get_Name() +"\nUsername: " + user.get_SamAccountName() + "\nEmail address: " + user.get_Mail() + "\nDisplay name: " + user.get_DisplayName() +
                                                      "\nOrganizational unit: " + user.get_OU_CN() + "\nUser Principal Name: " + user.get_UPN() + "\nGroups: " + user.get_Groups().join(" , ") + "\nPassword: " + domainwidget.password_edit->text() + "\n\n" + azure);
 
-
-
-
-                 user.Set_URL_Image_Path("");
-                 user.Dump_User_Form("<html> <h1> <center> The following information pertains to the new user request that you have submitted: </center> </h1> <br><br><br> <body> <strong> Employee name: </strong> " + user.get_Name() +
-                                     "<br> <strong> Username: </strong> " + user.get_SamAccountName() + " <br> <strong> Email address: </strong> " + user.get_Mail() +
-                                     "<br> <strong> Password: </strong> " + domainwidget.password_edit->text() + " <br> <strong> Groups: </strong> " + user.get_Groups().join(" , ") +
-                                     "<br> <strong> Template user provided: </strong> " + user.stripCompanyName(domainwidget.template_user_combo->currentText()) +
-                                     "</body> </html>", user.List_URL_Image_Path(), user.get_Name()
-                             );
-                 clear_ui();
-
+                 if(custom_creation_text.length() > 0)
+                 {
+                     if(your_logo_path.length() > 0 && your_logo_position.length() > 0)
+                     {
+                         user.Dump_User_Form("<html> <h1> <center>" + custom_creation_text + ": </center> </h1> <br><br><br> <body> <strong> Employee name: </strong> " + user.get_Name() +
+                                             "<br> <strong> Username: </strong> " + user.get_SamAccountName() + " <br> <strong> Email address: </strong> " + user.get_Mail() +
+                                             "<br> <strong> Password: </strong> " + domainwidget.password_edit->text() + " <br> <strong> Groups: </strong> " + user.get_Groups().join(" , ") +
+                                             "<br> <strong> Template user provided: </strong> " + user.stripCompanyName(domainwidget.template_user_combo->currentText()) +
+                                             "</body> </html>", QUrl(your_logo_path), user.get_Name()
+                                     );
+                         clear_ui();
+                     }
+                     else if(your_logo_path.length() <= 0)
+                     {
+                         user.Dump_User_Form("<html> <h1> <center>" + custom_creation_text + ": </center> </h1> <br><br><br> <body> <strong> Employee name: </strong> " + user.get_Name() +
+                                             "<br> <strong> Username: </strong> " + user.get_SamAccountName() + " <br> <strong> Email address: </strong> " + user.get_Mail() +
+                                             "<br> <strong> Password: </strong> " + domainwidget.password_edit->text() + " <br> <strong> Groups: </strong> " + user.get_Groups().join(" , ") +
+                                             "<br> <strong> Template user provided: </strong> " + user.stripCompanyName(domainwidget.template_user_combo->currentText()) +
+                                             "</body> </html>", QUrl(""), user.get_Name()
+                                     );
+                         clear_ui();
+                     }
+                 }
+                 else if(custom_creation_text.length() <= 0)
+                 {
+                     user.Dump_User_Form("<html> <h1> <center> The following information pertains to the new user request that you have submitted: </center> </h1> <br><br><br> <body> <strong> Employee name: </strong> " + user.get_Name() +
+                                         "<br> <strong> Username: </strong> " + user.get_SamAccountName() + " <br> <strong> Email address: </strong> " + user.get_Mail() +
+                                         "<br> <strong> Password: </strong> " + domainwidget.password_edit->text() + " <br> <strong> Groups: </strong> " + user.get_Groups().join(" , ") +
+                                         "<br> <strong> Template user provided: </strong> " + user.stripCompanyName(domainwidget.template_user_combo->currentText()) +
+                                         "</body> </html>", QUrl(""), user.get_Name()
+                                 );
+                     clear_ui();
+                 }
              }
          }
          else if (warning_banner->clickedButton() == cancel_button)
@@ -606,29 +760,6 @@ void MainWindow::clear_ui()
 
 void MainWindow::Automate()
 {
-    /* If the employee name is not empty, take the text and use it to set:
-     *     Attribute - Name
-     *     Attribute - givenName
-     *     Attribute - surName
-     *     Attribute - displayName
-     *
-     * If the StringList count of Names is > 2 then there are three names, do something with the third name.
-     *
-     *
-     *
-     *
-     */
-
-
-    /*
-     * Validate if the employee name text edit is or isn't empty.
-     * If it is empty, do nothing. (add in error message)
-     * If it's not empty, take the text and set the new users name.
-     * Split the users name at each space and add to QStringList,
-     * use that list to generate First name, middle name (if middle name exists), and last name.
-     * Create the default display name using the new users full name.
-     *
-     */
 
     if(domainwidget.employee_name_edit->text().length() > 0)
     {
@@ -721,7 +852,6 @@ void MainWindow::Automate()
             {
                 user.set_OtherName(Names[1]);
             }
-            //user.set_SamAccountName(Names.first().at(0).toUpper() + Names.last().toLower());
             user.set_SamAccountName(user.validateSamOption(domainwidget.template_user_combo->currentText(), domainwidget.employee_name_edit->text()));
             user.set_Identifier(user.List_User_Identifier(user.List_Name(domainwidget.template_user_combo->currentText())));
 
@@ -979,11 +1109,51 @@ void MainWindow::disable_user()
         user.Edit_Disable_Description(name);
         user.Edit_User_Status(name);
         disableuser.informational->setText("The user " + name + " has been disabled.");
-        user.Dump_User_Form("<html> <h1> <center> The following information pertains to the disable user request that you have submitted: </center> </h1> <br><br><br> <body> <strong> Employee name: </strong> " + name +
-                            "<br> <strong> Username: </strong> " + username + " <br> <strong> Email address: </strong> " + email +
-                            "<br> <strong> Groups: </strong> " + Groups_Clean.join(" , ") +
-                            "</body> </html>", QUrl(""), name
-                    );
+
+        QSettings *PDFSettings = new QSettings("HKEY_LOCAL_MACHINE\\SOFTWARE\\WOW6432Node\\Elysian Productions\\UMTK-Classic\\PDF Settings\\", QSettings::Registry64Format);
+        QString custom_disable_text;
+        QString your_logo_path;
+        QString your_logo_position;
+        if(PDFSettings->value("UserDisableText").toString().length() > 0)
+        {
+            custom_disable_text = PDFSettings->value("UserDisableText").toString();
+        }
+        if(PDFSettings->value("CompanyLogoPath").toString().length() > 0)
+        {
+            your_logo_path = PDFSettings->value("CompanyLogoPath").toString();
+        }
+        if(PDFSettings->value("LogoPosition").toString().length() > 0 && PDFSettings->value("").toString() == "Top" || PDFSettings->value("").toString() == "Bottom")
+        {
+            your_logo_position = PDFSettings->value("LogoPosition").toString();
+        }
+
+        if(custom_disable_text.length() > 0)
+        {
+            if(your_logo_path.length() > 0 && your_logo_position.length() > 0)
+            {
+                user.Dump_User_Form("<html> <h1> <center>" + custom_disable_text + ": </center> </h1> <br><br><br> <body> <strong> Employee name: </strong> " + name +
+                                            "<br> <strong> Username: </strong> " + username + " <br> <strong> Email address: </strong> " + email +
+                                            "<br> <strong> Groups: </strong> " + Groups_Clean.join(" , ") +
+                                            "</body> </html>", QUrl(your_logo_path), name
+                                    );
+            }
+            else if(your_logo_path.length() <= 0)
+            {
+                user.Dump_User_Form("<html> <h1> <center>" + custom_disable_text + ": </center> </h1> <br><br><br> <body> <strong> Employee name: </strong> " + name +
+                                            "<br> <strong> Username: </strong> " + username + " <br> <strong> Email address: </strong> " + email +
+                                            "<br> <strong> Groups: </strong> " + Groups_Clean.join(" , ") +
+                                            "</body> </html>", QUrl(""), name
+                                    );
+            }
+        }
+        else if(custom_disable_text.length() <= 0)
+        {
+            user.Dump_User_Form("<html> <h1> <center> The following information pertains to the disable user request that you have submitted: </center> </h1> <br><br><br> <body> <strong> Employee name: </strong> " + name +
+                                        "<br> <strong> Username: </strong> " + username + " <br> <strong> Email address: </strong> " + email +
+                                        "<br> <strong> Groups: </strong> " + Groups_Clean.join(" , ") +
+                                        "</body> </html>", QUrl(""), name
+                                );
+        }
     }
     else if(user.List_All_UPNs().count() <= 1)
     {
@@ -996,10 +1166,51 @@ void MainWindow::disable_user()
         user.Edit_Disable_Description(name);
         user.Edit_User_Status(name);
         disableuser.informational->setText("The user " + name + " has been disabled.");
-        user.Dump_User_Form("<html> <h1> <center> The following information pertains to the disable user request that you have submitted: </center> </h1> <br><br><br> <body> <strong> Employee name: </strong> " + name +
-                            "<br> <strong> Username: </strong> " + username + " <br> <strong> Email address: </strong> " + email +
-                            "<br> <strong> Groups: </strong> " + Groups_Clean.join(" , ") +
-                            "</body> </html>", QUrl(""), name
-                    );
+
+
+        QSettings *PDFSettings = new QSettings("HKEY_LOCAL_MACHINE\\SOFTWARE\\WOW6432Node\\Elysian Productions\\UMTK-Classic\\PDF Settings\\", QSettings::Registry64Format);
+        QString custom_disable_text;
+        QString your_logo_path;
+        QString your_logo_position;
+        if(PDFSettings->value("UserDisableText").toString().length() > 0)
+        {
+            custom_disable_text = PDFSettings->value("UserDisableText").toString();
+        }
+        if(PDFSettings->value("CompanyLogoPath").toString().length() > 0)
+        {
+            your_logo_path = PDFSettings->value("CompanyLogoPath").toString();
+        }
+        if(PDFSettings->value("LogoPosition").toString().length() > 0 && PDFSettings->value("").toString() == "Top" || PDFSettings->value("").toString() == "Bottom")
+        {
+            your_logo_position = PDFSettings->value("LogoPosition").toString();
+        }
+
+        if(custom_disable_text.length() > 0)
+        {
+            if(your_logo_path.length() > 0 && your_logo_position.length() > 0)
+            {
+                user.Dump_User_Form("<html> <h1> <center>" + custom_disable_text + ": </center> </h1> <br><br><br> <body> <strong> Employee name: </strong> " + name +
+                                            "<br> <strong> Username: </strong> " + username + " <br> <strong> Email address: </strong> " + email +
+                                            "<br> <strong> Groups: </strong> " + Groups_Clean.join(" , ") +
+                                            "</body> </html>", QUrl(your_logo_path), name
+                                    );
+            }
+            else if(your_logo_path.length() <= 0)
+            {
+                user.Dump_User_Form("<html> <h1> <center>" + custom_disable_text + ": </center> </h1> <br><br><br> <body> <strong> Employee name: </strong> " + name +
+                                            "<br> <strong> Username: </strong> " + username + " <br> <strong> Email address: </strong> " + email +
+                                            "<br> <strong> Groups: </strong> " + Groups_Clean.join(" , ") +
+                                            "</body> </html>", QUrl(""), name
+                                    );
+            }
+        }
+        else if(custom_disable_text.length() <= 0)
+        {
+            user.Dump_User_Form("<html> <h1> <center> The following information pertains to the disable user request that you have submitted: </center> </h1> <br><br><br> <body> <strong> Employee name: </strong> " + name +
+                                        "<br> <strong> Username: </strong> " + username + " <br> <strong> Email address: </strong> " + email +
+                                        "<br> <strong> Groups: </strong> " + Groups_Clean.join(" , ") +
+                                        "</body> </html>", QUrl(""), name
+                                );
+        }
     }
 }

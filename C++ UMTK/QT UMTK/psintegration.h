@@ -23,17 +23,14 @@ public:
     PSIntegration();
 
 
-void set_db_lists();
-
-
+    void set_db_lists();
     void List_Password_Policy(QString name); // Detect the appropriate policy based on the template user. - done
     void Set_FGPP_active(QString MinLength, QString Complexity); // Configure the fine grain password policy as active for this specific user.
     void Set_DDPP_active(QString MinLength, QString Complexity); // Configure the default domain policy as active for this specific user.
     void Set_APP_active(QString MinLength, QString Complexity); // Configure an arbitrary password policy with min length = 10 and complexity = true
     void Move_ADUser_Orgranizational_Unit(QString User_CN, QString Template_OU_Distinguished); // Move the specified user to the specified OU.
     void Dump_User_Form(QString data, QUrl image_path, QString name); // Take the contents of the data and draw it on a pdf. If chosen you can supply an image to paint as well.
-    void Set_URL_Image_Path(QString url); // Set the path to the image
-
+    //void Set_URL_Image_Path(QString url); // Set the path to the image
     void Edit_Name(QString name, QString first_name, QString middle_name, QString last_name);
     void Edit_Password(QString name, QString password);
     void Edit_Display_Name(QString name, QString display_name);
@@ -95,6 +92,11 @@ void mapUserToOU(); // create a map for user to ou for multi company support
 void mapCompanyToSam(); // Create a map for company to sam for multi company support
 void reMapConnections();
 
+/*void setLogoPath(const QString &path);
+void setCustomCreationText(const QString &path);
+void setCustomDisableText(const QString &path);
+void setCustomLogoPosition(const QString &path);
+*/
 
 QStringList getAllADUsers(); // Return all_users StringList
 QStringList getAllADUPNs(); // Return all_upns StringList
@@ -130,8 +132,8 @@ public slots:
 
 private:
 
-    bool initalize_database(const QString &db_path);
-    QSqlDatabase get_database();
+    bool initalize_database(const QString &db_path); // Initialize the UMTK.db
+    QSqlDatabase get_database(); // Get the connection.
 
     QString DDPP_ComplexityEnabled; // Default Domain Password Policy ComplexityEnabled
     QString DDPP_MinPasswordLength; // Default Domain Password Policy MinPasswordLength
@@ -151,11 +153,11 @@ private:
     QString active_SP_Complexity; // This is the active policy always. It pulls from one of the above variables.
 
 
-    QMap<QString, QString> ou_to_company;
-    QMap<QString, QString> company_to_prefix;
-    QMap<QString, QString> user_to_company;
-    QMap<QString, QString> user_to_ou;
-    QMap<QString, int> company_to_sam;
+    QMap<QString, QString> ou_to_company; //QMap of OU to Company pairs
+    QMap<QString, QString> company_to_prefix; // QMap of Company to Prefix pairs.
+    QMap<QString, QString> user_to_company; // QMap of User to Company pairs.
+    QMap<QString, QString> user_to_ou; // QMap of User to OU pairs.
+    QMap<QString, int> company_to_sam; // QMap of Company to Sam pairs.
 
     QStringList ou_list;
     QStringList company_names_list;

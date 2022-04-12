@@ -2,7 +2,7 @@
 
 PSIntegration::PSIntegration()
 {
-    image = "";
+    //image = "";
 }
 
 QStringList PSIntegration::Execute_Command(QString param)
@@ -750,10 +750,18 @@ void PSIntegration::Dump_User_Form(QString data, QUrl image_path, QString name)
     }
 }
 
-void PSIntegration::Set_URL_Image_Path(QString path)
+/*void PSIntegration::Set_URL_Image_Path(QString path)
 {
     image = path;
 }
+void PSIntegration::setLogoPath(const QString &path)
+{
+    image = path;
+}*/
+
+
+
+
 
 void PSIntegration::Edit_Name(QString name, QString first_name, QString middle_name, QString last_name)
 {
