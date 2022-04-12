@@ -275,13 +275,6 @@ QWidget* ConfigurationWidget::get_generation_custimization_widget()
     ticketing_on_off_group->addButton(ticketing_button_on);
     ticketing_on_off_group->addButton(ticketing_button_off);
 
-    QCheckBox *ticketing_top = new QCheckBox();
-    QCheckBox *ticketing_bottom = new QCheckBox();
-    QButtonGroup *ticket_layout_group = new QButtonGroup();
-    ticketing_top->setText("Add ticket to top of page");
-    ticketing_bottom->setText("Add ticket to bottom of page");
-    ticket_layout_group->addButton(ticketing_top);
-    ticket_layout_group->addButton(ticketing_bottom);
 
     // SMTP settings
     QLabel *smtp_settings_label = new QLabel("SMTP settings");
@@ -328,22 +321,20 @@ QWidget* ConfigurationWidget::get_generation_custimization_widget()
     primary_layout->addWidget(ticketing_label, 4, 0);
     primary_layout->addWidget(ticketing_button_on, 5, 0);
     primary_layout->addWidget(ticketing_button_off, 5, 1);
-    primary_layout->addWidget(ticketing_top, 6, 0);
-    primary_layout->addWidget(ticketing_bottom, 6, 1);
-    primary_layout->addItem(spacer_two, 7, 0);
-    primary_layout->addWidget(smtp_settings_label, 8, 0);
-    primary_layout->addWidget(smtp_email_label, 9, 0);
-    primary_layout->addWidget(smtp_email_edit, 9, 1);
-    primary_layout->addWidget(smtp_credential_label, 10, 0);
-    primary_layout->addWidget(smtp_credential_edit, 10, 1);
-    primary_layout->addWidget(smtp_incport_label, 11, 0);
-    primary_layout->addWidget(smtp_incport_edit, 11, 1);
-    primary_layout->addWidget(smtp_outport_label, 12, 0);
-    primary_layout->addWidget(smtp_outport_edit, 12, 1);
-    primary_layout->addWidget(smtp_sub_label, 13, 0);
-    primary_layout->addWidget(smtp_sub_edit, 13, 1);
-    primary_layout->addWidget(smtp_protocol_combo, 14, 0);
-    primary_layout->addItem(spacer_three, 15, 0);
+    primary_layout->addItem(spacer_two, 6, 0);
+    primary_layout->addWidget(smtp_settings_label, 7, 0);
+    primary_layout->addWidget(smtp_email_label, 8, 0);
+    primary_layout->addWidget(smtp_email_edit, 8, 1);
+    primary_layout->addWidget(smtp_credential_label, 9, 0);
+    primary_layout->addWidget(smtp_credential_edit, 9, 1);
+    primary_layout->addWidget(smtp_incport_label, 10, 0);
+    primary_layout->addWidget(smtp_incport_edit, 10, 1);
+    primary_layout->addWidget(smtp_outport_label, 11, 0);
+    primary_layout->addWidget(smtp_outport_edit, 11, 1);
+    primary_layout->addWidget(smtp_sub_label, 12, 0);
+    primary_layout->addWidget(smtp_sub_edit, 12, 1);
+    primary_layout->addWidget(smtp_protocol_combo, 13, 0);
+    primary_layout->addItem(spacer_three, 14, 0);
 
 
     primary_display->setLayout(primary_layout);
