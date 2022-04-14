@@ -69,10 +69,9 @@ Section "UMTK Classic(Required)"
   WriteRegStr HKLM "Software\Elysian Productions\UMTK-Classic\Generation Settings\Ticket Settings" "Ticketing_off" ""
   WriteRegStr HKLM "Software\Elysian Productions\UMTK-Classic\Generation Settings\Ticket Settings" "Top_Position" ""
   WriteRegStr HKLM "Software\Elysian Productions\UMTK-Classic\Generation Settings\Ticket Settings" "Bottom_Position" ""
-  WriteRegStr HKLM "Software\Elysian Productions\UMTK-Classic\Disable Settings\" "Cleanup_on" ""
-  WriteRegStr HKLM "Software\Elysian Productions\UMTK-Classic\Disable Settings\" "Cleanup_off" ""
-  WriteRegStr HKLM "Software\Elysian Productions\UMTK-Classic\Disable Settings\" "Redirection_share" ""
-  WriteRegStr HKLM "Software\Elysian Productions\UMTK-Classic\Disable Settings\" "Storage_location" ""
+  WriteRegDWORD HKLM "Software\Elysian Productions\UMTK-Classic\Disable Settings\" "CleanupOn" ""
+  WriteRegStr HKLM "Software\Elysian Productions\UMTK-Classic\Disable Settings\" "RedirectionShare" ""
+  WriteRegStr HKLM "Software\Elysian Productions\UMTK-Classic\Disable Settings\" "Storagelocation" ""
   WriteRegDWORD HKLM "Software\Elysian Productions\UMTK-Classic\Company Settings\" "MultiCompanyEnabled" "0"
 
 	
