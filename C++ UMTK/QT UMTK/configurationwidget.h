@@ -57,6 +57,12 @@ public:
     QComboBox *company_logo_position;
     //
 
+
+    //Disable Settings widgets
+    QLineEdit *folder_redirection_edit;
+    QLineEdit *profile_storage_edit;
+
+    //
     void setCompanyName(const QString &company);
     void setOUCNName(const QString &cn);
     void setUserPrefix(const QString &prefix);
@@ -114,11 +120,14 @@ private:
      void setDisableUserText();
      void setImagePath();
      void setLogoPosition(const int &index);
+     void setProfileCleanupSettings(const bool &state);
+     void setProfileRedirectionPath();
+     void setProfileStoragePath();
 
      QSettings *MultiCompanySettings;
      QSettings *SamGenerationSettings;
      QSettings *PDFSettings;
-
+     QSettings *DisableSettings;
 
 };
 

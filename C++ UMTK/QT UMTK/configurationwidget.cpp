@@ -12,6 +12,9 @@ ConfigurationWidget::ConfigurationWidget()
     c_sam_combo = new QComboBox();
     c_enable_button = new QCheckBox();
 
+    folder_redirection_edit = new QLineEdit();
+    profile_storage_edit = new QLineEdit();
+
     user_creation_text_edit = new QLineEdit();
     user_disable_text_edit = new QLineEdit();
     image_path_edit = new QLineEdit();
@@ -20,6 +23,7 @@ ConfigurationWidget::ConfigurationWidget()
     MultiCompanySettings = new QSettings("HKEY_LOCAL_MACHINE\\SOFTWARE\\WOW6432Node\\Elysian Productions\\UMTK-Classic\\Company Settings\\", QSettings::Registry64Format);
     SamGenerationSettings = new QSettings("HKEY_LOCAL_MACHINE\\SOFTWARE\\WOW6432Node\\Elysian Productions\\UMTK-Classic\\Generation Settings\\SamAccount Settings\\", QSettings::Registry64Format);
     PDFSettings = new QSettings("HKEY_LOCAL_MACHINE\\SOFTWARE\\WOW6432Node\\Elysian Productions\\UMTK-Classic\\PDF Settings\\", QSettings::Registry64Format);
+    DisableSettings = new QSettings("HKEY_LOCAL_MACHINE\\SOFTWARE\\WOW6432Node\\Elysian Productions\\UMTK-Classic\\Disable Settings\\", QSettings::Registry64Format);
     if(initalize_database("C:\\Program Files (x86)\\UMTK-Classic\\Database\\UMTK.db"))
     {
         model = new QSqlQueryModel(this);
@@ -35,7 +39,8 @@ ConfigurationWidget::ConfigurationWidget()
 ConfigurationWidget::~ConfigurationWidget()
 {
     delete model;
-    delete MultiCompanySettings;
+    //delete MultiCompanySettings;
+
 }
 
 bool ConfigurationWidget::initalize_database(const QString &db_path)
@@ -346,21 +351,15 @@ QWidget* ConfigurationWidget::get_disable_custimation_widget()
 {
     QWidget *primary_display = new QWidget();
     QGridLayout *primary_layout = new QGridLayout();
-    QButtonGroup *cleanup_group = new QButtonGroup();
     QCheckBox *turn_on_cleanup = new QCheckBox();
-    QCheckBox *turn_off_cleanup = new QCheckBox();
     QSpacerItem *spacer_one = new QSpacerItem(40, 20, QSizePolicy::Minimum, QSizePolicy::Expanding);
     QLabel *cleanup_label = new QLabel("Disable User settings");
-    QLineEdit *folder_redirection_edit = new QLineEdit();
-    QLineEdit *profile_storage_edit = new QLineEdit();
     QLabel *folder_redirection_label = new QLabel("Folder redirection share");
     QLabel *profile_storage_label = new QLabel("Storage location for profiles");
     QLabel *profile_cleanup_label = new QLabel("Profile settings");
 
     turn_on_cleanup->setText("Turn on profile cleanup");
-    turn_off_cleanup->setText("Turn off profile cleanup");
-    cleanup_group->addButton(turn_on_cleanup);
-    cleanup_group->addButton(turn_off_cleanup);
+
 
     cleanup_label->setFrameShape(QFrame::Panel);
     cleanup_label->setFrameShadow(QFrame::Sunken);
@@ -372,24 +371,54 @@ QWidget* ConfigurationWidget::get_disable_custimation_widget()
     profile_cleanup_label->setStyleSheet("background-color:white");
     profile_cleanup_label->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Maximum);
 
-    folder_redirection_edit->setPlaceholderText("Enter folder redirection share");
-    folder_redirection_edit->setToolTip("Input the current path to your folder redirection share.");
 
-    profile_storage_edit->setPlaceholderText("Enter the path to the share where you store profiles.");
-    profile_storage_edit->setToolTip("Input the path to the share where you store old profiles of former employees.");
+
+    if(DisableSettings->value("CleanupOn").toInt() == 1)
+    {
+        turn_on_cleanup->setChecked(true);
+        if(DisableSettings->value("RedirectionShare").toString().length() > 0 && DisableSettings->value("StorageLocation").toString().length() > 0)
+        {
+            folder_redirection_edit->setPlaceholderText(DisableSettings->value("RedirectionShare").toString());
+            folder_redirection_edit->setToolTip("Input the current path to your folder redirection share.\nOnce done, just hit enter on your keyboard.");
+
+            profile_storage_edit->setPlaceholderText(DisableSettings->value("StorageLocation").toString());
+            profile_storage_edit->setToolTip("Input the path to the share where you store old profiles of former employees.\nOnce done, just hit enter on your keyboard.");
+        }
+        else if(DisableSettings->value("RedirectionShare").toString().length() <= 0 || DisableSettings->value("StorageLocation").toString().length() <= 0)
+        {
+            folder_redirection_edit->setPlaceholderText("Enter folder redirection share");
+            folder_redirection_edit->setToolTip("Input the current path to your folder redirection share.\nOnce done, just hit enter on your keyboard.");
+
+            profile_storage_edit->setPlaceholderText("Enter the path to the share where you store profiles.");
+            profile_storage_edit->setToolTip("Input the path to the share where you store old profiles of former employees.\nOnce done, just hit enter on your keyboard.");
+        }
+    }
+    else if(DisableSettings->value("CleanupOn").toInt() == 0)
+    {
+        folder_redirection_edit->setPlaceholderText("Enter folder redirection share");
+        folder_redirection_edit->setToolTip("Input the current path to your folder redirection share.\nOnce done, just hit enter on your keyboard.");
+
+        profile_storage_edit->setPlaceholderText("Enter the path to the share where you store profiles.");
+        profile_storage_edit->setToolTip("Input the path to the share where you store old profiles of former employees.\nOnce done, just hit enter on your keyboard.");
+    }
+
+
 
     primary_layout->setSpacing(1);
     primary_layout->setHorizontalSpacing(0);
     primary_layout->setVerticalSpacing(1);
     primary_layout->addWidget(cleanup_label, 0, 0);
     primary_layout->addWidget(turn_on_cleanup, 1, 0);
-    primary_layout->addWidget(turn_off_cleanup, 2, 0);
     primary_layout->addWidget(profile_cleanup_label, 3, 0);
     primary_layout->addWidget(folder_redirection_label, 4, 0);
     primary_layout->addWidget(folder_redirection_edit, 4, 1);
     primary_layout->addWidget(profile_storage_label, 5, 0);
     primary_layout->addWidget(profile_storage_edit, 5, 1);
     primary_layout->addItem(spacer_one, 6, 0);
+
+    connect(turn_on_cleanup, &QCheckBox::toggled, [=] (bool isChecked) { Q_EMIT(setProfileCleanupSettings(isChecked)); });
+    connect(folder_redirection_edit, &QLineEdit::returnPressed, this, &ConfigurationWidget::setProfileRedirectionPath);
+    connect(profile_storage_edit, &QLineEdit::returnPressed, this, &ConfigurationWidget::setProfileStoragePath);
 
 
     primary_display->setLayout(primary_layout);
@@ -674,6 +703,44 @@ void ConfigurationWidget::setLogoPosition(const int &index)
     else if(index == 2)
     {
         PDFSettings->setValue("LogoPosition", "Bottom");
+    }
+}
+
+void ConfigurationWidget::setProfileCleanupSettings(const bool &state)
+{
+    if(state)
+    {
+        DisableSettings->setValue("CleanupOn", 1);
+        qDebug() << state;
+    }
+    else if(!state)
+    {
+        DisableSettings->setValue("CleanupOn", 0);
+        qDebug() << state;
+    }
+}
+
+void ConfigurationWidget::setProfileRedirectionPath()
+{
+    if(folder_redirection_edit->text().length() > 8 && folder_redirection_edit->text() != "")
+    {
+        DisableSettings->setValue("RedirectionShare", folder_redirection_edit->text());
+    }
+    else if(folder_redirection_edit->text().length() < 8 || folder_redirection_edit->text() == "")
+    {
+        folder_redirection_edit->setText("Either the length of the path is to short or you hit enter while the box was blank. Try again.");
+    }
+}
+
+void ConfigurationWidget::setProfileStoragePath()
+{
+    if(profile_storage_edit->text().length() > 8 && profile_storage_edit->text() != "")
+    {
+        DisableSettings->setValue("StorageLocation", profile_storage_edit->text());
+    }
+    else if(profile_storage_edit->text().length() < 8 || profile_storage_edit->text() == "")
+    {
+        profile_storage_edit->setText("Either the length of the path is to short or you hit enter while the box was blank. Try again.");
     }
 }
 
