@@ -1043,6 +1043,24 @@ void PSIntegration::reMapConnections()
     mapUserToCompany();
 }
 
+void PSIntegration::roboCopyProfile(const QString redirection_path, const QString &storage_path, const QString &username)
+{
+    if(redirection_path.length() > 0 && storage_path.length() > 0)
+    {
+        QDir dir(redirection_path + "\\" + username);
+        if(dir.exists())
+        {
+            QProcess *process = new QProcess();
+            QByteArray success;
+            QByteArray errors;
+            QStringList params;
+            QString param = "Move-Item -Source " + redirection_path + username + " -Destination " + storage_path + username;
+            qDebug() << param;
+            params = QStringList({"-Command", param});
+            process->startDetached("powershell", params);
+        }
+    }
+}
 
 
 //

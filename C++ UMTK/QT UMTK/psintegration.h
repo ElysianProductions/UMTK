@@ -15,6 +15,8 @@
 #include <QSqlQuery>
 #include <QSqlQueryModel>
 #include <QSettings>
+#include <QFile>
+#include <QDir>
 
 class PSIntegration : public QObject
 {
@@ -91,6 +93,7 @@ void mapUserToCompany(); // create a map for user to company for multi company s
 void mapUserToOU(); // create a map for user to ou for multi company support
 void mapCompanyToSam(); // Create a map for company to sam for multi company support
 void reMapConnections();
+void roboCopyProfile(const QString redirection_path, const QString &storage_path, const QString &username);
 
 /*void setLogoPath(const QString &path);
 void setCustomCreationText(const QString &path);

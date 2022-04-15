@@ -124,6 +124,7 @@ private:
      void setProfileRedirectionPath();
      void setProfileStoragePath();
 
+
      QSettings *MultiCompanySettings;
      QSettings *SamGenerationSettings;
      QSettings *PDFSettings;

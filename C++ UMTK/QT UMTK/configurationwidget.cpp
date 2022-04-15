@@ -20,7 +20,7 @@ ConfigurationWidget::ConfigurationWidget()
     image_path_edit = new QLineEdit();
     company_logo_position = new QComboBox();
 
-    MultiCompanySettings = new QSettings("HKEY_LOCAL_MACHINE\\SOFTWARE\\WOW6432Node\\Elysian Productions\\UMTK-Classic\\Company Settings\\", QSettings::Registry64Format);
+    MultiCompanySettings = new QSettings("HKEY_LOCAL_MACHINE\\SOFTWARE\\Wow6432Node\\Elysian Productions\\UMTK-Classic\\Company Settings\\", QSettings::Registry64Format);
     SamGenerationSettings = new QSettings("HKEY_LOCAL_MACHINE\\SOFTWARE\\WOW6432Node\\Elysian Productions\\UMTK-Classic\\Generation Settings\\SamAccount Settings\\", QSettings::Registry64Format);
     PDFSettings = new QSettings("HKEY_LOCAL_MACHINE\\SOFTWARE\\WOW6432Node\\Elysian Productions\\UMTK-Classic\\PDF Settings\\", QSettings::Registry64Format);
     DisableSettings = new QSettings("HKEY_LOCAL_MACHINE\\SOFTWARE\\WOW6432Node\\Elysian Productions\\UMTK-Classic\\Disable Settings\\", QSettings::Registry64Format);
@@ -160,14 +160,7 @@ QWidget* ConfigurationWidget::get_company_custimization_widget(QPushButton *c_in
     c_sam_combo->addItems(sam_options);
     c_enable_button->setText("Enable Multi-Company mode");
     c_enable_button->setToolTip("Enabling multiple companies will result in the domain dropdown being empty\nuntill you fill in the database.");
-
-
     QSpacerItem *spacer_one = new QSpacerItem(40, 20, QSizePolicy::Minimum, QSizePolicy::Expanding);
-
-    connect(c_sam_combo, qOverload<int>(&QComboBox::currentIndexChanged), [=] (int var) { Q_EMIT(setSamSetting(var));});
-    connect(c_insert_button, &QPushButton::clicked, this, &ConfigurationWidget::setupQuery);
-    connect(c_enable_button, &QCheckBox::toggled, this, &ConfigurationWidget::setMultiCompanyStatus);
-    connect(c_enable_button, &QCheckBox::toggled, [=] (bool var) {Q_EMIT(setMultiCompanyStatus(var));});
 
     primary_layout->setSpacing(1);
     primary_layout->setHorizontalSpacing(0);
@@ -182,19 +175,22 @@ QWidget* ConfigurationWidget::get_company_custimization_widget(QPushButton *c_in
     primary_layout->addWidget(c_enable_button, 8, 0);
     primary_layout->addItem(spacer_one , 9, 0);
     primary_layout->addWidget(info_label, 10, 0);
-
     primary_display->setLayout(primary_layout);
 
-    if(MultiCompanySettings->value("MultiCompanyEnabled").toBool())
+    if(MultiCompanySettings->value("MultiCompanyEnabled").toInt() == 1)
     {
         c_enable_button->setChecked(true);
         c_insert_button->setVisible(true);
     }
-    else if(!MultiCompanySettings->value("MultiCompanyEnabled").toBool())
+    else if(MultiCompanySettings->value("MultiCompanyEnabled").toInt() == 0)
     {
         c_enable_button->setChecked(false);
         c_insert_button->setVisible(false);
     }
+
+    connect(c_sam_combo, qOverload<int>(&QComboBox::currentIndexChanged), [=] (int var) { Q_EMIT(setSamSetting(var));});
+    connect(c_insert_button, &QPushButton::clicked, this, &ConfigurationWidget::setupQuery);
+    connect(c_enable_button, &QCheckBox::toggled, [=] (bool var) {Q_EMIT(setMultiCompanyStatus(var));});
 
     return primary_display;
 }
@@ -228,11 +224,6 @@ QWidget* ConfigurationWidget::get_pdf_custimization_widget(QLineEdit *user_creat
     company_logo_position->addItems(logo_positions);
     company_logo_position->setToolTip("If you add a logo you can choose to add it to either the bottom or top of the page.");
 
-    connect(user_creation_text_edit, &QLineEdit::returnPressed, this, &ConfigurationWidget::setNewUserText);
-    connect(user_disable_text_edit, &QLineEdit::returnPressed, this, &ConfigurationWidget::setDisableUserText);
-    connect(image_path_edit, &QLineEdit::returnPressed, this, &ConfigurationWidget::setImagePath);
-    connect(company_logo_position, qOverload<int>(&QComboBox::currentIndexChanged), [=] (int var) {Q_EMIT(setLogoPosition(var));});
-
     primary_layout->addWidget(pdf_settings_label, 0, 0);
     primary_layout->addWidget(new_user_label, 1, 0);
     primary_layout->addWidget(user_creation_text_edit, 1, 1);
@@ -242,8 +233,35 @@ QWidget* ConfigurationWidget::get_pdf_custimization_widget(QLineEdit *user_creat
     primary_layout->addWidget(image_path_edit, 3, 1);
     primary_layout->addWidget(company_logo_position, 4, 0);
     primary_layout->addItem(spacer_one, 5, 0);
-
     primary_display->setLayout(primary_layout);
+
+
+    if(PDFSettings->value("UserCreationText").toString().length() > 0)
+    {
+        user_creation_text_edit->setPlaceholderText(PDFSettings->value("UserCreationText").toString());
+    }
+    if(PDFSettings->value("UserDisableText").toString().length() > 0)
+    {
+        user_disable_text_edit->setPlaceholderText(PDFSettings->value("UserDisableText").toString());
+    }
+    if(PDFSettings->value("CompanyLogoPath").toString().length() > 0 && PDFSettings->value("CompanyLogoPath").toString() == "Top" || PDFSettings->value("CompanyLogoPath").toString() == "Bottom")
+    {
+        image_path_edit->setPlaceholderText(PDFSettings->value("CompanyLogoPath").toString());
+        if(PDFSettings->value("LogoPosition").toString() == "Top")
+        {
+            company_logo_position->setCurrentIndex(1);
+        }
+        else if(PDFSettings->value("LogoPosition").toString() == "Bottom")
+        {
+            company_logo_position->setCurrentIndex(2);
+        }
+    }
+
+    connect(user_creation_text_edit, &QLineEdit::returnPressed, this, &ConfigurationWidget::setNewUserText);
+    connect(user_disable_text_edit, &QLineEdit::returnPressed, this, &ConfigurationWidget::setDisableUserText);
+    connect(image_path_edit, &QLineEdit::returnPressed, this, &ConfigurationWidget::setImagePath);
+    connect(company_logo_position, qOverload<int>(&QComboBox::currentIndexChanged), [=] (int var) {Q_EMIT(setLogoPosition(var));});
+
     return primary_display;
 }
 
@@ -340,9 +358,11 @@ QWidget* ConfigurationWidget::get_generation_custimization_widget()
     primary_layout->addWidget(smtp_sub_edit, 12, 1);
     primary_layout->addWidget(smtp_protocol_combo, 13, 0);
     primary_layout->addItem(spacer_three, 14, 0);
-
-
     primary_display->setLayout(primary_layout);
+
+
+
+
     connect(sam_styles, qOverload<int>(&QComboBox::currentIndexChanged), [=] (int var) {Q_EMIT(setSingleEnvSamStyle(var));});
     return primary_display;
 }
@@ -656,12 +676,12 @@ void ConfigurationWidget::setSingleEnvSamStyle(const int &option)
 
 void ConfigurationWidget::setMultiCompanyStatus(const bool &status)
 {
-    // By default the MultiCompanyEnabled DWORD is disabled (0)
     if(status)
     {
         // Enable multi company support
         MultiCompanySettings->setValue("MultiCompanyEnabled", 1);
         // Write to RegKey HKLM "Software\Elysian Productions\UMTK-Classic\Company Settings\" "MultiCompanyEnabled" "0" (DWORD) -> 1
+        c_enable_button->setChecked(true);
         c_insert_button->setVisible(true);
     }
     else if(!status)
@@ -669,6 +689,7 @@ void ConfigurationWidget::setMultiCompanyStatus(const bool &status)
         // Disable multi company support
         MultiCompanySettings->setValue("MultiCompanyEnabled", 0);
         // Write to RegKey HKLM "Software\Elysian Productions\UMTK-Classic\Company Settings\" "MultiCompanyEnabled" "0" (DWORD) -> 0
+        c_enable_button->setChecked(false);
         c_insert_button->setVisible(false);
     }
 }
@@ -711,12 +732,10 @@ void ConfigurationWidget::setProfileCleanupSettings(const bool &state)
     if(state)
     {
         DisableSettings->setValue("CleanupOn", 1);
-        qDebug() << state;
     }
     else if(!state)
     {
         DisableSettings->setValue("CleanupOn", 0);
-        qDebug() << state;
     }
 }
 
