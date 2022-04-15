@@ -7,6 +7,7 @@
 ;--------------------------------
 !include "x64.nsh"
 
+
  
 ; The name of the installer
 Name "UMTK Classic"
@@ -50,7 +51,7 @@ Section "UMTK Classic(Required)"
   ; Set output path to the installation directory.
   File /r "C:\BuildDir\UMTK-Classic\umtkclassic\*"
   ; Put file there
-  ;make menu entrys for main program else workpath is wrong?
+  ;make menu entrys for main program 
   CreateDirectory "$SMPROGRAMS\UMTK-Classic"
   CreateShortCut "$SMPROGRAMS\UMTK-Classic\UMTK-Classic.lnk" "$INSTDIR\UMTK-Classic.exe" "" "$INSTDIR\Icons\A.ico" 0
   CreateShortcut "$DESKTOP\UMTK-Classic.lnk" "$INSTDIR\UMTK-Classic.exe" "" "$INSTDIR\Icons\A.ico" 0
@@ -89,7 +90,6 @@ Section "UMTK Classic(Required)"
   ;make menu entrys
  
 SectionEnd
-
 ;--------------------------------
 
 ; Uninstaller
