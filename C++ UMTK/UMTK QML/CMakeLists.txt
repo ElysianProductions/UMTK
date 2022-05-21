@@ -1,27 +1,53 @@
-cmake_minimum_required(VERSION 3.21)
+cmake_minimum_required(VERSION 3.21.1)
 
-project(UMTKQML VERSION 0.1 LANGUAGES CXX)
+project(UMTK-Classic LANGUAGES CXX)
 
+set(CMAKE_AUTOUIC ON)
 set(CMAKE_AUTOMOC ON)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_AUTORCC ON)
-#set(APP_ICON_RESOURCE_WINDOWS "${CMAKE_CURRENT_SOURCE_DIR}/Icon.qrc")
+set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+#set(Qt6_USE_STATIC_LIBS ON) # Uncomment for static, comment out for dynamic
+#set(Qt6_USE_STATIC_RUNTIME ON) #Uncomment for static, comment out for dynamic
 
-find_package(Qt6 6.2 COMPONENTS Quick Core PrintSupport REQUIRED)
+find_package(Qt6 COMPONENTS Gui Core Widgets PrintSupport Sql REQUIRED)
 
-qt_add_executable(UMTK-QML WIN32
-    main.cpp
-    ${APP_ICON_RESOURCE_WINDOWS}
+# set(INSTALL_DIRECTORY "C:\\BuildDir\\UMTK") # uncomment for static with build directory, comment out for dynamic
+set(PROJECT_SOURCES
+        main.cpp
+        mainwindow.cpp
+        mainwindow.h
+        mainwindow.ui
+        mainwidget.cpp
+        mainwidget.h
+        domainwidget.cpp
+        domainwidget.h
+        localwidget.cpp
+        localwidget.h
+        editwidget.cpp
+        editwidget.h
+        newuser.cpp
+        newuser.h
+        psintegration.cpp
+        psintegration.h
+        disablewidget.cpp
+        disablewidget.h
+        configurationwidget.cpp
+        configurationwidget.h
+        Images.qrc
+
 )
 
-qt_add_qml_module(UMTK-QML
-    URI UMTKQML
-    VERSION 1.0
-    QML_FILES main.qml LocalAccountWidget.qml DomainAccountWidget.qml DisableAccountWidget.qml AdvancedSettingsWidget.qml
-    SOURCES psintegration.cpp psintegration.h domainintegration.cpp domainintegration.h advancedsettings.cpp advancedsettings.h Icon.qrc
-)
+if(Qt6_FOUND)
+    qt_add_executable(UMTK-Classic
+        ${PROJECT_SOURCES}
+    )
+elseif(NOT Qt6_FOUND)
+    add_executable(UMTK-Classic
+        ${PROJECT_SOURCES}
+    )
+endif()
 
-target_compile_definitions(UMTK-QML
-    PRIVATE $<$<OR:$<CONFIG:Debug>,$<CONFIG:RelWithDebInfo>>:QT_QML_DEBUG>)
-target_link_libraries(UMTK-QML
-    PRIVATE Qt6::Quick Qt6::PrintSupport Qt6::Qml Qt6::Gui Qt6::Core ${ADDITIONAL_LIBRARIES})
+
+target_link_libraries(UMTK-Classic PRIVATE Qt::Gui Qt6::Core Qt6::Widgets Qt6::PrintSupport Qt6::Sql ${ADDITIONAL_LIBRARIES}) # Comment out for static, or uncomment for dynamic
+#target_link_libraries(UMTK PRIVATE Qt::Gui Qt6::Core Qt6::Widgets Qt6::PrintSupport ${ADDITIONAL_LIBRARIES} -static) # Uncomment for static, comment out for dynamic
