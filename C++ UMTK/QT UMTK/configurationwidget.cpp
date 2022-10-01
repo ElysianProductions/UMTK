@@ -20,10 +20,14 @@ ConfigurationWidget::ConfigurationWidget()
     image_path_edit = new QLineEdit();
     company_logo_position = new QComboBox();
 
+    display_ou_prefix = new QCheckBox();
+    display_employee_acl = new QCheckBox();
+
     MultiCompanySettings = new QSettings("HKEY_LOCAL_MACHINE\\SOFTWARE\\Wow6432Node\\Elysian Productions\\UMTK-Classic\\Company Settings\\", QSettings::Registry64Format);
     SamGenerationSettings = new QSettings("HKEY_LOCAL_MACHINE\\SOFTWARE\\WOW6432Node\\Elysian Productions\\UMTK-Classic\\Generation Settings\\SamAccount Settings\\", QSettings::Registry64Format);
     PDFSettings = new QSettings("HKEY_LOCAL_MACHINE\\SOFTWARE\\WOW6432Node\\Elysian Productions\\UMTK-Classic\\PDF Settings\\", QSettings::Registry64Format);
     DisableSettings = new QSettings("HKEY_LOCAL_MACHINE\\SOFTWARE\\WOW6432Node\\Elysian Productions\\UMTK-Classic\\Disable Settings\\", QSettings::Registry64Format);
+    AdvancedSortDisplaySettings = new QSettings("HKEY_LOCAL_MACHINE\\SOFTWARE\\WOW6432Node\\Elysian Productions\\UMTK-Classic\\Advanced Sort and Display\\", QSettings::Registry64Format);
     if(initalize_database("C:\\Program Files (x86)\\UMTK-Classic\\Database\\UMTK.db"))
     {
         model = new QSqlQueryModel(this);
@@ -93,10 +97,16 @@ QWidget* ConfigurationWidget::get_menu_widget(QPushButton *close_button)
     generation_item->setTextAlignment(Qt::AlignHCenter);
     generation_item->setFlags(Qt::ItemIsSelectable | Qt::ItemIsEnabled);
 
-    QListWidgetItem *disable_item = new QListWidgetItem(menu_options_widget);
+
+    QListWidgetItem *sortdisplay_item = new QListWidgetItem(menu_options_widget);
+    sortdisplay_item->setText("Sort & Display");
+    sortdisplay_item->setTextAlignment(Qt::AlignHCenter);
+    sortdisplay_item->setFlags(Qt::ItemIsSelectable | Qt::ItemIsEnabled);
+
+    /*QListWidgetItem *disable_item = new QListWidgetItem(menu_options_widget);
     disable_item->setText("Disable settings");
     disable_item->setTextAlignment(Qt::AlignHCenter);
-    disable_item->setFlags(Qt::ItemIsSelectable | Qt::ItemIsEnabled);
+    disable_item->setFlags(Qt::ItemIsSelectable | Qt::ItemIsEnabled);*/
 
     QListWidgetItem *help_item = new QListWidgetItem(menu_options_widget);
     help_item->setText("Help");
@@ -107,7 +117,8 @@ QWidget* ConfigurationWidget::get_menu_widget(QPushButton *close_button)
     menus_widget->insertWidget(0, get_company_custimization_widget(c_insert_button, c_ou_edit, c_company_edit, c_prefix_edit, c_sam_combo));
     menus_widget->insertWidget(1, get_pdf_custimization_widget(user_creation_text_edit, user_disable_text_edit, image_path_edit));
     menus_widget->insertWidget(2, get_generation_custimization_widget());
-    menus_widget->insertWidget(3, get_disable_custimation_widget());
+    menus_widget->insertWidget(3, get_advanced_sortdisplay_widget(display_ou_prefix, display_employee_acl));
+    //menus_widget->insertWidget(3, get_disable_custimation_widget());
     menus_widget->insertWidget(4, getHelpWidget());
 
 
@@ -361,7 +372,10 @@ QWidget* ConfigurationWidget::get_generation_custimization_widget()
     primary_display->setLayout(primary_layout);
 
 
-
+  if(SamGenerationSettings->value("SamStyle").toInt() > 0)
+  {
+      sam_styles->setCurrentIndex(SamGenerationSettings->value("SamStyle").toInt());
+  }
 
     connect(sam_styles, qOverload<int>(&QComboBox::currentIndexChanged), [=] (int var) {Q_EMIT(setSingleEnvSamStyle(var));});
     return primary_display;
@@ -512,6 +526,61 @@ QWidget* ConfigurationWidget::getHelpWidget()
     primary_display->setLayout(primary_layout);
     return primary_display;
     //QTreeView
+}
+
+QWidget* ConfigurationWidget::get_advanced_sortdisplay_widget(QCheckBox *display_ou_prefix, QCheckBox *display_employee_acl)
+{
+    QWidget *primary_display = new QWidget();
+    QGridLayout *primary_layout = new QGridLayout();
+
+    QSpacerItem *spacer_one = new QSpacerItem(40, 20, QSizePolicy::Minimum, QSizePolicy::Expanding);
+    QLabel *ou_label = new QLabel("Organizational Employee name prefix");
+    ou_label->setFrameShape(QFrame::Panel);
+    ou_label->setFrameShadow(QFrame::Sunken);
+    ou_label->setStyleSheet("background-color:white");
+    ou_label->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Maximum);
+    display_ou_prefix->setToolTip("Checking this box will display 'OU - Employee name'.");
+
+
+    QSpacerItem *spacer_two = new QSpacerItem(40, 20, QSizePolicy::Minimum, QSizePolicy::Expanding);
+    QLabel *acl_label = new QLabel("Display Employee ACLs");
+    acl_label->setFrameShape(QFrame::Panel);
+    acl_label->setFrameShadow(QFrame::Sunken);
+    acl_label->setStyleSheet("background-color:white");
+    acl_label->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Maximum);
+    display_employee_acl->setToolTip("Checking this box will pull all ACLs for a user and display them in a widget.");
+
+
+    if(AdvancedSortDisplaySettings->value("OU Prefix").toInt() > 0)
+    {
+        display_ou_prefix->setChecked(true);
+    }
+
+    if(AdvancedSortDisplaySettings->value("Display ACL").toInt() > 0)
+    {
+        display_employee_acl->setChecked(true);
+    }
+
+
+    connect(display_ou_prefix, &QCheckBox::toggled, [=] (bool var) {Q_EMIT(setDisplayOUPrefixSetting(var));});
+    connect(display_employee_acl, &QCheckBox::toggled, [=] (bool var) {Q_EMIT(setDisplayEmployeeACLSetting(var));});
+
+
+
+    primary_layout->setSpacing(1);
+    primary_layout->setHorizontalSpacing(0);
+    primary_layout->setVerticalSpacing(1);
+    primary_layout->addWidget(ou_label, 0, 0);
+    primary_layout->addWidget(display_ou_prefix, 1, 0);
+    primary_layout->addItem(spacer_one, 2, 0);
+    primary_layout->addWidget(acl_label, 3, 0);
+    primary_layout->addWidget(display_employee_acl, 4, 0);
+    primary_layout->addItem(spacer_two, 5, 0);
+
+
+    primary_display->setLayout(primary_layout);
+    return primary_display;
+
 }
 
 void ConfigurationWidget::setupQuery()
@@ -691,6 +760,40 @@ void ConfigurationWidget::setMultiCompanyStatus(const bool &status)
         // Write to RegKey HKLM "Software\Elysian Productions\UMTK-Classic\Company Settings\" "MultiCompanyEnabled" "0" (DWORD) -> 0
         c_enable_button->setChecked(false);
         c_insert_button->setVisible(false);
+    }
+}
+
+void ConfigurationWidget::setDisplayOUPrefixSetting(const bool &var)
+{
+    if(var == true)
+    {
+        AdvancedSortDisplaySettings->setValue("OU Prefix", 1);
+        display_ou_prefix->setChecked(true);
+        // WriteRegDWORD HKLM "Software\Elysian Productions\UMTK-Classic\Advanced Sort and Display\" "OU Prefix" "1"
+
+    }
+    else if(var == false)
+    {
+        AdvancedSortDisplaySettings->setValue("OU Prefix", 0);
+        display_ou_prefix->setChecked(false);
+        // WriteRegDWORD HKLM "Software\Elysian Productions\UMTK-Classic\Advanced Sort and Display\" "OU Prefix" "0"
+        //qDebug() << var;
+    }
+}
+
+void ConfigurationWidget::setDisplayEmployeeACLSetting(const bool &var)
+{
+    if(var == true)
+    {
+        AdvancedSortDisplaySettings->setValue("Display ACL", 1);
+        display_employee_acl->setChecked(true);
+        // WriteRegDWORD HKLM "Software\Elysian Productions\UMTK-Classic\Advanced Sort and Display\" "Display ACL" "1"
+    }
+    else if(var == false)
+    {
+        AdvancedSortDisplaySettings->setValue("Display ACL", 0);
+        display_employee_acl->setChecked(false);
+        // WriteRegDWORD HKLM "Software\Elysian Productions\UMTK-Classic\Advanced Sort and Display\" "Display ACL" "0"
     }
 }
 

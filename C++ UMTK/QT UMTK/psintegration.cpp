@@ -224,9 +224,9 @@ QString PSIntegration::Clean_String(QString str)
 
 QString PSIntegration::Execute(QString param)
 {
-    /* Implement QProcess with Lambda and forgoe usage of waitForFinished(-1) to prevent GUI hard locks and improve general performance.
+    /* Implement QProcess correctly and forgoe usage of waitForFinished(-1) to prevent GUI hard locks and improve general performance.
      * Also need to implement a process bar to give some indication on time duration to not frighten people.
-     * Could even use https://www.qt.io/blog/2017/08/25/a-new-qprocessstartdetached which is great but since I went from 5.2.x to 6.2.x I never knew this was implemented.
+     * Could even use https://www.qt.io/blog/2017/08/25/a-new-qprocessstartdetached.
      * Running detached and using the same session would also work.
      */
 
@@ -241,9 +241,12 @@ QString PSIntegration::Execute(QString param)
     errors.append(process->readAllStandardError());
     //qDebug() << errors;
     process->terminate();
+
+
     QString data = QString(success);
     return data;
 }
+
 
 QString PSIntegration::User_Exists(QString SamName)
 {
@@ -750,19 +753,6 @@ void PSIntegration::Dump_User_Form(QString data, QUrl image_path, QString name)
     }
 }
 
-/*void PSIntegration::Set_URL_Image_Path(QString path)
-{
-    image = path;
-}
-void PSIntegration::setLogoPath(const QString &path)
-{
-    image = path;
-}*/
-
-
-
-
-
 void PSIntegration::Edit_Name(QString name, QString first_name, QString middle_name, QString last_name)
 {
     if(first_name.length() > 0 || last_name.length() > 0 || middle_name.length() > 0)
@@ -1045,19 +1035,16 @@ void PSIntegration::reMapConnections()
 
 void PSIntegration::roboCopyProfile(const QString redirection_path, const QString &storage_path, const QString &username)
 {
+
+    //qDebug() << "Move-Item -Path " + QString("\"") + redirection_path + "\\" + username + QString("\"") + " -Destination " + QString("\"") + storage_path + QString("\\") + username + QString("\"");
+    qDebug() << "ROBOCOPY " + QString("'") + redirection_path + QString("\\") + username + QString("' '") + storage_path + QString("\\") + username + "' /MOVE /E";
     if(redirection_path.length() > 0 && storage_path.length() > 0)
     {
         QDir dir(redirection_path + "\\" + username);
         if(dir.exists())
         {
-            QProcess *process = new QProcess();
-            QByteArray success;
-            QByteArray errors;
-            QStringList params;
-            QString param = "Move-Item -Source " + redirection_path + username + " -Destination " + storage_path + username;
-            qDebug() << param;
-            params = QStringList({"-Command", param});
-            process->startDetached("powershell", params);
+            //Execute("Move-Item -Path " + QString("\"") + redirection_path + "\\" + username + QString("\"") + " -Destination " + QString("\"") + storage_path + QString("\\") + username + QString("\""));
+            Execute("ROBOCOPY " + QString("'") + redirection_path + QString("\\") + username + QString("' '") + storage_path + QString("\\") + username + "' /MOVE /E");
         }
     }
 }
