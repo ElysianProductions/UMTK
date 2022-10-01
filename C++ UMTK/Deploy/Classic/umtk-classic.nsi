@@ -49,7 +49,7 @@ Section "UMTK Classic(Required)"
   SectionIn RO
   SetOutPath $INSTDIR
   ; Set output path to the installation directory.
-  File /r "C:\BuildDir\UMTK-Classic\umtkclassic\*"
+  File /r "C:\BuildDir\UMTK-Classic\UMTK-Classic-V2.0\*"
   ; Put file there
   ;make menu entrys for main program 
   CreateDirectory "$SMPROGRAMS\UMTK-Classic"
@@ -74,6 +74,8 @@ Section "UMTK Classic(Required)"
   WriteRegStr HKLM "Software\Elysian Productions\UMTK-Classic\Disable Settings\" "RedirectionShare" ""
   WriteRegStr HKLM "Software\Elysian Productions\UMTK-Classic\Disable Settings\" "Storagelocation" ""
   WriteRegDWORD HKLM "Software\Elysian Productions\UMTK-Classic\Company Settings\" "MultiCompanyEnabled" "0"
+  WriteRegDWORD HKLM "Software\Elysian Productions\UMTK-Classic\Advanced Sort and Display\" "OU Prefix" "0"
+  WriteRegDWORD HKLM "Software\Elysian Productions\UMTK-Classic\Advanced Sort and Display\" "Display ACL" "0"
 
 	
   
