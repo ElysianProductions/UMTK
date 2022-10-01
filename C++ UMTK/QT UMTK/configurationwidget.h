@@ -62,6 +62,12 @@ public:
     QLineEdit *folder_redirection_edit;
     QLineEdit *profile_storage_edit;
 
+
+    //ADvanced Sort & Display widgets
+    QCheckBox *display_ou_prefix;
+    QCheckBox *display_employee_acl;
+
+
     //
     void setCompanyName(const QString &company);
     void setOUCNName(const QString &cn);
@@ -98,6 +104,7 @@ private:
      QWidget* get_pdf_custimization_widget(QLineEdit *user_creation_text_edit, QLineEdit *user_disable_text_edit, QLineEdit *image_path_edit);
      QWidget* get_generation_custimization_widget();
      QWidget* get_disable_custimation_widget();
+     QWidget* get_advanced_sortdisplay_widget(QCheckBox *display_ou_prefix, QCheckBox *display_employee_acl);
      QWidget* getHelpWidget();
 
      QString database_name;
@@ -123,12 +130,15 @@ private:
      void setProfileCleanupSettings(const bool &state);
      void setProfileRedirectionPath();
      void setProfileStoragePath();
+     void setDisplayOUPrefixSetting(const bool &var);
+     void setDisplayEmployeeACLSetting(const bool &var);
 
 
      QSettings *MultiCompanySettings;
      QSettings *SamGenerationSettings;
      QSettings *PDFSettings;
      QSettings *DisableSettings;
+     QSettings *AdvancedSortDisplaySettings;
 
 };
 

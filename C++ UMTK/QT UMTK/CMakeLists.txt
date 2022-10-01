@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.21.1)
+cmake_minimum_required(VERSION 3.2v)
 
 project(UMTK-Classic LANGUAGES CXX)
 
@@ -39,11 +39,11 @@ set(PROJECT_SOURCES
 )
 
 if(Qt6_FOUND)
-    qt_add_executable(UMTK-Classic
+    qt_add_executable(UMTK-Classic WIN32
         ${PROJECT_SOURCES}
     )
 elseif(NOT Qt6_FOUND)
-    add_executable(UMTK-Classic
+    add_executable(UMTK-Classic WIN32
         ${PROJECT_SOURCES}
     )
 endif()

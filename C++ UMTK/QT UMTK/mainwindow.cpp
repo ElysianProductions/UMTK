@@ -1157,7 +1157,7 @@ void MainWindow::disable_user()
         QSettings *DisableSettings = new QSettings("HKEY_LOCAL_MACHINE\\SOFTWARE\\WOW6432Node\\Elysian Productions\\UMTK-Classic\\Disable Settings\\", QSettings::Registry64Format);
         if(DisableSettings->value("CleanupOn").toInt() == 1)
         {
-            user.roboCopyProfile(DisableSettings->value("RedirectionShare").toString(),DisableSettings->value("StorageLocation").toString(), username);
+            user.roboCopyProfile(DisableSettings->value("RedirectionShare").toString(), DisableSettings->value("StorageLocation").toString(), username);
         }
     }
     else if(user.List_All_UPNs().count() <= 1)
@@ -1220,7 +1220,7 @@ void MainWindow::disable_user()
         QSettings *DisableSettings = new QSettings("HKEY_LOCAL_MACHINE\\SOFTWARE\\WOW6432Node\\Elysian Productions\\UMTK-Classic\\Disable Settings\\", QSettings::Registry64Format);
         if(DisableSettings->value("CleanupOn").toInt() == 1)
         {
-            user.roboCopyProfile(QString("\"") + DisableSettings->value("RedirectionShare").toString() + QString("\"\\"), QString("\"") + DisableSettings->value("StorageLocation").toString() + QString("\"\\"), username);
+            user.roboCopyProfile(DisableSettings->value("RedirectionShare").toString(), DisableSettings->value("StorageLocation").toString(), username);
         }
     }
 
