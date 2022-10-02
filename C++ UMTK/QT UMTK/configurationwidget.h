@@ -22,6 +22,7 @@
 #include <QSqlQueryModel>
 #include <QHeaderView>
 #include <QSettings>
+#include <QTextBrowser>
 
 #include <QDebug>
 #include <QStandardItemModel>

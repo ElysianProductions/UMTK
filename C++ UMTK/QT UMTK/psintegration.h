@@ -68,6 +68,8 @@ public:
     QString List_URL_Image_Path(); // dump the path to the url image.
     QString List_User_UserPrincipalName(QString name); // List the UserPrincipalName property of the specified user.
     QString List_User_DisplayName(QString name); // List the displayName property of the specified user.
+    QString List_User_Manager(QString name); // Get the manager of the user in question
+
 
     QStringList List_All_OU_DNs(); // Return the Distinguished name of all Organizational units. // Done
     QStringList List_All_OU_CNs(); // Return the clean name of all Organizational units // Done
@@ -82,40 +84,40 @@ public:
 
 
 
-void setAllADUsers(const QStringList &list); // Set all_users StringList.
-void setAllADUPNs(const QStringList &list); // Set all_upns StringList
-void setAllADForests(const QStringList &list); // Set all_forests StringList
-void setAllOUNames(const QStringList &list); // Set all_ou_names StringList;
-void setAllOUDNs(const QStringList &list); // Set all_ou_distinguished StringList;
-void mapOUToCompany(); // Create ou_to_company by querying OU, Company in UMTK.db
-void mapCompanyToPrefix(); // Create company_to_prefix by querying Company, Prefix in UMTK.db
-void mapUserToCompany(); // create a map for user to company for multi company support
-void mapUserToOU(); // create a map for user to ou for multi company support
-void mapCompanyToSam(); // Create a map for company to sam for multi company support
-void reMapConnections();
-void roboCopyProfile(const QString redirection_path, const QString &storage_path, const QString &username);
+    void setAllADUsers(const QStringList &list); // Set all_users StringList.
+    void setAllADUPNs(const QStringList &list); // Set all_upns StringList
+    void setAllADForests(const QStringList &list); // Set all_forests StringList
+    void setAllOUNames(const QStringList &list); // Set all_ou_names StringList;
+    void setAllOUDNs(const QStringList &list); // Set all_ou_distinguished StringList;
+    void mapOUToCompany(); // Create ou_to_company by querying OU, Company in UMTK.db
+    void mapCompanyToPrefix(); // Create company_to_prefix by querying Company, Prefix in UMTK.db
+    void mapUserToCompany(); // create a map for user to company for multi company support
+    void mapUserToOU(); // create a map for user to ou for multi company support
+    void mapCompanyToSam(); // Create a map for company to sam for multi company support
+    void reMapConnections();
+    void roboCopyProfile(const QString redirection_path, const QString &storage_path, const QString &username);
 
-/*void setLogoPath(const QString &path);
-void setCustomCreationText(const QString &path);
-void setCustomDisableText(const QString &path);
-void setCustomLogoPosition(const QString &path);
-*/
+    /*void setLogoPath(const QString &path);
+    void setCustomCreationText(const QString &path);
+    void setCustomDisableText(const QString &path);
+    void setCustomLogoPosition(const QString &path);
+    */
 
-QStringList getAllADUsers(); // Return all_users StringList
-QStringList getAllADUPNs(); // Return all_upns StringList
-QStringList getAllADForests(); // Return all_forests StringList
-QStringList getAllOUNames(); // Return all_ou_names StringList
-QStringList getAllOUDNs(); // Return all_ou_distingusihed StringList
+    QStringList getAllADUsers(); // Return all_users StringList
+    QStringList getAllADUPNs(); // Return all_upns StringList
+    QStringList getAllADForests(); // Return all_forests StringList
+    QStringList getAllOUNames(); // Return all_ou_names StringList
+    QStringList getAllOUDNs(); // Return all_ou_distingusihed StringList
 
 
 
-QString stripCompanyName(QString employee); // Remove X characters from the start of the string to the hypen + 1
-QString getEmployeeName(QString name); // Pass the full name of your user, function returns Clean_String(name).
-QString getEmployeeIdentifier(QString name); // Pass the full name of your user.
-QString validateSamOption(QString template_name, QString new_user); // Pass the template users name to check company options, pass the new users name to then configure the SamAccountName.
+    QString stripCompanyName(QString employee); // Remove X characters from the start of the string to the hypen + 1
+    QString getEmployeeName(QString name); // Pass the full name of your user, function returns Clean_String(name).
+    QString getEmployeeIdentifier(QString name); // Pass the full name of your user.
+    QString validateSamOption(QString template_name, QString new_user); // Pass the template users name to check company options, pass the new users name to then configure the SamAccountName.
 
-bool multi_company_enabled;
-bool getMultiCompanyStatus();
+    bool multi_company_enabled;
+    bool getMultiCompanyStatus();
 
 protected:
     QString image;
