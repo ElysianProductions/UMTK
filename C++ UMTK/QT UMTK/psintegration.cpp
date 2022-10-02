@@ -326,6 +326,31 @@ QString PSIntegration::List_User_Manager(QString name)
     return Clean_String(Execute("$temp = (Get-ADUser -Filter {Name -Like " + QString("\"") + name + QString("\"") + "} -Properties Manager).Manager; $mgr, $garbage = $temp.split(',', 2); return $mgr"));
 }
 
+QString PSIntegration::List_User_IPPhone(QString name)
+{
+    return Clean_String(Execute("$temp = (Get-ADUser -Filter {Name -Like " + QString("\"") + name + QString("\"") + "} -Properties ipphone).ipphone; return $temp"));
+}
+
+QString PSIntegration::List_User_MobilePhone(QString name)
+{
+    return Clean_String(Execute("$temp = (Get-ADUser -Filter {Name -Like " + QString("\"") + name + QString("\"") + "} -Properties mobile).mobile; return $temp"));
+}
+
+QString PSIntegration::List_User_Pager(QString name)
+{
+    return Clean_String(Execute("$temp = (Get-ADUser -Filter {Name -Like " + QString("\"") + name + QString("\"") + "} -Properties pager).pager; return $temp"));
+}
+
+QString PSIntegration::List_User_FaxNumber(QString name)
+{
+    return Clean_String(Execute("$temp = (Get-ADUser -Filter {Name -Like " + QString("\"") + name + QString("\"") + "} -Properties fax).fax; return $temp"));
+}
+
+QString PSIntegration::List_User_HomeNumber(QString name)
+{
+    return Clean_String(Execute("$temp = (Get-ADUser -Filter {Name -Like " + QString("\"") + name + QString("\"") + "} -Properties homephone).homephone; return $temp"));
+}
+
 QString PSIntegration::List_Name(QString name)
 {
     return Clean_String(name);

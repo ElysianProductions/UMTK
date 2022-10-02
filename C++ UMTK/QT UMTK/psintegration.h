@@ -69,7 +69,11 @@ public:
     QString List_User_UserPrincipalName(QString name); // List the UserPrincipalName property of the specified user.
     QString List_User_DisplayName(QString name); // List the displayName property of the specified user.
     QString List_User_Manager(QString name); // Get the manager of the user in question
-
+    QString List_User_IPPhone(QString name); // Get the users IP Phone
+    QString List_User_MobilePhone(QString name); // Get the users Mobile Phone
+    QString List_User_Pager(QString name); // List the users pager number
+    QString List_User_FaxNumber(QString name); // List users fax number
+    QString List_User_HomeNumber(QString name); // List users home number
 
     QStringList List_All_OU_DNs(); // Return the Distinguished name of all Organizational units. // Done
     QStringList List_All_OU_CNs(); // Return the clean name of all Organizational units // Done
