@@ -247,7 +247,6 @@ QString PSIntegration::Execute(QString param)
     return data;
 }
 
-
 QString PSIntegration::User_Exists(QString SamName)
 {
     /*
@@ -320,6 +319,11 @@ QString PSIntegration::List_Mail(QString name)
      */
 
     return Clean_String(Execute("(Get-ADUser -Filter {Name -Like " + QString("\"") + name + QString("\"") + "} -Properties Mail).Mail"));
+}
+
+QString PSIntegration::List_User_Manager(QString name)
+{
+    return Clean_String(Execute("$temp = (Get-ADUser -Filter {Name -Like " + QString("\"") + name + QString("\"") + "} -Properties Manager).Manager; $mgr, $garbage = $temp.split(',', 2); return $mgr"));
 }
 
 QString PSIntegration::List_Name(QString name)

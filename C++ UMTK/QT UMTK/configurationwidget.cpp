@@ -506,7 +506,6 @@ QWidget* ConfigurationWidget::getHelpWidget()
 
 
 
-
     model->setColumnCount(1);
     model->setRowCount(4);
     model->setHorizontalHeaderItem(0, new QStandardItem("Select option"));
@@ -522,7 +521,14 @@ QWidget* ConfigurationWidget::getHelpWidget()
     QTreeView *help_tree = new QTreeView();
     help_tree->setModel(model);
 
+
+
+    QTextBrowser *browser = new QTextBrowser();
+
+
+
     primary_layout->addWidget(help_tree, 0, 0);
+    primary_layout->addWidget(browser, 1, 0);
     primary_display->setLayout(primary_layout);
     return primary_display;
     //QTreeView
@@ -777,7 +783,6 @@ void ConfigurationWidget::setDisplayOUPrefixSetting(const bool &var)
         AdvancedSortDisplaySettings->setValue("OU Prefix", 0);
         display_ou_prefix->setChecked(false);
         // WriteRegDWORD HKLM "Software\Elysian Productions\UMTK-Classic\Advanced Sort and Display\" "OU Prefix" "0"
-        //qDebug() << var;
     }
 }
 
